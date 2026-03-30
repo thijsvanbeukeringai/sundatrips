@@ -132,6 +132,7 @@ export const id: Translations = {
       property:    'Properti',
       checkIn:     'Check-in',
       guests:      'Tamu',
+      total:       'Total',
       yourCut:     'Bagian Anda',
       status:      'Status',
       view:        'Lihat →',
