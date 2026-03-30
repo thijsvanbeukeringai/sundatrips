@@ -120,6 +120,7 @@ export default function BookingPOSPanel({
   }
 
   function handleRemove(itemId: string) {
+    setPosItems(items => items.filter(i => i.id !== itemId))
     startTransition(() => { void removePOSItem(itemId, bookingId) })
   }
 

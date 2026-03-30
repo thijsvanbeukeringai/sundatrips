@@ -93,6 +93,7 @@ export default function POSTerminal({
 
   function handleRemove(itemId: string) {
     if (!selectedBookingId) return
+    setPosItems(items => items.filter(i => i.id !== itemId))
     startTransition(() => { void removePOSItem(itemId, selectedBookingId) })
   }
 
