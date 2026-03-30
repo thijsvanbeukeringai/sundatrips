@@ -19,11 +19,19 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
 
   if (!data) notFound()
 
-  const { data: posItems } = await supabase
-    .from('pos_items')
-    .select('*')
-    .eq('booking_id', data.id)
-    .order('created_at', { ascending: true })
+  const [{ data: posItems }, { data: catalog }] = await Promise.all([
+    supabase
+      .from('pos_items')
+      .select('*')
+      .eq('booking_id', data.id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('pos_catalog')
+      .select('*')
+      .eq('owner_id', user.id)
+      .eq('is_active', true)
+      .order('sort_order'),
+  ])
 
-  return <BookingDetailClient booking={data} posItems={posItems ?? []} />
+  return <BookingDetailClient booking={data} posItems={posItems ?? []} catalog={catalog ?? []} />
 }

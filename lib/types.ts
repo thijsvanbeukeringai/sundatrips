@@ -105,6 +105,7 @@ export interface Booking {
   notes: string | null
   guest_user_id: string | null
   variant_id:    string | null
+  extras_paid:   boolean
   created_at: string
   updated_at: string
   // Joined

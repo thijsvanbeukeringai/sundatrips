@@ -279,15 +279,22 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                       </p>
                     )}
                   </div>
+
+                  {/* Show filtered room types inline after search */}
+                  {availableIds !== null && displayedVariants.length > 0 && (
+                    <div className="mt-4">
+                      <ListingVariants variants={displayedVariants} propertyType={p.type} onBook={id => openBooking({ variantId: id })} />
+                    </div>
+                  )}
                 </div>
               </>
             )}
 
-            {/* Variants */}
-            {displayedVariants.length > 0 && (
+            {/* Variants — shown when no search active */}
+            {availableIds === null && variants.length > 0 && (
               <>
                 <hr className="border-gray-100" />
-                <ListingVariants variants={displayedVariants} propertyType={p.type} onBook={id => openBooking({ variantId: id })} />
+                <ListingVariants variants={variants} propertyType={p.type} onBook={id => openBooking({ variantId: id })} />
               </>
             )}
 

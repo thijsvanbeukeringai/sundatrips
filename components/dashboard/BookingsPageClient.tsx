@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CalendarDays, Plus } from 'lucide-react'
+import { CalendarDays, Plus, ShoppingBag } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
 import BookingStatusFilter from './BookingStatusFilter'
@@ -26,6 +26,8 @@ interface BookingRow {
   guests_count: number
   total_amount: number
   net_payout: number
+  extras_amount: number
+  extras_paid: boolean
   status: string
   property: { name: string; type: string } | null
 }
@@ -99,9 +101,17 @@ export default function BookingsPageClient({ bookings, counts, currentStatus, q 
                     <td className="px-5 py-3.5 text-right font-semibold text-gray-800">{formatPriceRaw(b.total_amount, lang)}</td>
                     <td className="px-5 py-3.5 text-right font-semibold text-jungle-700 hidden sm:table-cell">{formatPriceRaw(b.net_payout, lang)}</td>
                     <td className="px-5 py-3.5">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-bold capitalize whitespace-nowrap ${STATUS_STYLE[b.status]}`}>
-                        {b.status.replace('_', ' ')}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-bold capitalize whitespace-nowrap ${STATUS_STYLE[b.status]}`}>
+                          {b.status.replace('_', ' ')}
+                        </span>
+                        {b.extras_amount > 0 && !b.extras_paid && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 whitespace-nowrap">
+                            <ShoppingBag className="w-2.5 h-2.5" />
+                            Open bill
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <Link

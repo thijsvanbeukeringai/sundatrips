@@ -4,9 +4,12 @@ import { useTransition } from 'react'
 import { toggleCatalogItem, deleteCatalogItem } from '@/app/actions/pos'
 import type { POSCatalogItem } from '@/lib/types'
 import { ToggleLeft, ToggleRight, Trash2 } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
+import { formatPriceRaw } from '@/lib/currency'
 
 export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
   const [pending, startTransition] = useTransition()
+  const { lang } = useI18n()
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
@@ -15,7 +18,7 @@ export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
         <p className={`text-sm font-medium ${item.is_active ? 'text-gray-800' : 'text-gray-400 line-through'}`}>
           {item.name}
         </p>
-        <p className="text-xs text-gray-400">€{item.default_price.toFixed(2)}</p>
+        <p className="text-xs text-gray-400">{formatPriceRaw(item.default_price, lang)}</p>
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
         <button

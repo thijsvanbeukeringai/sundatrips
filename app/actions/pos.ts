@@ -77,6 +77,23 @@ export async function toggleCatalogItem(id: string, is_active: boolean) {
   return { success: true }
 }
 
+export async function markExtrasPaid(bookingId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('bookings')
+    .update({ extras_paid: true })
+    .eq('id', bookingId)
+    .eq('owner_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath(`/dashboard/bookings/${bookingId}`)
+  revalidatePath('/dashboard/bookings')
+  return { success: true }
+}
+
 export async function deleteCatalogItem(id: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

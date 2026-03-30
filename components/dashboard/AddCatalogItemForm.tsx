@@ -25,7 +25,7 @@ function SubmitBtn() {
 }
 
 export default function AddCatalogItemForm() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const pos = t.pos
   const [state, formAction] = useFormState(createCatalogItem, null)
 
@@ -61,7 +61,7 @@ export default function AddCatalogItemForm() {
         </select>
 
         <div className="relative w-28">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{lang === 'id' ? 'Rp' : '€'}</span>
           <input name="default_price" type="number" required min="0" step="0.01" placeholder="4.50" className={inputClass + ' pl-7'} />
         </div>
 

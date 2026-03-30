@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { ArrowLeft, User, Calendar, CreditCard, FileText } from 'lucide-react'
-import type { Booking, Property } from '@/lib/types'
+import type { Booking, POSCatalogItem, POSItem, Property } from '@/lib/types'
 import BookingStatusActions from '@/components/dashboard/BookingStatusActions'
+import BookingPOSPanel from '@/components/dashboard/BookingPOSPanel'
 import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
 
@@ -22,11 +23,12 @@ function formatDate(d: string) {
 type FullBooking = Booking & { property: Property | null }
 
 interface Props {
-  booking: FullBooking
-  posItems: any[]
+  booking:  FullBooking
+  posItems: POSItem[]
+  catalog:  POSCatalogItem[]
 }
 
-export default function BookingDetailClient({ booking: b, posItems }: Props) {
+export default function BookingDetailClient({ booking: b, posItems, catalog }: Props) {
   const { t, lang } = useI18n()
   const bd = t.bookingDetail
 
@@ -135,23 +137,13 @@ export default function BookingDetailClient({ booking: b, posItems }: Props) {
           </div>
         </div>
 
-        {/* POS items */}
-        {posItems && posItems.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-4">{bd.posExtrasSection}</h2>
-            <div className="space-y-2 text-sm">
-              {posItems.map((item: any) => (
-                <div key={item.id} className="flex justify-between py-2 border-b border-gray-50 last:border-0">
-                  <div>
-                    <span className="font-medium text-gray-800">{item.name}</span>
-                    <span className="text-gray-400 ml-2 text-xs">×{item.quantity}</span>
-                  </div>
-                  <span className="font-medium text-gray-700">{formatPriceRaw(item.total_price, lang)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* POS — live bill */}
+        <BookingPOSPanel
+          bookingId={b.id}
+          initialPosItems={posItems}
+          catalog={catalog}
+          extrasPaid={b.extras_paid}
+        />
 
         {/* Notes */}
         {b.notes && (
