@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, CalendarDays, ShoppingBag, Building2,
   BarChart3, Settings, LogOut, ChevronRight, UserPlus,
-  Pencil, Check, X,
+  Pencil, Check, X, Landmark,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
@@ -41,6 +41,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
     { href: '/dashboard',             icon: LayoutDashboard, label: t.dashboard.overview },
     { href: '/dashboard/bookings',    icon: CalendarDays,    label: t.dashboard.bookings },
     { href: '/dashboard/pos',         icon: ShoppingBag,     label: t.dashboard.pos,      badge: 'Live' },
+    { href: '/dashboard/venues',      icon: Landmark,        label: t.dashboard.venues },
     { href: '/dashboard/properties',  icon: Building2,       label: t.dashboard.listings },
     { href: '/dashboard/financials',  icon: BarChart3,       label: t.dashboard.financials },
     { href: '/dashboard/settings',    icon: Settings,        label: t.dashboard.settings },
@@ -99,6 +100,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 px-3 mb-2">{t.dashboard.admin}</p>
           {[
             { href: '/admin/invite',          icon: UserPlus,  label: t.dashboard.inviteOwner },
+            { href: '/admin/companies',       icon: Landmark,  label: 'Companies' },
             { href: '/admin',                 icon: BarChart3, label: t.dashboard.adminOverview },
             { href: '/dashboard/admin/owners',icon: UserPlus,  label: t.dashboard.ownerSettings },
           ].map(({ href, icon: Icon, label }) => {

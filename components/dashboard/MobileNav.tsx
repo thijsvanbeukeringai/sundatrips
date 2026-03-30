@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Menu, X, LayoutDashboard, CalendarDays, ShoppingBag, Building2,
-  BarChart3, Settings, LogOut, UserPlus, ChevronRight,
+  BarChart3, Settings, LogOut, UserPlus, ChevronRight, Landmark,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
@@ -23,6 +23,7 @@ export default function MobileNav({ profile }: { profile: Profile }) {
     { href: '/dashboard',            icon: LayoutDashboard, label: t.dashboard.overview },
     { href: '/dashboard/bookings',   icon: CalendarDays,    label: t.dashboard.bookings },
     { href: '/dashboard/pos',        icon: ShoppingBag,     label: t.dashboard.pos,     badge: 'Live' },
+    { href: '/dashboard/venues',     icon: Landmark,        label: t.dashboard.venues },
     { href: '/dashboard/properties', icon: Building2,       label: t.dashboard.listings },
     { href: '/dashboard/settings',   icon: Settings,        label: t.dashboard.settings },
   ]
@@ -93,6 +94,7 @@ export default function MobileNav({ profile }: { profile: Profile }) {
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-3 pt-4 pb-1">{t.dashboard.admin}</p>
               {[
                 { href: '/admin/invite',           icon: UserPlus,  label: t.dashboard.inviteOwner },
+                { href: '/admin/companies',        icon: Landmark,  label: 'Companies' },
                 { href: '/admin',                  icon: BarChart3, label: t.dashboard.adminOverview },
                 { href: '/dashboard/admin/owners', icon: UserPlus,  label: t.dashboard.ownerSettings },
               ].map(({ href, icon: Icon, label }) => (

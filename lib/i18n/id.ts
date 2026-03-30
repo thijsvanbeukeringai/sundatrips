@@ -91,6 +91,7 @@ export const id: Translations = {
     overview:      'Ikhtisar',
     bookings:      'Pemesanan',
     pos:           'POS',
+    venues:        'Perusahaan',
     listings:      'Listing',
     financials:    'Keuangan',
     settings:      'Pengaturan',

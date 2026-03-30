@@ -11,6 +11,21 @@ export type PaymentMethod    = 'cash' | 'stripe'
 export type POSCategory = 'food' | 'drinks' | 'tours' | 'transport' | 'wellness' | 'other'
 export type PayoutStatus = 'pending' | 'processing' | 'paid'
 
+export interface Venue {
+  id:            string
+  owner_id:      string
+  name:          string
+  description:   string | null
+  location:      string
+  island:        Island
+  images:        string[]
+  amenities:     string[]
+  allowed_types: PropertyType[]
+  is_active:     boolean
+  created_at:    string
+  updated_at:    string
+}
+
 export interface Profile {
   id: string
   full_name: string
@@ -44,6 +59,7 @@ export interface Property {
   images: string[]
   amenities: string[]
   is_active: boolean
+  venue_id: string | null
   // transfer-specific
   transfer_from:    string | null
   transfer_to:      string | null

@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, Users, Building2, CalendarDays, DollarSign,
-  TrendingUp, CheckCircle, Clock, XCircle, UserPlus, Bed, Compass, Activity,
+  ArrowLeft, Users, Building2, CalendarDays,
+  TrendingUp, CheckCircle, Clock, XCircle, UserPlus, Bed, Compass, Activity, Landmark, Plus,
 } from 'lucide-react'
 
 export default async function AdminPage() {
@@ -18,11 +18,13 @@ export default async function AdminPage() {
     { data: properties },
     { data: bookings },
     { data: invites },
+    { data: venues },
   ] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, role, created_at').order('created_at', { ascending: false }),
-    supabase.from('properties').select('id, name, type, island, location, is_active, owner_id, price_per_unit, price_unit, created_at').order('created_at', { ascending: false }),
+    supabase.from('properties').select('id, name, type, island, location, is_active, owner_id, venue_id, price_per_unit, price_unit, created_at').order('created_at', { ascending: false }),
     supabase.from('bookings').select('id, guest_name, total_amount, net_payout, platform_fee, status, check_in, created_at, owner_id').order('created_at', { ascending: false }).limit(50),
     supabase.from('invites').select('id, email, property_name, accepted_at, expires_at, created_at').order('created_at', { ascending: false }).limit(20),
+    supabase.from('venues').select('id, name, owner_id, island, is_active').order('created_at', { ascending: false }),
   ])
 
   // Show everyone with listings + all owners; admins who created listings count too
@@ -62,20 +64,31 @@ export default async function AdminPage() {
       <div className="max-w-6xl mx-auto p-6 sm:p-8 space-y-8">
 
         {/* KPI cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
-            { label: 'Total Users',       value: allUsers.length,       icon: Users,        color: 'text-jungle-700', bg: 'bg-jungle-50' },
-            { label: 'Active Listings',  value: activeProps.length,    icon: Building2,    color: 'text-blue-700',   bg: 'bg-blue-50' },
-            { label: 'Total Bookings',   value: (bookings ?? []).length, icon: CalendarDays, color: 'text-amber-700',  bg: 'bg-amber-50' },
-            { label: 'Platform Fees',    value: `€${totalFees.toFixed(0)}`, icon: TrendingUp, color: 'text-sunset-600', bg: 'bg-sunset-50' },
-          ].map(({ label, value, icon: Icon, color, bg }) => (
-            <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5">
-              <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mb-3`}>
-                <Icon className={`w-5 h-5 ${color}`} />
+            { label: 'Total Users',      value: allUsers.length,            icon: Users,        color: 'text-jungle-700', bg: 'bg-jungle-50', href: null },
+            { label: 'Companies',        value: (venues ?? []).length,      icon: Landmark,     color: 'text-purple-700', bg: 'bg-purple-50', href: '/admin/companies' },
+            { label: 'Active Listings',  value: activeProps.length,         icon: Building2,    color: 'text-blue-700',   bg: 'bg-blue-50',   href: null },
+            { label: 'Total Bookings',   value: (bookings ?? []).length,    icon: CalendarDays, color: 'text-amber-700',  bg: 'bg-amber-50',  href: null },
+            { label: 'Platform Fees',    value: `€${totalFees.toFixed(0)}`, icon: TrendingUp,   color: 'text-sunset-600', bg: 'bg-sunset-50', href: null },
+          ].map(({ label, value, icon: Icon, color, bg, href }) => (
+            href ? (
+              <Link key={label} href={href} className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-purple-200 hover:shadow-md transition-all group">
+                <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mb-3`}>
+                  <Icon className={`w-5 h-5 ${color}`} />
+                </div>
+                <p className={`font-display text-2xl font-bold ${color}`}>{value}</p>
+                <p className="text-xs text-gray-400 mt-0.5 group-hover:text-purple-500 transition-colors">{label} →</p>
+              </Link>
+            ) : (
+              <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5">
+                <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mb-3`}>
+                  <Icon className={`w-5 h-5 ${color}`} />
+                </div>
+                <p className={`font-display text-2xl font-bold ${color}`}>{value}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{label}</p>
               </div>
-              <p className={`font-display text-2xl font-bold ${color}`}>{value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-            </div>
+            )
           ))}
         </div>
 

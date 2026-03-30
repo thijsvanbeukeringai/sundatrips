@@ -89,6 +89,7 @@ export const en = {
     overview:      'Overview',
     bookings:      'Bookings',
     pos:           'POS',
+    venues:        'Companies',
     listings:      'Listings',
     financials:    'Financials',
     settings:      'Settings',
