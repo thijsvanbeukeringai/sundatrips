@@ -38,13 +38,14 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ id
     .eq('venue_id', id)
     .order('name')
 
-  // Unlinked properties owned by the same owner
-  const { data: unlinkedProperties } = await supabase
+  // Unlinked properties: for admins show ALL unlinked, for owners show only their own
+  let unlinkedQuery = supabase
     .from('properties')
-    .select('id, name, type, location, is_active')
-    .eq('owner_id', venue.owner_id)
+    .select('id, name, type, location, is_active, owner_id')
     .is('venue_id', null)
     .order('name')
+  if (profile?.role !== 'admin') unlinkedQuery = unlinkedQuery.eq('owner_id', user.id)
+  const { data: unlinkedProperties } = await unlinkedQuery
 
   const editHref = profile?.role === 'admin' ? `/admin/companies/${id}` : null
 
@@ -90,7 +91,7 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ id
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-800">Listings ({(venueProperties ?? []).length})</h2>
           <Link
-            href="/dashboard/properties/new"
+            href={`/dashboard/properties/new?venue_id=${id}`}
             className="flex items-center gap-1.5 text-xs font-semibold text-jungle-700 hover:text-jungle-900 hover:bg-jungle-50 px-3 py-1.5 rounded-lg transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -103,7 +104,7 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ id
             <Building2 className="w-8 h-8 text-gray-200 mx-auto mb-3" />
             <p className="text-gray-400 text-sm">No listings in this company yet.</p>
             <Link
-              href="/dashboard/properties/new"
+              href={`/dashboard/properties/new?venue_id=${id}`}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-jungle-700 hover:text-jungle-900 mt-3"
             >
               <Plus className="w-4 h-4" />

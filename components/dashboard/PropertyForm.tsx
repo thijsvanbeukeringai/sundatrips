@@ -12,9 +12,10 @@ import LocationAutocomplete from './LocationAutocomplete'
 import { useI18n } from '@/lib/i18n'
 
 interface Props {
-  userId:        string
-  property?:     Property
-  allowedTypes?: string[]
+  userId:          string
+  property?:       Property
+  allowedTypes?:   string[]
+  defaultVenueId?: string
 }
 
 const labelClass = 'block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5'
@@ -42,7 +43,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   )
 }
 
-export default function PropertyForm({ userId, property, allowedTypes }: Props) {
+export default function PropertyForm({ userId, property, allowedTypes, defaultVenueId }: Props) {
   const { t } = useI18n()
   const isEdit = !!property
   const action = isEdit ? updateProperty : createProperty
@@ -114,6 +115,7 @@ export default function PropertyForm({ userId, property, allowedTypes }: Props) 
 
       <form action={formAction} className="space-y-6">
         {isEdit && <input type="hidden" name="id" value={property.id} />}
+        {!isEdit && defaultVenueId && <input type="hidden" name="venue_id" value={defaultVenueId} />}
         <input type="hidden" name="images"    value={images.join('\n')} />
         <input type="hidden" name="amenities" value={amenities.join(',')} />
 

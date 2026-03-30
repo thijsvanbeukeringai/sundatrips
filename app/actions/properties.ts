@@ -38,6 +38,7 @@ export async function createProperty(_prevState: unknown, formData: FormData) {
     english_speaking: formData.get('english_speaking') === 'on',
     driver_name:      (formData.get('driver_name') as string) || null,
     driver_phone:     (formData.get('driver_phone') as string) || null,
+    venue_id:         (formData.get('venue_id') as string) || null,
   })
 
   if (error) return { error: error.message }

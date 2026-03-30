@@ -2,7 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PropertyForm from '@/components/dashboard/PropertyForm'
 
-export default async function NewPropertyPage() {
+export default async function NewPropertyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ venue_id?: string }>
+}) {
+  const { venue_id } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -21,7 +26,7 @@ export default async function NewPropertyPage() {
 
   return (
     <div className="p-6 sm:p-8">
-      <PropertyForm userId={user.id} allowedTypes={allowedTypes} />
+      <PropertyForm userId={user.id} allowedTypes={allowedTypes} defaultVenueId={venue_id} />
     </div>
   )
 }
