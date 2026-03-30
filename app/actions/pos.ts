@@ -82,13 +82,35 @@ export async function markExtrasPaid(bookingId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { error } = await supabase
-    .from('bookings')
-    .update({ extras_paid: true })
-    .eq('id', bookingId)
+  // 1. Fetch current POS items
+  const { data: items } = await supabase
+    .from('pos_items')
+    .select('*')
+    .eq('booking_id', bookingId)
     .eq('owner_id', user.id)
+    .order('created_at', { ascending: true })
 
-  if (error) return { error: error.message }
+  if (!items || items.length === 0) return { error: 'No items on bill' }
+
+  const total = items.reduce((s: number, i: { total_price: number }) => s + i.total_price, 0)
+
+  // 2. Snapshot to bill_payments
+  const { error: snapErr } = await supabase.from('bill_payments').insert({
+    booking_id:   bookingId,
+    owner_id:     user.id,
+    items:        items,
+    total_amount: total,
+  })
+  if (snapErr) return { error: snapErr.message }
+
+  // 3. Delete all POS items — extras_amount auto-resets to 0 via DB trigger
+  const { error: delErr } = await supabase
+    .from('pos_items')
+    .delete()
+    .eq('booking_id', bookingId)
+    .eq('owner_id', user.id)
+  if (delErr) return { error: delErr.message }
+
   revalidatePath(`/dashboard/bookings/${bookingId}`)
   revalidatePath('/dashboard/bookings')
   return { success: true }
