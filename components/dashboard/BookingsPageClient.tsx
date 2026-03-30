@@ -47,7 +47,7 @@ export default function BookingsPageClient({ bookings, counts, currentStatus, q 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-3xl font-bold text-jungle-800">{bp.title}</h1>
-          <p className="text-gray-400 text-sm mt-1">{counts.all ?? 0} {bp.total}</p>
+          <p className="text-gray-400 text-sm mt-1">{counts.all ?? 0} {bp.totalLabel}</p>
         </div>
         <Link
           href="/dashboard/bookings/new"

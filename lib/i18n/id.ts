@@ -124,7 +124,7 @@ export const id: Translations = {
     },
     bookings_page: {
       title:       'Pemesanan',
-      total:       'total',
+      totalLabel:  'total',
       newBooking:  'Pemesanan Baru',
       noBookings:  'Tidak ada pemesanan',
       createFirst: 'Buat pemesanan pertama',

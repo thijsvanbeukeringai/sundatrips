@@ -122,7 +122,7 @@ export const en = {
     },
     bookings_page: {
       title:       'Bookings',
-      total:       'total',
+      totalLabel:  'total',
       newBooking:  'New Booking',
       noBookings:  'No bookings found',
       createFirst: 'Create your first booking',
