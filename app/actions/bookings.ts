@@ -44,9 +44,12 @@ export async function updateBookingStatus(id: string, status: BookingStatus) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
+  const patch: Record<string, unknown> = { status }
+  if (status === 'cancelled') patch.base_amount = 0
+
   const { error } = await supabase
     .from('bookings')
-    .update({ status })
+    .update(patch)
     .eq('id', id)
     .eq('owner_id', user.id)
 

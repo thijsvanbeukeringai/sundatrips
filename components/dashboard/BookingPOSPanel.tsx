@@ -73,13 +73,18 @@ export default function BookingPOSPanel({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${bookingId}` },
-        () => {
-          supabase
-            .from('pos_items')
-            .select('*')
-            .eq('booking_id', bookingId)
-            .order('created_at', { ascending: true })
-            .then(({ data }) => setPosItems((data ?? []) as POSItem[]))
+        (payload) => {
+          const newItem = payload.new as POSItem
+          setPosItems(prev => {
+            // Replace the matching temp item; otherwise append (added from another device)
+            const tempIdx = prev.findIndex(i => i.id.startsWith('temp-') && i.catalog_id === newItem.catalog_id)
+            if (tempIdx !== -1) {
+              const next = [...prev]
+              next[tempIdx] = newItem
+              return next
+            }
+            return [...prev, newItem]
+          })
         }
       )
       .on(
@@ -116,7 +121,7 @@ export default function BookingPOSPanel({
   const billTotal  = posItems.reduce((s, i) => s + i.total_price, 0)
 
   function handleAdd(item: POSCatalogItem) {
-    // Optimistic: show instantly, real-time INSERT will replace with DB record
+    // Optimistic: show instantly, real-time INSERT will replace temp with DB record
     const tempId = `temp-${Date.now()}`
     setPosItems(prev => [...prev, {
       id:          tempId,
@@ -131,14 +136,13 @@ export default function BookingPOSPanel({
       notes:       null,
       created_at:  new Date().toISOString(),
     }])
-    startTransition(() => {
-      void addPOSItem(bookingId, {
-        name:       item.name,
-        category:   item.category,
-        unit_price: item.default_price,
-        quantity:   1,
-        catalog_id: item.id,
-      })
+    // Fire and forget — never block the UI
+    void addPOSItem(bookingId, {
+      name:       item.name,
+      category:   item.category,
+      unit_price: item.default_price,
+      quantity:   1,
+      catalog_id: item.id,
     })
   }
 
@@ -205,8 +209,7 @@ export default function BookingPOSPanel({
               <button
                 key={item.id}
                 onClick={() => handleAdd(item)}
-                disabled={pending}
-                className={`group relative rounded-xl border p-3 text-left hover:shadow-md transition-all active:scale-[0.97] disabled:opacity-50 ${CATEGORY_COLORS[item.category]}`}
+                className={`group relative rounded-xl border p-3 text-left hover:shadow-md transition-all active:scale-[0.97] ${CATEGORY_COLORS[item.category]}`}
               >
                 <div className="text-xl mb-1">{item.emoji}</div>
                 <p className="font-semibold text-xs leading-snug line-clamp-2">{item.name}</p>

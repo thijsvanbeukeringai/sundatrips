@@ -60,14 +60,18 @@ export default function POSTerminal({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${selectedBookingId}` },
-        () => {
-          // Refetch on insert to get server-computed total_price
-          supabase
-            .from('pos_items')
-            .select('*')
-            .eq('booking_id', selectedBookingId)
-            .order('created_at', { ascending: true })
-            .then(({ data }) => setPosItems((data ?? []) as POSItem[]))
+        (payload) => {
+          const newItem = payload.new as POSItem
+          setPosItems(prev => {
+            // Replace the matching temp item; otherwise append (added from another device)
+            const tempIdx = prev.findIndex(i => i.id.startsWith('temp-') && i.catalog_id === newItem.catalog_id)
+            if (tempIdx !== -1) {
+              const next = [...prev]
+              next[tempIdx] = newItem
+              return next
+            }
+            return [...prev, newItem]
+          })
         }
       )
       .on(
@@ -107,13 +111,14 @@ export default function POSTerminal({
       notes:      null,
       created_at: new Date().toISOString(),
     }])
-    startTransition(() => { void addPOSItem(selectedBookingId, {
+    // Fire and forget — optimistic update already handles UI, no need to block
+    void addPOSItem(selectedBookingId, {
       name:       item.name,
       category:   item.category,
       unit_price: item.default_price,
       quantity:   1,
       catalog_id: item.id,
-    }) })
+    })
   }
 
   function handleRemove(itemId: string) {
@@ -196,7 +201,7 @@ export default function POSTerminal({
               {visibleCatalog.map(item => (
                 <button
                   key={item.id}
-                  disabled={!selectedBookingId || pending}
+                  disabled={!selectedBookingId}
                   onClick={() => handleAdd(item)}
                   className={`group relative bg-white rounded-2xl border p-4 text-left hover:border-jungle-400 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97] ${CATEGORY_COLORS[item.category]}`}
                 >
