@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
-import Link from 'next/link'
+import NextLink from 'next/link'
 import Image from 'next/image'
 import { useI18n } from '@/lib/i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
@@ -15,11 +15,11 @@ export default function Navbar({ solid }: { solid?: boolean } = {}) {
   const isSolid = solid || scrolled
 
   const navLinks = [
-    { label: t.nav.stays,      href: '#destinations' },
-    { label: t.nav.trips,      href: '#destinations' },
-    { label: t.nav.activities, href: '#destinations' },
-    { label: t.nav.forOwners,  href: '#owners' },
-    { label: t.nav.contact,    href: '#contact' },
+    { label: t.nav.stays,        href: '#destinations' },
+    { label: t.nav.trips,        href: '#destinations' },
+    { label: t.nav.activities,   href: '#destinations' },
+    { label: t.nav.forPartners,  href: '/partners' },
+    { label: t.nav.contact,      href: '#contact' },
   ]
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function Navbar({ solid }: { solid?: boolean } = {}) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
+            <NextLink href="/" className="flex items-center gap-2 group">
               <Image
                 src="/logo.avif"
                 alt="Sunda Trips"
@@ -52,32 +52,33 @@ export default function Navbar({ solid }: { solid?: boolean } = {}) {
                 className={`h-10 w-auto transition-all duration-300 ${isSolid ? 'brightness-0' : 'brightness-0 invert'}`}
                 priority
               />
-            </Link>
+            </NextLink>
 
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className={`text-sm font-medium tracking-wide transition-colors duration-200 hover:text-sunset-500 ${
-                    isSolid ? 'text-gray-700' : 'text-white/90'
-                  }`}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const cls = `text-sm font-medium tracking-wide transition-colors duration-200 hover:text-sunset-500 ${isSolid ? 'text-gray-700' : 'text-white/90'}`
+                return link.href.startsWith('/') ? (
+                  <NextLink key={link.label} href={link.href} className={cls}>
+                    {link.label}
+                  </NextLink>
+                ) : (
+                  <a key={link.label} href={link.href} className={cls}>
+                    {link.label}
+                  </a>
+                )
+              })}
             </nav>
 
             {/* CTA buttons */}
             <div className="hidden md:flex items-center gap-3">
               <LanguageSwitcher dark={!isSolid} />
-              <a
-                href="#owners"
+              <NextLink
+                href="/partners"
                 className="bg-sunset-500 hover:bg-sunset-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-200 hover:shadow-lg hover:shadow-sunset-500/25 active:scale-95"
               >
                 {t.nav.listProperty}
-              </a>
+              </NextLink>
             </div>
 
             {/* Mobile menu button */}
@@ -105,23 +106,25 @@ export default function Navbar({ solid }: { solid?: boolean } = {}) {
             className="fixed inset-x-0 top-20 z-40 bg-white border-b border-gray-100 shadow-xl md:hidden"
           >
             <nav className="max-w-7xl mx-auto px-4 py-6 flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="text-gray-700 font-medium py-2 border-b border-gray-50 hover:text-sunset-500 transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const cls = 'text-gray-700 font-medium py-2 border-b border-gray-50 hover:text-sunset-500 transition-colors'
+                return link.href.startsWith('/') ? (
+                  <NextLink key={link.label} href={link.href} onClick={() => setMobileOpen(false)} className={cls}>
+                    {link.label}
+                  </NextLink>
+                ) : (
+                  <a key={link.label} href={link.href} onClick={() => setMobileOpen(false)} className={cls}>
+                    {link.label}
+                  </a>
+                )
+              })}
               <LanguageSwitcher />
-              <a
-                href="#owners"
+              <NextLink
+                href="/partners"
                 className="mt-2 bg-sunset-500 text-white text-center font-semibold py-3 rounded-full"
               >
                 {t.nav.listProperty}
-              </a>
+              </NextLink>
             </nav>
           </m.div>
         )}

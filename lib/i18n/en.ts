@@ -4,8 +4,9 @@ export const en = {
     trips:        'Trips',
     activities:   'Activities',
     forOwners:    'For Owners',
+    forPartners:  'List Your Services',
     contact:      'Contact',
-    listProperty: 'List Your Property',
+    listProperty: 'List Your Services',
   },
   hero: {
     badge:      'Stays · Trips · Activities · Authentic Indonesia',

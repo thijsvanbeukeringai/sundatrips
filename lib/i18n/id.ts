@@ -6,8 +6,9 @@ export const id: Translations = {
     trips:        'Perjalanan',
     activities:   'Aktivitas',
     forOwners:    'Untuk Pemilik',
+    forPartners:  'Daftarkan Layanan',
     contact:      'Kontak',
-    listProperty: 'Daftarkan Properti',
+    listProperty: 'Daftarkan Layanan',
   },
   hero: {
     badge:      'Penginapan · Perjalanan · Aktivitas · Indonesia Asli',
