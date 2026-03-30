@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { headers } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
 interface PublicBookingInput {
   property_id:  string
@@ -59,5 +60,8 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
   })
 
   if (error) return { error: error.message }
+
+  revalidatePath(`/listings/${input.property_id}`)
+
   return { success: true }
 }

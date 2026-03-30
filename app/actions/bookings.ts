@@ -32,8 +32,10 @@ export async function createBooking(_prevState: unknown, formData: FormData) {
 
   if (error) return { error: error.message }
 
+  const propertyId = formData.get('property_id') as string
   revalidatePath('/dashboard/bookings')
   revalidatePath('/dashboard')
+  revalidatePath(`/listings/${propertyId}`)
   redirect('/dashboard/bookings')
 }
 
