@@ -268,41 +268,54 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
           )}
         </div>
 
-        {/* Pricing */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-          <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider">{t.form.pricing}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>{t.form.price} (€) *</label>
-              <input name="price_per_unit" type="number" required min="0" step="0.01" defaultValue={property?.price_per_unit} placeholder="48" className={inputClass} />
+        {/* Pricing — hidden for stays (price lives in room types) */}
+        {type === 'stay' ? (
+          <>
+            {/* Hidden defaults so DB NOT NULL constraint is satisfied */}
+            <input type="hidden" name="price_per_unit" value="0" />
+            <input type="hidden" name="price_unit" value="night" />
+            <div className="bg-jungle-50 border border-jungle-100 rounded-2xl p-4 flex items-start gap-3">
+              <span className="text-jungle-600 text-lg mt-0.5">💡</span>
+              <div>
+                <p className="text-sm font-semibold text-jungle-800">Pricing is set per room type</p>
+                <p className="text-xs text-jungle-600 mt-0.5">After saving, go to <strong>Room Types</strong> to add rooms (e.g. Standard Room, Deluxe Villa) each with their own nightly rate.</p>
+              </div>
             </div>
-            <div>
-              <label className={labelClass}>{t.form.per} *</label>
-              <select
-                name="price_unit"
-                required
-                defaultValue={property?.price_unit ?? (type === 'stay' ? 'night' : 'person')}
-                className={selectClass}
-              >
-                {type === 'stay' ? (
-                  <option value="night">{t.form.units.night}</option>
-                ) : type === 'transfer' ? (
-                  <>
-                    <option value="trip">{t.form.units.trip}</option>
-                    <option value="vehicle">{t.form.units.vehicle}</option>
-                    <option value="person">{t.form.units.person}</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="person">{t.form.units.person}</option>
-                    <option value="session">{t.form.units.session}</option>
-                    <option value="day">{t.form.units.day}</option>
-                  </>
-                )}
-              </select>
+          </>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+            <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider">{t.form.pricing}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>{t.form.price} (€) *</label>
+                <input name="price_per_unit" type="number" required min="0" step="0.01" defaultValue={property?.price_per_unit} placeholder="48" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>{t.form.per} *</label>
+                <select
+                  name="price_unit"
+                  required
+                  defaultValue={property?.price_unit ?? (type === 'transfer' ? 'trip' : 'person')}
+                  className={selectClass}
+                >
+                  {type === 'transfer' ? (
+                    <>
+                      <option value="trip">{t.form.units.trip}</option>
+                      <option value="vehicle">{t.form.units.vehicle}</option>
+                      <option value="person">{t.form.units.person}</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="person">{t.form.units.person}</option>
+                      <option value="session">{t.form.units.session}</option>
+                      <option value="day">{t.form.units.day}</option>
+                    </>
+                  )}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Details */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">

@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Plus, Trash2, Pencil, Check, X, Users, ArrowRight, Car, Phone } from 'lucide-react'
+import { Plus, Trash2, Pencil, Check, X, Users, ArrowRight, Car, Phone, Building2 } from 'lucide-react'
 import { addVariant, updateVariant, deleteVariant, toggleVariantActive } from '@/app/actions/variants'
 import type { ListingVariant, PropertyType } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
+import ImageUploader from './ImageUploader'
 
 // ─── Blank form state ─────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ function blankForm(type: PropertyType, priceUnit: string) {
     vehicle_type:   '',
     driver_name:    '',
     driver_phone:   '',
+    images:         [] as string[],
   }
 }
 
@@ -36,6 +38,7 @@ interface FormState {
   vehicle_type:  string
   driver_name:   string
   driver_phone:  string
+  images:        string[]
 }
 
 function VariantForm({
@@ -44,12 +47,14 @@ function VariantForm({
   onSave,
   onCancel,
   saving,
+  userId,
 }: {
   type:     PropertyType
   initial:  FormState
   onSave:   (data: FormState) => void
   onCancel: () => void
   saving:   boolean
+  userId:   string
 }) {
   const { t } = useI18n()
   const vm = t.variantManager
@@ -168,6 +173,16 @@ function VariantForm({
         />
       </div>
 
+      {/* Photos */}
+      <div>
+        <label className="text-xs font-semibold text-gray-600 mb-1 block">Photos</label>
+        <ImageUploader
+          userId={userId}
+          initialUrls={form.images}
+          onChange={imgs => setForm(f => ({ ...f, images: imgs }))}
+        />
+      </div>
+
       {/* Price + Unit + Capacity */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div>
@@ -253,6 +268,17 @@ function VariantCard({
     <div className={`flex items-start gap-3 p-4 rounded-xl border transition-colors ${
       variant.is_active ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'
     }`}>
+      {/* Thumbnail */}
+      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+        {variant.images?.[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={variant.images[0]} alt={variant.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <Building2 className="w-5 h-5" />
+          </div>
+        )}
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-semibold text-sm text-gray-900">{variant.name}</p>
@@ -329,10 +355,12 @@ export default function VariantManager({
   propertyId,
   propertyType,
   initialVariants,
+  userId,
 }: {
   propertyId:       string
   propertyType:     PropertyType
   initialVariants:  ListingVariant[]
+  userId:           string
 }) {
   const { t } = useI18n()
   const vt = t.variants
@@ -373,6 +401,7 @@ export default function VariantManager({
         driver_name:    form.driver_name,
         driver_phone:   form.driver_phone,
         amenities:      [],
+        images:         form.images,
       }
       await addVariant(propertyId, data)
       setVariants(v => [...v, {
@@ -404,6 +433,7 @@ export default function VariantManager({
         vehicle_type:   form.vehicle_type,
         driver_name:    form.driver_name,
         driver_phone:   form.driver_phone,
+        images:         form.images,
       }
       await updateVariant(id, propertyId, data)
       setVariants(v => v.map(x => x.id === id ? { ...x, ...data, vehicle_type: form.vehicle_type || null, driver_name: form.driver_name || null, driver_phone: form.driver_phone || null } : x))
@@ -451,6 +481,7 @@ export default function VariantManager({
             <VariantForm
               key={v.id}
               type={propertyType}
+              userId={userId}
               initial={{
                 name:          v.name,
                 description:   v.description  ?? '',
@@ -462,6 +493,7 @@ export default function VariantManager({
                 vehicle_type:  v.vehicle_type  ?? '',
                 driver_name:   v.driver_name   ?? '',
                 driver_phone:  v.driver_phone  ?? '',
+                images:        v.images ?? [],
               }}
               onSave={form => handleEdit(v.id, form)}
               onCancel={() => setEditId(null)}
@@ -484,6 +516,7 @@ export default function VariantManager({
       {showAdd && (
         <VariantForm
           type={propertyType}
+          userId={userId}
           initial={blankForm(propertyType, PRICE_UNITS[propertyType])}
           onSave={handleAdd}
           onCancel={() => setShowAdd(false)}

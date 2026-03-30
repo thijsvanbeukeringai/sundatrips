@@ -15,6 +15,7 @@ interface VariantData {
   driver_name:    string
   driver_phone:   string
   amenities:      string[]
+  images:         string[]
 }
 
 export async function addVariant(propertyId: string, data: VariantData) {
@@ -36,6 +37,7 @@ export async function addVariant(propertyId: string, data: VariantData) {
     driver_name:    data.driver_name || null,
     driver_phone:   data.driver_phone || null,
     amenities:      data.amenities,
+    images:         data.images ?? [],
   })
   if (error) throw error
   revalidatePath(`/dashboard/properties`)

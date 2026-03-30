@@ -2,13 +2,14 @@
 
 import { useFormState, useFormStatus } from 'react-dom'
 import { createBooking } from '@/app/actions/bookings'
-import type { Property } from '@/lib/types'
+import type { Property, ListingVariant } from '@/lib/types'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useI18n } from '@/lib/i18n'
 
 type PropertyOption = Pick<Property, 'id' | 'name' | 'type' | 'price_per_unit' | 'price_unit'>
+type VariantOption  = Pick<ListingVariant, 'id' | 'property_id' | 'name' | 'price_per_unit' | 'price_unit' | 'max_capacity'>
 
 const labelClass = 'block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5'
 const inputClass = 'w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-jungle-600 focus:ring-2 focus:ring-jungle-600/10 transition'
@@ -30,13 +31,30 @@ function SubmitButton() {
   )
 }
 
-export default function BookingForm({ properties }: { properties: PropertyOption[] }) {
+export default function BookingForm({
+  properties,
+  variants = [],
+}: {
+  properties: PropertyOption[]
+  variants?:  VariantOption[]
+}) {
   const { t } = useI18n()
   const bk = t.booking
   const [state, formAction]   = useFormState(createBooking, null)
   const [selectedId, setSelectedId] = useState(properties[0]?.id ?? '')
+  const [selectedVariantId, setSelectedVariantId] = useState<string>('')
 
   const selected = properties.find(p => p.id === selectedId)
+  const propertyVariants = variants.filter(v => v.property_id === selectedId)
+  const selectedVariant  = propertyVariants.find(v => v.id === selectedVariantId)
+
+  // Price: variant price if selected, else property base price
+  const basePrice = selectedVariant?.price_per_unit ?? selected?.price_per_unit ?? ''
+
+  function handlePropertyChange(id: string) {
+    setSelectedId(id)
+    setSelectedVariantId('') // reset room type when property changes
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -74,16 +92,39 @@ export default function BookingForm({ properties }: { properties: PropertyOption
               name="property_id"
               required
               value={selectedId}
-              onChange={e => setSelectedId(e.target.value)}
+              onChange={e => handlePropertyChange(e.target.value)}
               className={inputClass + ' bg-white'}
             >
               {properties.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name} — €{p.price_per_unit}/{p.price_unit}
-                </option>
+                <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
           </div>
+
+          {/* Room type / variant selector — shown if the property has variants */}
+          {propertyVariants.length > 0 && (
+            <div>
+              <label className={labelClass}>
+                {selected?.type === 'stay' ? 'Room Type' : selected?.type === 'trip' ? 'Package' : 'Option'}
+                {' '}*
+              </label>
+              <select
+                name="variant_id"
+                required
+                value={selectedVariantId}
+                onChange={e => setSelectedVariantId(e.target.value)}
+                className={inputClass + ' bg-white'}
+              >
+                <option value="" disabled>Select a room type…</option>
+                {propertyVariants.map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} — €{v.price_per_unit}/{v.price_unit}
+                    {v.max_capacity ? ` · max ${v.max_capacity}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Guest info */}
@@ -144,7 +185,8 @@ export default function BookingForm({ properties }: { properties: PropertyOption
                 required
                 min="0"
                 step="0.01"
-                defaultValue={selected?.price_per_unit ?? ''}
+                key={`${selectedId}-${selectedVariantId}`}
+              defaultValue={basePrice}
                 className={inputClass}
               />
               <p className="text-[11px] text-gray-400 mt-1">{bk.baseAmountHelper}</p>

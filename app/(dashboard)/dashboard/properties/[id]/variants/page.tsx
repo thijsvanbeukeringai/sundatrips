@@ -59,6 +59,7 @@ export default async function VariantsPage({ params }: { params: { id: string } 
           propertyId={p.id}
           propertyType={p.type}
           initialVariants={variantList}
+          userId={user.id}
         />
       </div>
 

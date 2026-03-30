@@ -199,6 +199,7 @@ export interface ListingVariant {
   driver_name:    string | null  // for transfers: chauffeur name
   driver_phone:   string | null  // for transfers: chauffeur contact number
   amenities:      string[]
+  images:         string[]
   is_active:      boolean
   sort_order:     number
   created_at:     string

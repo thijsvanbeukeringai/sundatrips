@@ -41,7 +41,6 @@ export default function Sidebar({ profile }: { profile: Profile }) {
     { href: '/dashboard',             icon: LayoutDashboard, label: t.dashboard.overview },
     { href: '/dashboard/bookings',    icon: CalendarDays,    label: t.dashboard.bookings },
     { href: '/dashboard/pos',         icon: ShoppingBag,     label: t.dashboard.pos,      badge: 'Live' },
-    { href: '/dashboard/venues',      icon: Landmark,        label: t.dashboard.venues },
     { href: '/dashboard/properties',  icon: Building2,       label: t.dashboard.listings },
     { href: '/dashboard/financials',  icon: BarChart3,       label: t.dashboard.financials },
     { href: '/dashboard/settings',    icon: Settings,        label: t.dashboard.settings },
