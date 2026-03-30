@@ -17,5 +17,5 @@ export function formatPriceRaw(eurAmount: number, lang: 'en' | 'id'): string {
     const idr = Math.round(eurAmount * EUR_TO_IDR)
     return `Rp ${idr.toLocaleString('id-ID')}`
   }
-  return `€${eurAmount}`
+  return `€${eurAmount.toLocaleString('en-EU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 }
