@@ -8,6 +8,7 @@ import {
 import PaymentMethodControl   from '@/components/dashboard/admin/PaymentMethodControl'
 import ListingTypeControl     from '@/components/dashboard/admin/ListingTypeControl'
 import StripeSettingsForm     from '@/components/dashboard/admin/StripeSettingsForm'
+import DeleteOwnerButton      from '@/components/dashboard/admin/DeleteOwnerButton'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -134,6 +135,13 @@ export default async function AdminOwnersPage() {
                   <p className="text-[10px] text-gray-400 uppercase tracking-wider">listing{listings.length !== 1 ? 's' : ''}</p>
                 </div>
               </div>
+
+              {/* ── Danger zone ───────────────────────────────────── */}
+              {!isYou && (
+                <div className="px-6 py-3 border-b border-gray-50 flex justify-end">
+                  <DeleteOwnerButton ownerId={owner.id} name={owner.full_name || owner.email} />
+                </div>
+              )}
 
               {/* ── Platform access ────────────────────────────────── */}
               <div className="px-6 py-4 border-b border-gray-50">
