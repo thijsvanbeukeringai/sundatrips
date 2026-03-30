@@ -42,26 +42,42 @@ export async function removePOSItem(itemId: string, bookingId: string) {
   return { success: true }
 }
 
-const EUR_TO_IDR = 17_000
-
-function parsePrice(raw: string, lang: string): number {
-  const value = parseFloat(raw)
-  return lang === 'id' ? value / EUR_TO_IDR : value
-}
-
 export async function createCatalogItem(_prevState: unknown, formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const lang = (formData.get('lang') as string) || 'en'
-
   const { error } = await supabase.from('pos_catalog').insert({
     owner_id:      user.id,
     name:          formData.get('name') as string,
     category:      formData.get('category') as string,
-    default_price: parsePrice(formData.get('default_price') as string, lang),
+    default_price: parseFloat(formData.get('default_price') as string),
     emoji:         (formData.get('emoji') as string) || '🛍️',
+    is_active:     true,
+  })
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/pos')
+  return { success: true }
+}
+
+// Used by the controlled form which converts currency client-side before calling this
+export async function createCatalogItemDirect(data: {
+  name:          string
+  category:      string
+  emoji:         string
+  default_price: number   // always EUR
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase.from('pos_catalog').insert({
+    owner_id:      user.id,
+    name:          data.name,
+    category:      data.category,
+    default_price: data.default_price,
+    emoji:         data.emoji || '🛍️',
     is_active:     true,
   })
 
