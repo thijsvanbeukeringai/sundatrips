@@ -203,7 +203,7 @@ export default function ActivityDatePicker({ blocks, slots, durationHours, maxCa
           {pickedSlot && (
             <button
               type="button"
-              onClick={() => onBook?.(selectedDate!)}
+              onClick={() => onBook?.(selected!)}
               className="block w-full bg-jungle-800 hover:bg-jungle-900 text-white font-semibold py-3.5 rounded-xl text-center transition-colors"
             >
               {t.listing.requestSlot}
