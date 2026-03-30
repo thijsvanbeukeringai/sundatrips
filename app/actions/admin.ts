@@ -61,6 +61,48 @@ export async function setOwnerPaymentMethods(
   revalidatePath('/dashboard/admin/owners')
 }
 
+export async function sendPasswordReset(userId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return { error: 'Forbidden' }
+
+  const admin = createAdminClient()
+  // Get the target user's email
+  const { data: targetUser, error: fetchError } = await admin.auth.admin.getUserById(userId)
+  if (fetchError || !targetUser.user.email) return { error: 'User not found' }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(targetUser.user.email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard/settings`,
+  })
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: { full_name: string; role: 'owner' | 'admin' }
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+  if (userId === user.id) return { error: 'Cannot edit your own account here' }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return { error: 'Forbidden' }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ full_name: data.full_name, role: data.role })
+    .eq('id', userId)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
 export async function deleteOwner(ownerId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

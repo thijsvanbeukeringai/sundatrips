@@ -139,7 +139,7 @@ export default async function AdminPage() {
               <h2 className="font-semibold text-gray-700">Listing Owners ({allUsers.length})</h2>
               <div className="flex items-center gap-3">
                 <Link
-                  href="/dashboard/admin/owners"
+                  href="/admin/users"
                   className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
                 >
                   Manage →

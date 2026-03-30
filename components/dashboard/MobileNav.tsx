@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Menu, X, LayoutDashboard, CalendarDays, ShoppingBag, Building2,
-  BarChart3, Settings, LogOut, UserPlus, ChevronRight, Landmark,
+  BarChart3, Settings, LogOut, UserPlus, ChevronRight, Landmark, Users,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
@@ -93,10 +93,10 @@ export default function MobileNav({ profile }: { profile: Profile }) {
             <>
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-3 pt-4 pb-1">{t.dashboard.admin}</p>
               {[
-                { href: '/admin/invite',           icon: UserPlus,  label: t.dashboard.inviteOwner },
-                { href: '/admin/companies',        icon: Landmark,  label: 'Companies' },
-                { href: '/admin',                  icon: BarChart3, label: t.dashboard.adminOverview },
-                { href: '/dashboard/admin/owners', icon: UserPlus,  label: t.dashboard.ownerSettings },
+                { href: '/admin/users',     icon: Users,     label: 'Users' },
+                { href: '/admin/companies', icon: Landmark,  label: 'Companies' },
+                { href: '/admin/invite',    icon: UserPlus,  label: t.dashboard.inviteOwner },
+                { href: '/admin',           icon: BarChart3, label: t.dashboard.adminOverview },
               ].map(({ href, icon: Icon, label }) => (
                 <Link
                   key={href}
