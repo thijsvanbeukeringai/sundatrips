@@ -12,7 +12,13 @@ export default function DeletePropertyButton({ id, name, onDeleted }: { id: stri
   function handleDelete() {
     if (!confirm(t.properties.deleteConfirm.replace('$name', name))) return
     onDeleted?.(id) // remove immediately from UI
-    startTransition(() => { void deleteProperty(id) })
+    startTransition(async () => {
+      const result = await deleteProperty(id)
+      if (result?.error) {
+        alert(`Could not delete: ${result.error}`)
+        window.location.reload()
+      }
+    })
   }
 
   return (
