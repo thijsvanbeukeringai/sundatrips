@@ -116,6 +116,21 @@ export default function BookingPOSPanel({
   const billTotal  = posItems.reduce((s, i) => s + i.total_price, 0)
 
   function handleAdd(item: POSCatalogItem) {
+    // Optimistic: show instantly, real-time INSERT will replace with DB record
+    const tempId = `temp-${Date.now()}`
+    setPosItems(prev => [...prev, {
+      id:          tempId,
+      booking_id:  bookingId,
+      owner_id:    '',
+      catalog_id:  item.id,
+      name:        item.name,
+      category:    item.category,
+      unit_price:  item.default_price,
+      quantity:    1,
+      total_price: item.default_price,
+      notes:       null,
+      created_at:  new Date().toISOString(),
+    }])
     startTransition(() => {
       void addPOSItem(bookingId, {
         name:       item.name,

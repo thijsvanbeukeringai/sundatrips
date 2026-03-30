@@ -92,6 +92,21 @@ export default function POSTerminal({
 
   function handleAdd(item: POSCatalogItem) {
     if (!selectedBookingId) return
+    // Optimistic: show instantly, real-time will replace with DB record
+    const tempId = `temp-${Date.now()}`
+    setPosItems(prev => [...prev, {
+      id:         tempId,
+      booking_id: selectedBookingId,
+      owner_id:   '',
+      catalog_id: item.id,
+      name:       item.name,
+      category:   item.category,
+      unit_price: item.default_price,
+      quantity:   1,
+      total_price: item.default_price,
+      notes:      null,
+      created_at: new Date().toISOString(),
+    }])
     startTransition(() => { void addPOSItem(selectedBookingId, {
       name:       item.name,
       category:   item.category,
