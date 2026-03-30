@@ -298,7 +298,7 @@ export default function POSTerminal({
           </div>
           <div className="flex justify-between text-xs text-gray-400">
             <span>{pos.yourPayout}</span>
-            <span>{formatPriceRaw(((selectedBooking?.base_amount ?? 0) + tabTotal) * 0.99, lang)}</span>
+            <span>{formatPriceRaw((selectedBooking?.base_amount ?? 0) * 0.99 + tabTotal, lang)}</span>
           </div>
         </div>
       </div>

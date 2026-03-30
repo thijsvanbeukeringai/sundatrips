@@ -127,7 +127,7 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
               <span className="font-bold text-gray-900">{formatPriceRaw(b.total_amount, lang)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-50">
-              <span className="text-gray-400">{bd.platformFee}</span>
+              <span className="text-gray-400">{bd.platformFee} <span className="text-[11px]">(room only)</span></span>
               <span className="text-gray-400">−{formatPriceRaw(b.platform_fee, lang)}</span>
             </div>
             <div className="flex justify-between py-2 bg-jungle-50 px-3 rounded-xl">
