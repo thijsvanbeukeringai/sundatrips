@@ -169,7 +169,7 @@ export async function startImpersonation(targetUserId: string): Promise<{ url?: 
   const { data, error } = await adminClient.auth.admin.generateLink({
     type:  'magiclink',
     email: targetUser.email,
-    options: { redirectTo: `${appUrl}/auth/callback?next=/dashboard` },
+    options: { redirectTo: `${appUrl}/auth/callback?next=/dashboard&impersonate=1` },
   })
 
   if (error || !data.properties?.action_link) return { error: error?.message ?? 'Failed to generate link' }

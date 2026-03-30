@@ -17,20 +17,22 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     // Supabase automatically exchanges the hash tokens for a session.
     // We just need to wait for the auth state to settle, then redirect.
+    const params = new URLSearchParams(window.location.search)
+    const next        = params.get('next') ?? '/dashboard'
+    const impersonate = params.get('impersonate') === '1'
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // Check if this is a new invited user who hasn't onboarded yet
-        const isInvite = !!session.user.app_metadata?.invited_at
-        const onboarded = !!session.user.user_metadata?.onboarded
-
-        if (isInvite && !onboarded) {
-          router.replace('/onboarding')
-        } else {
-          // Read ?next= param if present
-          const params = new URLSearchParams(window.location.search)
-          const next = params.get('next') ?? '/dashboard'
-          router.replace(next)
+        if (!impersonate) {
+          // Check if this is a new invited user who hasn't onboarded yet
+          const isInvite  = !!session.user.app_metadata?.invited_at
+          const onboarded = !!session.user.user_metadata?.onboarded
+          if (isInvite && !onboarded) {
+            router.replace('/onboarding')
+            return
+          }
         }
+        router.replace(next)
       }
     })
 
