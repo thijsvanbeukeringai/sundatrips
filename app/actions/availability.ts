@@ -31,6 +31,8 @@ export async function getAvailableVariantIds(
 
   const variantIds = capacityFiltered.map(v => v.id)
 
+  // A booking overlaps if: check_in < searchCheckOut AND (check_out > searchCheckIn OR check_out IS NULL)
+  // NULL check_out means single-day booking — block if check_in falls within the search range
   const { data: conflicts } = await supabase
     .from('bookings')
     .select('variant_id')
@@ -38,7 +40,7 @@ export async function getAvailableVariantIds(
     .in('variant_id', variantIds)
     .in('status', ['pending', 'confirmed', 'checked_in'])
     .lt('check_in', checkOut)
-    .gt('check_out', checkIn)
+    .or(`check_out.gt.${checkIn},check_out.is.null`)
 
   const conflictIds = new Set((conflicts ?? []).map((b: { variant_id: string }) => b.variant_id))
 
