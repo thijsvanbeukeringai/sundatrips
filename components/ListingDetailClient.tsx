@@ -7,7 +7,7 @@ import type { Property, AvailabilityBlock, TimeSlot, ListingVariant, SlotAvailab
 import { groupAmenities } from '@/lib/amenities'
 import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
-import { getAvailableVariantIds } from '@/app/actions/availability'
+import { getAvailableVariants } from '@/app/actions/availability'
 import PublicAvailabilityCalendar from '@/components/PublicAvailabilityCalendar'
 import ActivityDatePicker from '@/components/ActivityDatePicker'
 import ListingVariants from '@/components/ListingVariants'
@@ -44,26 +44,22 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
   const [triggerDate,      setTriggerDate]      = useState<string | null>(null)
 
   // Stay search state
-  const [searchCheckIn,  setSearchCheckIn]  = useState('')
-  const [searchCheckOut, setSearchCheckOut] = useState('')
-  const [searchGuests,   setSearchGuests]   = useState(2)
-  const [availableIds,   setAvailableIds]   = useState<string[] | null>(null)
-  const [searching,      startSearch]       = useTransition()
-
-  const displayedVariants = availableIds !== null
-    ? variants.filter(v => availableIds.includes(v.id))
-    : variants
+  const [searchCheckIn,    setSearchCheckIn]    = useState('')
+  const [searchCheckOut,   setSearchCheckOut]   = useState('')
+  const [searchGuests,     setSearchGuests]     = useState(2)
+  const [searchVariants,   setSearchVariants]   = useState<ListingVariant[] | null>(null)
+  const [searching,        startSearch]         = useTransition()
 
   function handleSearch() {
     if (!searchCheckIn || !searchCheckOut) return
     startSearch(async () => {
-      const ids = await getAvailableVariantIds(p.id, searchCheckIn, searchCheckOut, searchGuests)
-      setAvailableIds(ids)
+      const results = await getAvailableVariants(p.id, searchCheckIn, searchCheckOut, searchGuests)
+      setSearchVariants(results)
     })
   }
 
   function clearSearch() {
-    setAvailableIds(null)
+    setSearchVariants(null)
     setSearchCheckIn('')
     setSearchCheckOut('')
     setSearchGuests(2)
@@ -223,7 +219,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                           type="date"
                           value={searchCheckIn}
                           min={new Date().toISOString().split('T')[0]}
-                          onChange={e => { setSearchCheckIn(e.target.value); setAvailableIds(null) }}
+                          onChange={e => { setSearchCheckIn(e.target.value); setSearchVariants(null) }}
                           className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-jungle-600 focus:ring-2 focus:ring-jungle-600/10 transition"
                         />
                       </div>
@@ -233,7 +229,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                           type="date"
                           value={searchCheckOut}
                           min={searchCheckIn || new Date().toISOString().split('T')[0]}
-                          onChange={e => { setSearchCheckOut(e.target.value); setAvailableIds(null) }}
+                          onChange={e => { setSearchCheckOut(e.target.value); setSearchVariants(null) }}
                           className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-jungle-600 focus:ring-2 focus:ring-jungle-600/10 transition"
                         />
                       </div>
@@ -243,7 +239,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                           type="number"
                           min="1"
                           value={searchGuests}
-                          onChange={e => { setSearchGuests(parseInt(e.target.value) || 1); setAvailableIds(null) }}
+                          onChange={e => { setSearchGuests(parseInt(e.target.value) || 1); setSearchVariants(null) }}
                           className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-jungle-600 focus:ring-2 focus:ring-jungle-600/10 transition"
                         />
                       </div>
@@ -259,7 +255,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                             : <Search className="w-4 h-4" />}
                           Search
                         </button>
-                        {availableIds !== null && (
+                        {searchVariants !== null && (
                           <button
                             type="button"
                             onClick={clearSearch}
@@ -271,19 +267,19 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                       </div>
                     </div>
 
-                    {availableIds !== null && (
-                      <p className={`mt-3 text-sm font-medium ${availableIds.length === 0 ? 'text-red-600' : 'text-jungle-700'}`}>
-                        {availableIds.length === 0
+                    {searchVariants !== null && (
+                      <p className={`mt-3 text-sm font-medium ${searchVariants.length === 0 ? 'text-red-600' : 'text-jungle-700'}`}>
+                        {searchVariants.length === 0
                           ? 'No rooms available for these dates. Try different dates or guest count.'
-                          : `${availableIds.length} room type${availableIds.length > 1 ? 's' : ''} available`}
+                          : `${searchVariants.length} room type${searchVariants.length > 1 ? 's' : ''} available`}
                       </p>
                     )}
                   </div>
 
                   {/* Show filtered room types inline after search */}
-                  {availableIds !== null && displayedVariants.length > 0 && (
+                  {searchVariants !== null && searchVariants.length > 0 && (
                     <div className="mt-4">
-                      <ListingVariants variants={displayedVariants} propertyType={p.type} onBook={id => openBooking({ variantId: id })} />
+                      <ListingVariants variants={searchVariants} propertyType={p.type} onBook={id => openBooking({ variantId: id })} />
                     </div>
                   )}
                 </div>
@@ -291,7 +287,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
             )}
 
             {/* Variants — shown when no search active */}
-            {availableIds === null && variants.length > 0 && (
+            {searchVariants === null && variants.length > 0 && (
               <>
                 <hr className="border-gray-100" />
                 <ListingVariants variants={variants} propertyType={p.type} onBook={id => openBooking({ variantId: id })} />
