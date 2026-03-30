@@ -28,6 +28,7 @@ export const en = {
       stays:      ['🏖️ Beachfront', '🌿 Jungle Retreat', '🌅 Ocean View', '🏄 Surf Stay', '🕌 Rice Field'],
       trips:      ['🏔️ Rinjani Trek', '🚤 Island Hopping', '🍃 Cultural Tour', '🌋 Volcano Hike', '🐠 Dive Safari'],
       activities: ['🏄 Surf Lessons', '🤿 Snorkeling', '🛵 Scooter Tour', '🧘 Yoga Class', '🍳 Cooking Class'],
+      transfers:  ['🚗 Airport Transfer', '🏖️ Beach to Beach', '🏔️ Mountain Route', '🚢 Port Transfer', '🌴 Island Hop'],
     },
     stats: {
       guesthouses: 'Local Guesthouses',

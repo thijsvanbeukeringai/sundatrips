@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { m } from 'framer-motion'
-import { Search, MapPin, Calendar, Users, ChevronDown, BedDouble, Compass, Bike } from 'lucide-react'
+import { Search, MapPin, Calendar, Users, ChevronDown, BedDouble, Compass, Bike, Car } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/lib/i18n'
 
@@ -17,7 +17,7 @@ const fadeUp = {
 }
 
 const DESTINATIONS = ['Lombok', 'Bali', 'Gili Islands', 'Senggigi', 'Ubud', 'Seminyak', 'Kuta Lombok', 'Rinjani']
-type SearchType = 'stays' | 'trips' | 'activities'
+type SearchType = 'stays' | 'trips' | 'activities' | 'transfers'
 
 function formatDate(iso: string): string {
   if (!iso) return ''
@@ -42,6 +42,7 @@ export default function Hero() {
     { id: 'stays'      as const, label: t.featured.stays,      icon: BedDouble },
     { id: 'trips'      as const, label: t.featured.trips,      icon: Compass },
     { id: 'activities' as const, label: t.featured.activities, icon: Bike },
+    { id: 'transfers'  as const, label: t.featured.transfers,  icon: Car },
   ]
 
   const quickTags = t.hero.quickTags[searchType]

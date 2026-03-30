@@ -30,6 +30,7 @@ export const id: Translations = {
       stays:      ['🏖️ Tepi Pantai', '🌿 Retreat Hutan', '🌅 Pemandangan Laut', '🏄 Surfing', '🕌 Sawah'],
       trips:      ['🏔️ Pendakian Rinjani', '🚤 Island Hopping', '🍃 Wisata Budaya', '🌋 Pendakian Gunung', '🐠 Safari Selam'],
       activities: ['🏄 Les Surfing', '🤿 Snorkeling', '🛵 Tur Skuter', '🧘 Kelas Yoga', '🍳 Kelas Memasak'],
+      transfers:  ['🚗 Transfer Bandara', '🏖️ Pantai ke Pantai', '🏔️ Rute Pegunungan', '🚢 Transfer Pelabuhan', '🌴 Island Hop'],
     },
     stats: {
       guesthouses: 'Penginapan Lokal',
