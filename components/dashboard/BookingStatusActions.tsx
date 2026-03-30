@@ -36,7 +36,7 @@ export default function BookingStatusActions({
         <button
           key={next}
           disabled={pending}
-          onClick={() => startTransition(() => updateBookingStatus(bookingId, next))}
+          onClick={() => startTransition(() => { void updateBookingStatus(bookingId, next) })}
           className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all disabled:opacity-50 ${color}`}
         >
           {icon}

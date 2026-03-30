@@ -21,7 +21,7 @@ export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
         <button
           disabled={pending}
           title={item.is_active ? 'Deactivate' : 'Activate'}
-          onClick={() => startTransition(() => toggleCatalogItem(item.id, !item.is_active))}
+          onClick={() => startTransition(() => { void toggleCatalogItem(item.id, !item.is_active) })}
           className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors disabled:opacity-40 ${
             item.is_active ? 'text-jungle-600 hover:bg-jungle-50' : 'text-gray-300 hover:bg-gray-100'
           }`}
@@ -33,7 +33,7 @@ export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
           title="Delete"
           onClick={() => {
             if (!confirm(`Delete "${item.name}"?`)) return
-            startTransition(() => deleteCatalogItem(item.id))
+            startTransition(() => { void deleteCatalogItem(item.id) })
           }}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors disabled:opacity-40"
         >

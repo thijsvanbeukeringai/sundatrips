@@ -36,13 +36,13 @@ export default function StripeSettingsForm({
   function toggleOnboarding() {
     const next = !onboarded
     setOnboarded(next)
-    startTransition(() => updateOwnerStripe(ownerId, { stripe_onboarding_done: next }))
+    startTransition(() => { void updateOwnerStripe(ownerId, { stripe_onboarding_done: next }) })
   }
 
   function toggleCharges() {
     const next = !charges
     setCharges(next)
-    startTransition(() => updateOwnerStripe(ownerId, { stripe_charges_enabled: next }))
+    startTransition(() => { void updateOwnerStripe(ownerId, { stripe_charges_enabled: next }) })
   }
 
   return (

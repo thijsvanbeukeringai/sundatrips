@@ -12,7 +12,7 @@ export default function ToggleActiveButton({ id, isActive }: { id: string; isAct
     <button
       title={isActive ? t.properties.deactivateTitle : t.properties.activateTitle}
       disabled={pending}
-      onClick={() => startTransition(() => togglePropertyActive(id, !isActive))}
+      onClick={() => startTransition(() => { void togglePropertyActive(id, !isActive) })}
       className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 disabled:opacity-40 ${
         isActive
           ? 'bg-jungle-600 text-white hover:bg-jungle-700'

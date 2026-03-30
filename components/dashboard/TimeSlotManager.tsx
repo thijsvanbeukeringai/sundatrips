@@ -52,7 +52,7 @@ export default function TimeSlotManager({ propertyId, slots, durationHours }: Pr
     const next = slot.days_of_week.includes(iso)
       ? slot.days_of_week.filter(d => d !== iso)
       : [...slot.days_of_week, iso].sort()
-    startTransition(() => updateTimeSlotDays(slot.id, propertyId, next))
+    startTransition(() => { void updateTimeSlotDays(slot.id, propertyId, next) })
   }
 
   return (
@@ -137,7 +137,7 @@ export default function TimeSlotManager({ propertyId, slots, durationHours }: Pr
                   <td className="px-5 py-3">
                     <button
                       disabled={pending}
-                      onClick={() => startTransition(() => toggleTimeSlot(slot.id, propertyId, !slot.is_active))}
+                      onClick={() => startTransition(() => { void toggleTimeSlot(slot.id, propertyId, !slot.is_active) })}
                       className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-colors disabled:opacity-40
                         ${slot.is_active
                           ? 'bg-jungle-600 text-white hover:bg-jungle-700'
@@ -152,7 +152,7 @@ export default function TimeSlotManager({ propertyId, slots, durationHours }: Pr
                   <td className="pr-3 py-3">
                     <button
                       disabled={pending}
-                      onClick={() => startTransition(() => removeTimeSlot(slot.id, propertyId))}
+                      onClick={() => startTransition(() => { void removeTimeSlot(slot.id, propertyId) })}
                       className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors disabled:opacity-40"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

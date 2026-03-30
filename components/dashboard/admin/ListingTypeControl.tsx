@@ -25,7 +25,7 @@ export default function ListingTypeControl({
       : [...current, type]
     // Always keep at least 1 type
     if (next.length === 0) return
-    startTransition(() => setOwnerAllowedTypes(ownerId, next))
+    startTransition(() => { void setOwnerAllowedTypes(ownerId, next) })
   }
 
   return (

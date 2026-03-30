@@ -115,7 +115,7 @@ export default function AvailabilityCalendar({ property, bookings, blocks, slots
 
   function handleSetSpots(spots: number) {
     if (!selected) return
-    startTransition(() => setAvailability(property.id, selected, { available_spots: spots }))
+    startTransition(() => { void setAvailability(property.id, selected, { available_spots: spots }) })
   }
 
   // Available spots for a date
@@ -275,11 +275,11 @@ export default function AvailabilityCalendar({ property, bookings, blocks, slots
                             onClick={() => {
                               const isDefault = n === property.max_capacity && !slotAvailMap.has(key)
                               if (isDefault) return
-                              startTransition(() =>
+                              startTransition(() => { void (
                                 n === property.max_capacity && slotAvailMap.has(key)
                                   ? clearSlotAvailability(property.id, slot.id, selected)
                                   : setSlotAvailability(property.id, slot.id, selected, n)
-                              )
+                              ) })
                             }}
                             className={`w-8 h-8 rounded-lg text-xs font-bold transition-all disabled:opacity-50
                               ${current === n ? 'bg-jungle-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}

@@ -81,20 +81,18 @@ export default function POSTerminal({
 
   function handleAdd(item: POSCatalogItem) {
     if (!selectedBookingId) return
-    startTransition(() =>
-      addPOSItem(selectedBookingId, {
-        name:       item.name,
-        category:   item.category,
-        unit_price: item.default_price,
-        quantity:   1,
-        catalog_id: item.id,
-      })
-    )
+    startTransition(() => { void addPOSItem(selectedBookingId, {
+      name:       item.name,
+      category:   item.category,
+      unit_price: item.default_price,
+      quantity:   1,
+      catalog_id: item.id,
+    }) })
   }
 
   function handleRemove(itemId: string) {
     if (!selectedBookingId) return
-    startTransition(() => removePOSItem(itemId, selectedBookingId))
+    startTransition(() => { void removePOSItem(itemId, selectedBookingId) })
   }
 
   const CATEGORIES = CATEGORY_IDS.map(id => ({

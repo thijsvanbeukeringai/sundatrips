@@ -295,7 +295,7 @@ function VariantCard({
 
       <div className="flex items-center gap-1 flex-shrink-0">
         <button
-          onClick={() => startTransition(() => onToggle())}
+          onClick={() => startTransition(() => { void onToggle() })}
           disabled={pending}
           className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
             variant.is_active ? 'bg-jungle-600' : 'bg-gray-300'
@@ -312,7 +312,7 @@ function VariantCard({
           <Pencil className="w-3.5 h-3.5" />
         </button>
         <button
-          onClick={() => startTransition(() => onDelete())}
+          onClick={() => startTransition(() => { void onDelete() })}
           disabled={pending}
           className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
         >

@@ -11,7 +11,7 @@ export default function DeletePropertyButton({ id, name }: { id: string; name: s
 
   function handleDelete() {
     if (!confirm(t.properties.deleteConfirm.replace('$name', name))) return
-    startTransition(() => deleteProperty(id))
+    startTransition(() => { void deleteProperty(id) })
   }
 
   return (

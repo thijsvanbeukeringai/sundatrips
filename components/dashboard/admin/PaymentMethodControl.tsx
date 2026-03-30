@@ -28,7 +28,7 @@ export default function PaymentMethodControl({
           title={opt.description}
           onClick={() => {
             if (opt.value === current) return
-            startTransition(() => setOwnerPaymentMethods(ownerId, opt.value))
+            startTransition(() => { void setOwnerPaymentMethods(ownerId, opt.value) })
           }}
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 ${
             current === opt.value
