@@ -1,5 +1,4 @@
 {
-  "regions": ["sin1", "cdg1"],
   "headers": [
     {
       "source": "/(.*)",
