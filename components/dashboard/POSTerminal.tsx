@@ -252,44 +252,47 @@ export default function POSTerminal({
 
         {/* Items list */}
         <div className="flex-1 overflow-y-auto">
-          {posItems.length === 0 ? (
-            <div className="py-12 text-center text-gray-300">
-              <ShoppingBag className="w-8 h-8 mx-auto mb-2" />
-              <p className="text-xs">{pos.tabEmpty}</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {posItems.map(item => (
-                <div key={item.id} className="px-5 py-3 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
-                    <p className="text-xs text-gray-400">×{item.quantity} · {formatPriceRaw(item.unit_price, lang)}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-800 flex-shrink-0">{formatPriceRaw(item.total_price, lang)}</p>
-                  <button
-                    onClick={() => handleRemove(item.id)}
-                    disabled={pending}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+          <div className="divide-y divide-gray-50">
+            {/* Room rate — always shown as first line */}
+            {selectedBooking && (
+              <div className="px-5 py-3 flex items-center gap-3 bg-gray-50/60">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-700">{pos.baseBooking}</p>
+                  <p className="text-xs text-gray-400">{selectedBooking.property?.name}</p>
                 </div>
-              ))}
-            </div>
-          )}
+                <p className="text-sm font-semibold text-gray-800 flex-shrink-0">{formatPriceRaw(selectedBooking.base_amount, lang)}</p>
+                <div className="w-6 flex-shrink-0" />
+              </div>
+            )}
+
+            {/* POS extras */}
+            {posItems.length === 0 && (
+              <div className="py-8 text-center text-gray-300">
+                <p className="text-xs">{pos.tabEmpty}</p>
+              </div>
+            )}
+            {posItems.map(item => (
+              <div key={item.id} className="px-5 py-3 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
+                  <p className="text-xs text-gray-400">×{item.quantity} · {formatPriceRaw(item.unit_price, lang)}</p>
+                </div>
+                <p className="text-sm font-semibold text-gray-800 flex-shrink-0">{formatPriceRaw(item.total_price, lang)}</p>
+                <button
+                  onClick={() => handleRemove(item.id)}
+                  disabled={pending}
+                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Total */}
         <div className="border-t border-gray-100 p-5 space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">{pos.baseBooking}</span>
-            <span className="font-medium text-gray-700">{formatPriceRaw(selectedBooking?.base_amount ?? 0, lang)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">{pos.posExtras}</span>
-            <span className="font-medium text-gray-700">{formatPriceRaw(tabTotal, lang)}</span>
-          </div>
-          <div className="flex justify-between font-bold border-t border-gray-100 pt-3">
+          <div className="flex justify-between font-bold">
             <span className="text-gray-800">{pos.total}</span>
             <span className="text-jungle-800 font-display text-lg">{formatPriceRaw((selectedBooking?.base_amount ?? 0) + tabTotal, lang)}</span>
           </div>
