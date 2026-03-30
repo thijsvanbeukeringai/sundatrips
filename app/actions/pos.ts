@@ -42,19 +42,47 @@ export async function removePOSItem(itemId: string, bookingId: string) {
   return { success: true }
 }
 
+const EUR_TO_IDR = 17_000
+
+function parsePrice(raw: string, lang: string): number {
+  const value = parseFloat(raw)
+  return lang === 'id' ? value / EUR_TO_IDR : value
+}
+
 export async function createCatalogItem(_prevState: unknown, formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
+  const lang = (formData.get('lang') as string) || 'en'
+
   const { error } = await supabase.from('pos_catalog').insert({
     owner_id:      user.id,
     name:          formData.get('name') as string,
     category:      formData.get('category') as string,
-    default_price: parseFloat(formData.get('default_price') as string),
+    default_price: parsePrice(formData.get('default_price') as string, lang),
     emoji:         (formData.get('emoji') as string) || '🛍️',
     is_active:     true,
   })
+
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard/pos')
+  return { success: true }
+}
+
+export async function updateCatalogItem(
+  id: string,
+  data: { name: string; category: string; default_price: number; emoji: string },
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('pos_catalog')
+    .update(data)
+    .eq('id', id)
+    .eq('owner_id', user.id)
 
   if (error) return { error: error.message }
   revalidatePath('/dashboard/pos')

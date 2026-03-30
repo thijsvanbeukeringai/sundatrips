@@ -62,9 +62,18 @@ export default function AddCatalogItemForm() {
 
         <div className="relative w-28">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{lang === 'id' ? 'Rp' : '€'}</span>
-          <input name="default_price" type="number" required min="0" step="0.01" placeholder="4.50" className={inputClass + ' pl-7'} />
+          <input
+            name="default_price"
+            type="number"
+            required
+            min="0"
+            step={lang === 'id' ? '500' : '0.01'}
+            placeholder={lang === 'id' ? '25000' : '4.50'}
+            className={inputClass + ' pl-7'}
+          />
         </div>
 
+        <input type="hidden" name="lang" value={lang} />
         <SubmitBtn />
       </form>
     </div>
