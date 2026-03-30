@@ -5,12 +5,13 @@ import { deleteProperty } from '@/app/actions/properties'
 import { Trash2 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 
-export default function DeletePropertyButton({ id, name }: { id: string; name: string }) {
+export default function DeletePropertyButton({ id, name, onDeleted }: { id: string; name: string; onDeleted?: (id: string) => void }) {
   const [pending, startTransition] = useTransition()
   const { t } = useI18n()
 
   function handleDelete() {
     if (!confirm(t.properties.deleteConfirm.replace('$name', name))) return
+    onDeleted?.(id) // remove immediately from UI
     startTransition(() => { void deleteProperty(id) })
   }
 

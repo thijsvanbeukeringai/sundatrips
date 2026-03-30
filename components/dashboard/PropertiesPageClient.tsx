@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, Building2, MapPin, Pencil, Bed, Compass, Activity, CalendarDays, LayoutList, Car } from 'lucide-react'
 import type { Property } from '@/lib/types'
@@ -22,9 +23,14 @@ const TYPE_COLORS: Record<string, string> = {
   transfer: 'bg-gray-100 text-gray-700',
 }
 
-export default function PropertiesPageClient({ properties }: { properties: Property[] }) {
+export default function PropertiesPageClient({ properties: initial }: { properties: Property[] }) {
   const { t, lang } = useI18n()
   const pr = t.properties
+  const [properties, setProperties] = useState(initial)
+
+  function handleDeleted(id: string) {
+    setProperties(prev => prev.filter(p => p.id !== id))
+  }
 
   const active     = properties.filter(p => p.is_active).length
   const stays      = properties.filter(p => p.type === 'stay').length
@@ -169,7 +175,7 @@ export default function PropertiesPageClient({ properties }: { properties: Prope
                   <Pencil className="w-3.5 h-3.5" />
                   {pr.edit}
                 </Link>
-                <DeletePropertyButton id={p.id} name={p.name} />
+                <DeletePropertyButton id={p.id} name={p.name} onDeleted={handleDeleted} />
               </div>
 
             </div>
