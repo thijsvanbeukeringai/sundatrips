@@ -10,11 +10,13 @@ export async function createBooking(_prevState: unknown, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const checkOut = formData.get('check_out') as string
+  const checkOut   = formData.get('check_out') as string
+  const variantId  = formData.get('variant_id') as string
 
   const { error } = await supabase.from('bookings').insert({
     owner_id:          user.id,
     property_id:       formData.get('property_id') as string,
+    variant_id:        variantId || null,
     guest_name:        formData.get('guest_name') as string,
     guest_email:       formData.get('guest_email') as string,
     guest_phone:       (formData.get('guest_phone') as string) || null,
