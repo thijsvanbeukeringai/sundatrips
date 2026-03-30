@@ -32,6 +32,10 @@ export default function PropertiesPageClient({ properties: initial }: { properti
     setProperties(prev => prev.filter(p => p.id !== id))
   }
 
+  function handleToggled(id: string, next: boolean) {
+    setProperties(prev => prev.map(p => p.id === id ? { ...p, is_active: next } : p))
+  }
+
   const active     = properties.filter(p => p.is_active).length
   const stays      = properties.filter(p => p.type === 'stay').length
   const trips      = properties.filter(p => p.type === 'trip').length
@@ -148,7 +152,7 @@ export default function PropertiesPageClient({ properties: initial }: { properti
                     <p className="font-display font-bold text-lg text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</p>
                     <p className="text-xs text-gray-400">{pr.perUnit} {p.price_unit}</p>
                   </div>
-                  <ToggleActiveButton id={p.id} isActive={p.is_active} />
+                  <ToggleActiveButton id={p.id} isActive={p.is_active} onToggled={handleToggled} />
                 </div>
               </div>
 

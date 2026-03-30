@@ -128,7 +128,7 @@ export default function Hero() {
         <m.div custom={3} variants={fadeUp} initial="hidden" animate="visible" className="mt-12 w-full max-w-4xl">
 
           {/* Type tabs */}
-          <div className="flex gap-1 mb-2 justify-start">
+          <div className="flex flex-wrap gap-1 mb-2 justify-start">
             {SEARCH_TYPES.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => { setSearchType(id); setShowDatePicker(false) }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${

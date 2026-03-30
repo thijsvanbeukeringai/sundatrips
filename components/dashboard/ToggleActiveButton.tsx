@@ -4,7 +4,7 @@ import { useTransition } from 'react'
 import { togglePropertyActive } from '@/app/actions/properties'
 import { useI18n } from '@/lib/i18n'
 
-export default function ToggleActiveButton({ id, isActive }: { id: string; isActive: boolean }) {
+export default function ToggleActiveButton({ id, isActive, onToggled }: { id: string; isActive: boolean; onToggled?: (id: string, next: boolean) => void }) {
   const [pending, startTransition] = useTransition()
   const { t } = useI18n()
 
@@ -12,7 +12,11 @@ export default function ToggleActiveButton({ id, isActive }: { id: string; isAct
     <button
       title={isActive ? t.properties.deactivateTitle : t.properties.activateTitle}
       disabled={pending}
-      onClick={() => startTransition(() => { void togglePropertyActive(id, !isActive) })}
+      onClick={() => {
+        const next = !isActive
+        onToggled?.(id, next)
+        startTransition(() => { void togglePropertyActive(id, next) })
+      }}
       className={`relative flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 disabled:opacity-40 ${
         isActive
           ? 'bg-jungle-600 text-white hover:bg-jungle-700'
