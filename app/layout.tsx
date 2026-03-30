@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import MotionProvider from '@/components/MotionProvider'
 import { LanguageProvider } from '@/lib/i18n'
+import AuthHashRedirect from '@/components/AuthHashRedirect'
 import './globals.css'
 
 const inter = Inter({
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans">
         <LanguageProvider>
+          <AuthHashRedirect />
           <MotionProvider>{children}</MotionProvider>
         </LanguageProvider>
       </body>
