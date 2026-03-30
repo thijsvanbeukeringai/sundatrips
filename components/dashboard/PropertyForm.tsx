@@ -126,7 +126,7 @@ export default function PropertyForm({ userId, property, allowedTypes }: Props) 
             <input name="name" type="text" required defaultValue={property?.name} placeholder={t.form.namePlaceholder} className={inputClass} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>{t.form.type} *</label>
               <select name="type" required value={type} onChange={e => setType(e.target.value as any)} className={selectClass}>
@@ -166,7 +166,7 @@ export default function PropertyForm({ userId, property, allowedTypes }: Props) 
               <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{t.form.transferDetails}</p>
 
               {/* From → To */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>{t.form.from}</label>
                   <LocationAutocomplete
@@ -190,7 +190,7 @@ export default function PropertyForm({ userId, property, allowedTypes }: Props) 
               </div>
 
               {/* Distance + estimated time */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>{t.form.distanceKm}</label>
                   <input
@@ -236,7 +236,7 @@ export default function PropertyForm({ userId, property, allowedTypes }: Props) 
               </label>
 
               {/* Driver info */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>
                     <span className="flex items-center gap-1.5"><User className="w-3 h-3" /> Driver name</span>
@@ -269,7 +269,7 @@ export default function PropertyForm({ userId, property, allowedTypes }: Props) 
         {/* Pricing */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
           <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider">{t.form.pricing}</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>{t.form.price} (€) *</label>
               <input name="price_per_unit" type="number" required min="0" step="0.01" defaultValue={property?.price_per_unit} placeholder="48" className={inputClass} />

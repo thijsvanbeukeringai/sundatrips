@@ -94,7 +94,7 @@ function VariantForm({
       {/* Transfer: from → to */}
       {isTransfer && (
         <>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-1 block">{vm.from}</label>
               <input
@@ -120,7 +120,7 @@ function VariantForm({
           {/* Chauffeur info */}
           <div className="border-t border-gray-100 pt-3">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{vm.chauffeurTitle}</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1 block">{vm.vehicleType}</label>
                 <input
@@ -169,7 +169,7 @@ function VariantForm({
       </div>
 
       {/* Price + Unit + Capacity */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div>
           <label className="text-xs font-semibold text-gray-600 mb-1 block">{vm.price} *</label>
           <input

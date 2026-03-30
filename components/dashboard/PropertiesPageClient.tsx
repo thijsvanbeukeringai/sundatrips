@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Plus, Building2, MapPin, Pencil, Bed, Compass, Activity, CalendarDays, LayoutList, Car } from 'lucide-react'
 import type { Property } from '@/lib/types'
@@ -26,9 +26,20 @@ const TYPE_COLORS: Record<string, string> = {
 export default function PropertiesPageClient({ properties: initial }: { properties: Property[] }) {
   const { t, lang } = useI18n()
   const pr = t.properties
-  const [properties, setProperties] = useState(initial)
+
+  // Track deletions in a ref so they survive server re-renders
+  const deletedIds = useRef<Set<string>>(new Set())
+  const [properties, setProperties] = useState(() =>
+    initial.filter(p => !deletedIds.current.has(p.id))
+  )
+
+  // When server sends fresh data, apply our local deletions on top
+  useEffect(() => {
+    setProperties(initial.filter(p => !deletedIds.current.has(p.id)))
+  }, [initial])
 
   function handleDeleted(id: string) {
+    deletedIds.current.add(id)
     setProperties(prev => prev.filter(p => p.id !== id))
   }
 

@@ -39,6 +39,7 @@ export default function POSTerminal({
   const [selectedBookingId, setSelectedBookingId] = useState(initialBookings[0]?.id ?? null)
   const [posItems, setPosItems]  = useState<POSItem[]>([])
   const [catFilter, setCatFilter] = useState('all')
+  const [showCart, setShowCart]   = useState(false)
   const [pending, startTransition] = useTransition()
   const supabase = createClient()
 
@@ -101,7 +102,7 @@ export default function POSTerminal({
   }))
 
   return (
-    <div className="flex h-[calc(100vh-0px)] overflow-hidden bg-gray-50">
+    <div className="flex h-[calc(100vh-112px)] lg:h-[calc(100vh-0px)] overflow-hidden bg-gray-50 relative">
 
       {/* ── Left: Catalog ─────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -197,18 +198,45 @@ export default function POSTerminal({
         </div>
       </div>
 
+      {/* Mobile cart toggle button */}
+      {posItems.length > 0 && (
+        <button
+          onClick={() => setShowCart(true)}
+          className="fixed bottom-6 right-6 lg:hidden z-30 flex items-center gap-2 bg-jungle-800 text-white font-semibold px-5 py-3 rounded-full shadow-xl shadow-jungle-900/30"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          {posItems.length} · {formatPriceRaw(tabTotal, lang)}
+        </button>
+      )}
+
+      {/* Mobile cart overlay */}
+      {showCart && (
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setShowCart(false)} />
+      )}
+
       {/* ── Right: Current tab ─────────────────────────── */}
-      <div className="w-80 flex-shrink-0 bg-white border-l border-gray-100 flex flex-col">
+      <div className={`
+        lg:w-80 lg:flex-shrink-0 lg:relative lg:translate-x-0
+        fixed inset-y-0 right-0 w-full sm:w-96 z-50
+        bg-white border-l border-gray-100 flex flex-col
+        transform transition-transform duration-300
+        ${showCart ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+      `}>
         {/* Tab header */}
-        <div className="px-5 py-4 border-b border-gray-100">
-          <p className="font-semibold text-gray-800 text-sm">
-            {selectedBooking ? selectedBooking.guest_name : pos.noBookingSelected}
-          </p>
+        <div className="px-5 py-4 border-b border-gray-100 flex items-start justify-between gap-2">
+          <div>
+            <p className="font-semibold text-gray-800 text-sm">
+              {selectedBooking ? selectedBooking.guest_name : pos.noBookingSelected}
+            </p>
           {selectedBooking && (
             <p className="text-xs text-gray-400 mt-0.5">
               {selectedBooking.property?.name} · {selectedBooking.guests_count} {pos.guests}
             </p>
           )}
+          </div>
+          <button onClick={() => setShowCart(false)} className="lg:hidden p-1 text-gray-400 hover:text-gray-600">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
 
         {/* Items list */}
