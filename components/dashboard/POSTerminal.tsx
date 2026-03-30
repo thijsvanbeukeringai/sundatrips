@@ -59,14 +59,24 @@ export default function POSTerminal({
       .channel(`pos-${selectedBookingId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${selectedBookingId}` },
+        { event: 'INSERT', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${selectedBookingId}` },
         () => {
+          // Refetch on insert to get server-computed total_price
           supabase
             .from('pos_items')
             .select('*')
             .eq('booking_id', selectedBookingId)
             .order('created_at', { ascending: true })
             .then(({ data }) => setPosItems((data ?? []) as POSItem[]))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${selectedBookingId}` },
+        (payload) => {
+          // Filter locally — never refetch on delete, optimistic already handled it
+          const deletedId = (payload.old as { id: string }).id
+          if (deletedId) setPosItems(prev => prev.filter(i => i.id !== deletedId))
         }
       )
       .subscribe()

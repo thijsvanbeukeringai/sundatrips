@@ -16,12 +16,16 @@ export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
   const [pending, startTransition] = useTransition()
   const { lang } = useI18n()
 
-  const [deleted, setDeleted] = useState(false)
-  const [editing, setEditing] = useState(false)
+  const [deleted,       setDeleted]       = useState(false)
+  const [editing,       setEditing]       = useState(false)
+  // Display state (shown in the row)
+  const [displayEmoji,  setDisplayEmoji]  = useState(item.emoji)
+  const [displayName,   setDisplayName]   = useState(item.name)
+  const [displayPrice,  setDisplayPrice]  = useState(item.default_price)
+  // Form state (shown in the modal)
   const [emoji,   setEmoji]   = useState(item.emoji)
   const [name,    setName]    = useState(item.name)
-  const [cat,     setCat]     = useState(item.category)
-  // Display price in current currency
+  const [cat,     setCat]     = useState<typeof CATEGORIES[number]>(item.category as typeof CATEGORIES[number])
   const [price,   setPrice]   = useState(
     lang === 'id' ? String(Math.round(item.default_price * EUR_TO_IDR)) : String(item.default_price)
   )
@@ -40,26 +44,25 @@ export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
   function handleSave() {
     const rawPrice = parseFloat(price)
     const eurPrice = lang === 'id' ? rawPrice / EUR_TO_IDR : rawPrice
-    startTransition(async () => {
-      await updateCatalogItem(item.id, {
-        name,
-        category: cat,
-        default_price: eurPrice,
-        emoji,
-      })
-      setEditing(false)
+    // Optimistically update display
+    setDisplayEmoji(emoji)
+    setDisplayName(name)
+    setDisplayPrice(eurPrice)
+    setEditing(false)
+    startTransition(() => {
+      void updateCatalogItem(item.id, { name, category: cat, default_price: eurPrice, emoji })
     })
   }
 
   return (
     <>
       <div className="flex items-center gap-3 px-4 py-3">
-        <span className="text-xl flex-shrink-0">{item.emoji}</span>
+        <span className="text-xl flex-shrink-0">{displayEmoji}</span>
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-medium ${item.is_active ? 'text-gray-800' : 'text-gray-400 line-through'}`}>
-            {item.name}
+            {displayName}
           </p>
-          <p className="text-xs text-gray-400">{formatPriceRaw(item.default_price, lang)}</p>
+          <p className="text-xs text-gray-400">{formatPriceRaw(displayPrice, lang)}</p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
@@ -124,7 +127,7 @@ export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
               </div>
 
               {/* Category */}
-              <select value={cat} onChange={e => setCat(e.target.value)} className={inputClass}>
+              <select value={cat} onChange={e => setCat(e.target.value as typeof CATEGORIES[number])} className={inputClass}>
                 {CATEGORIES.map(c => (
                   <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
                 ))}

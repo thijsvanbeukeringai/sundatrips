@@ -72,7 +72,7 @@ export default function BookingPOSPanel({
       .channel(`pos-booking-${bookingId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${bookingId}` },
+        { event: 'INSERT', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${bookingId}` },
         () => {
           supabase
             .from('pos_items')
@@ -80,6 +80,14 @@ export default function BookingPOSPanel({
             .eq('booking_id', bookingId)
             .order('created_at', { ascending: true })
             .then(({ data }) => setPosItems((data ?? []) as POSItem[]))
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'pos_items', filter: `booking_id=eq.${bookingId}` },
+        (payload) => {
+          const deletedId = (payload.old as { id: string }).id
+          if (deletedId) setPosItems(prev => prev.filter(i => i.id !== deletedId))
         }
       )
       // Real-time: bill_payments (refresh history when a new payment is recorded)
