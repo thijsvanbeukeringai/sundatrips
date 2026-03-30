@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import type { AllowedPaymentMethods } from '@/lib/types'
 
 async function requireAdmin() {
@@ -122,4 +124,69 @@ export async function deleteOwner(ownerId: string) {
 
   revalidatePath('/dashboard/admin/owners')
   return { success: true }
+}
+
+// ── Impersonation ─────────────────────────────────────────────────────────────
+
+interface AdminRestore {
+  access_token: string
+  refresh_token: string
+  admin_name:   string
+}
+
+export async function startImpersonation(targetUserId: string): Promise<{ url?: string; error?: string }> {
+  let supabase
+  try { supabase = await requireAdmin() } catch { return { error: 'Unauthorized' } }
+
+  const adminClient = createAdminClient()
+  const cookieStore = await cookies()
+
+  // Store current admin session so we can restore it later
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return { error: 'No active session' }
+
+  const { data: { user: adminUser } } = await supabase.auth.getUser()
+  const { data: adminProfile } = await supabase.from('profiles').select('full_name').eq('id', adminUser!.id).single()
+
+  cookieStore.set('admin_restore', JSON.stringify({
+    access_token:  session.access_token,
+    refresh_token: session.refresh_token,
+    admin_name:    adminProfile?.full_name ?? 'Admin',
+  } satisfies AdminRestore), {
+    httpOnly: true,
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge:   60 * 60, // 1 hour
+    path:     '/',
+  })
+
+  // Get target user's email
+  const { data: { user: targetUser }, error: getUserErr } = await adminClient.auth.admin.getUserById(targetUserId)
+  if (getUserErr || !targetUser?.email) return { error: 'Target user not found' }
+
+  // Generate a magic link — existing /auth/callback handles the implicit-flow hash
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const { data, error } = await adminClient.auth.admin.generateLink({
+    type:  'magiclink',
+    email: targetUser.email,
+    options: { redirectTo: `${appUrl}/auth/callback?next=/dashboard` },
+  })
+
+  if (error || !data.properties?.action_link) return { error: error?.message ?? 'Failed to generate link' }
+  return { url: data.properties.action_link }
+}
+
+export async function stopImpersonation(): Promise<void> {
+  const cookieStore = await cookies()
+  const stored = cookieStore.get('admin_restore')
+  if (!stored) { redirect('/dashboard'); return }
+
+  const { access_token, refresh_token } = JSON.parse(stored.value) as AdminRestore
+
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  await supabase.auth.setSession({ access_token, refresh_token })
+
+  cookieStore.delete('admin_restore')
+  redirect('/admin/users')
 }

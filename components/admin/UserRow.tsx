@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Trash2, KeyRound, Pencil, Check, X, Mail, Phone, Building2 } from 'lucide-react'
-import { deleteOwner, sendPasswordReset, updateUserProfile } from '@/app/actions/admin'
+import { Trash2, KeyRound, Pencil, Check, X, Mail, Phone, Building2, LogIn } from 'lucide-react'
+import { deleteOwner, sendPasswordReset, updateUserProfile, startImpersonation } from '@/app/actions/admin'
 import { useRouter } from 'next/navigation'
 
 interface UserRowProps {
@@ -49,6 +49,14 @@ export default function UserRow({ user, listingCount, isYou }: UserRowProps) {
       if (res?.error) { showFeedback('error', res.error) } else {
         showFeedback('success', `Password reset email sent to ${user.email}`)
       }
+    })
+  }
+
+  function handleImpersonate() {
+    startTransition(async () => {
+      const res = await startImpersonation(user.id)
+      if (res?.error) { showFeedback('error', res.error) }
+      else if (res?.url) { window.location.href = res.url }
     })
   }
 
@@ -150,6 +158,14 @@ export default function UserRow({ user, listingCount, isYou }: UserRowProps) {
               >
                 <KeyRound className="w-3.5 h-3.5" />
                 Send password reset
+              </button>
+              <button
+                onClick={handleImpersonate}
+                disabled={pending}
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-jungle-700 hover:bg-white px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-gray-200 disabled:opacity-50"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                {pending ? 'Loading…' : 'Login as'}
               </button>
               <button
                 onClick={() => setMode('delete')}
