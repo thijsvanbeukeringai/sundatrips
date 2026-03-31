@@ -6,7 +6,7 @@ import ListingsGrid from '@/components/ListingsGrid'
 import { SlidersHorizontal } from 'lucide-react'
 import type { Property } from '@/lib/types'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 

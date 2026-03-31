@@ -15,7 +15,7 @@ import { useI18n } from '@/lib/i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { updateProfile } from '@/app/actions/profile'
 
-export default function Sidebar({ profile }: { profile: Profile }) {
+export default function Sidebar({ profile, isImpersonating }: { profile: Profile; isImpersonating?: boolean }) {
   const pathname = usePathname()
   const router   = useRouter()
   const supabase = createClient()
@@ -37,14 +37,24 @@ export default function Sidebar({ profile }: { profile: Profile }) {
     })
   }
 
-  const navItems = [
-    { href: '/dashboard',             icon: LayoutDashboard, label: t.dashboard.overview },
-    { href: '/dashboard/bookings',    icon: CalendarDays,    label: t.dashboard.bookings },
-    { href: '/dashboard/pos',         icon: ShoppingBag,     label: t.dashboard.pos,      badge: 'Live' },
-    { href: '/dashboard/properties',  icon: Building2,       label: t.dashboard.listings },
-    { href: '/dashboard/financials',  icon: BarChart3,       label: t.dashboard.financials },
-    { href: '/dashboard/settings',    icon: Settings,        label: t.dashboard.settings },
-  ]
+  const isAdminMode = profile.role === 'admin' && !isImpersonating
+
+  const navItems = isAdminMode
+    ? [
+        { href: '/dashboard',          icon: LayoutDashboard, label: 'Overview' },
+        { href: '/admin/users',        icon: Users,           label: 'Users' },
+        { href: '/admin/companies',    icon: Landmark,        label: 'Companies' },
+        { href: '/admin/invite',       icon: UserPlus,        label: 'Invite Owner' },
+        { href: '/dashboard/settings', icon: Settings,        label: t.dashboard.settings },
+      ]
+    : [
+        { href: '/dashboard',             icon: LayoutDashboard, label: t.dashboard.overview },
+        { href: '/dashboard/bookings',    icon: CalendarDays,    label: t.dashboard.bookings },
+        { href: '/dashboard/pos',         icon: ShoppingBag,     label: t.dashboard.pos,      badge: 'Live' },
+        { href: '/dashboard/properties',  icon: Building2,       label: t.dashboard.listings },
+        { href: '/dashboard/financials',  icon: BarChart3,       label: t.dashboard.financials },
+        { href: '/dashboard/settings',    icon: Settings,        label: t.dashboard.settings },
+      ]
 
   async function signOut() {
     await supabase.auth.signOut()
@@ -93,8 +103,8 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         })}
       </nav>
 
-      {/* Admin links */}
-      {profile.role === 'admin' && (
+      {/* Admin links (only shown for admin viewing as owner via impersonation) */}
+      {profile.role === 'admin' && isImpersonating && (
         <div className="px-3 pb-4 border-t border-white/10 pt-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 px-3 mb-2">{t.dashboard.admin}</p>
           {[

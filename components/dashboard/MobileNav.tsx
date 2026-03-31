@@ -12,20 +12,30 @@ import {
 import type { Profile } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 
-export default function MobileNav({ profile }: { profile: Profile }) {
+export default function MobileNav({ profile, isImpersonating }: { profile: Profile; isImpersonating?: boolean }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const router   = useRouter()
   const supabase = createClient()
   const { t }    = useI18n()
 
-  const navItems = [
-    { href: '/dashboard',            icon: LayoutDashboard, label: t.dashboard.overview },
-    { href: '/dashboard/bookings',   icon: CalendarDays,    label: t.dashboard.bookings },
-    { href: '/dashboard/pos',        icon: ShoppingBag,     label: t.dashboard.pos,     badge: 'Live' },
-    { href: '/dashboard/properties', icon: Building2,       label: t.dashboard.listings },
-    { href: '/dashboard/settings',   icon: Settings,        label: t.dashboard.settings },
-  ]
+  const isAdminMode = profile.role === 'admin' && !isImpersonating
+
+  const navItems = isAdminMode
+    ? [
+        { href: '/dashboard',          icon: LayoutDashboard, label: 'Overview' },
+        { href: '/admin/users',        icon: Users,           label: 'Users' },
+        { href: '/admin/companies',    icon: Landmark,        label: 'Companies' },
+        { href: '/admin/invite',       icon: UserPlus,        label: 'Invite Owner' },
+        { href: '/dashboard/settings', icon: Settings,        label: t.dashboard.settings },
+      ]
+    : [
+        { href: '/dashboard',            icon: LayoutDashboard, label: t.dashboard.overview },
+        { href: '/dashboard/bookings',   icon: CalendarDays,    label: t.dashboard.bookings },
+        { href: '/dashboard/pos',        icon: ShoppingBag,     label: t.dashboard.pos,     badge: 'Live' },
+        { href: '/dashboard/properties', icon: Building2,       label: t.dashboard.listings },
+        { href: '/dashboard/settings',   icon: Settings,        label: t.dashboard.settings },
+      ]
 
   async function signOut() {
     await supabase.auth.signOut()
@@ -88,7 +98,7 @@ export default function MobileNav({ profile }: { profile: Profile }) {
             )
           })}
 
-          {profile.role === 'admin' && (
+          {profile.role === 'admin' && isImpersonating && (
             <>
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-3 pt-4 pb-1">{t.dashboard.admin}</p>
               {[

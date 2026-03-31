@@ -1,12 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Property } from '@/lib/types'
 import PropertiesPageClient from '@/components/dashboard/PropertiesPageClient'
 
 export default async function PropertiesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const { data: properties } = await supabase
     .from('properties')

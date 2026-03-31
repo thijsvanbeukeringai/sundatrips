@@ -40,19 +40,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Protect /admin/* ──────────────────────────────────────
+  // Auth check only — role check is handled by (admin)/layout.tsx to avoid
+  // an extra sequential DB query on every admin request.
   if (pathname.startsWith('/admin')) {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
-    }
-    // Verify admin role via RLS-safe query
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
 

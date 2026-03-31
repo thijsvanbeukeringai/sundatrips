@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Booking } from '@/lib/types'
 import BookingsPageClient from '@/components/dashboard/BookingsPageClient'
@@ -10,9 +10,10 @@ export default async function BookingsPage({
 }: {
   searchParams: { status?: string; q?: string }
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   let query = supabase
     .from('bookings')
@@ -24,20 +25,18 @@ export default async function BookingsPage({
     query = query.eq('status', searchParams.status)
   }
 
-  const { data } = await query.returns<BookingWithProperty[]>()
-  let bookings = (data ?? [])
-
+  // Push text search to DB instead of filtering in JS
   if (searchParams.q) {
-    const q = searchParams.q.toLowerCase()
-    bookings = bookings.filter(
-      b => b.guest_name.toLowerCase().includes(q) || b.guest_email.toLowerCase().includes(q)
-    )
+    query = query.or(`guest_name.ilike.%${searchParams.q}%,guest_email.ilike.%${searchParams.q}%`)
   }
 
-  const { data: allBookings } = await supabase
-    .from('bookings')
-    .select('status')
-    .eq('owner_id', user.id)
+  // Run both queries in parallel instead of sequentially
+  const [{ data }, { data: allBookings }] = await Promise.all([
+    query.returns<BookingWithProperty[]>(),
+    supabase.from('bookings').select('status').eq('owner_id', user.id),
+  ])
+
+  const bookings = data ?? []
 
   const counts = (allBookings ?? []).reduce<Record<string, number>>((acc, b) => {
     acc.all = (acc.all ?? 0) + 1

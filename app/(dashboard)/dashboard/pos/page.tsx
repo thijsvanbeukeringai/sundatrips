@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Booking, POSCatalogItem, Property } from '@/lib/types'
 import POSTerminal from '@/components/dashboard/POSTerminal'
@@ -6,9 +6,10 @@ import POSTerminal from '@/components/dashboard/POSTerminal'
 type BookingWithProperty = Booking & { property: Pick<Property, 'name' | 'type'> | null }
 
 export default async function POSPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [{ data: bookings }, { data: catalog }] = await Promise.all([
     supabase

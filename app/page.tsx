@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import nextDynamic from 'next/dynamic'
 import Navbar from '@/components/Navbar'

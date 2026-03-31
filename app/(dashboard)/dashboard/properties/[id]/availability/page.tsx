@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -7,9 +7,10 @@ import AvailabilityCalendar from '@/components/dashboard/AvailabilityCalendar'
 import TimeSlotManager from '@/components/dashboard/TimeSlotManager'
 
 export default async function AvailabilityPage({ params }: { params: { id: string } }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const { data: property } = await supabase
     .from('properties')

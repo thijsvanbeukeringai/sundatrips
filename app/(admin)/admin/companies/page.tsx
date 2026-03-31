@@ -1,13 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Building2, Plus, MapPin, Check, X } from 'lucide-react'
 import DeleteVenueButton from '@/components/admin/DeleteVenueButton'
 
 export default async function AdminCompaniesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [
     { data: venues },

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import type { Booking, Property } from '@/lib/types'
 import BookingDetailClient from '@/components/dashboard/BookingDetailClient'
@@ -6,9 +6,10 @@ import BookingDetailClient from '@/components/dashboard/BookingDetailClient'
 type FullBooking = Booking & { property: Property | null }
 
 export default async function BookingDetailPage({ params }: { params: { id: string } }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const { data } = await supabase
     .from('bookings')

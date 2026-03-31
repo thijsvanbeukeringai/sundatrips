@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -6,9 +6,10 @@ import type { Property, ListingVariant } from '@/lib/types'
 import VariantManager from '@/components/dashboard/VariantManager'
 
 export default async function VariantsPage({ params }: { params: { id: string } }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [{ data: property }, { data: variants }] = await Promise.all([
     supabase

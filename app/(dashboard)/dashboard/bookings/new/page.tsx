@@ -1,12 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import BookingForm from '@/components/dashboard/BookingForm'
 import type { Property, ListingVariant } from '@/lib/types'
 
 export default async function NewBookingPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const [{ data: properties }, { data: variants }] = await Promise.all([
     supabase

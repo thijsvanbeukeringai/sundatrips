@@ -1,17 +1,77 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { Booking, Profile } from '@/lib/types'
 import DashboardOverviewClient from '@/components/dashboard/DashboardOverviewClient'
+import AdminDashboardClient from '@/components/dashboard/AdminDashboardClient'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const { data: profile } = await supabase
     .from('profiles').select('*').eq('id', user.id).single<Profile>()
 
+  // Check if admin is currently impersonating someone
+  const cookieStore = await cookies()
+  const adminRestoreCookie = cookieStore.get('admin_restore')
+  const isImpersonating = !!adminRestoreCookie
+
+  // Admin in their own account → show admin overview
+  if (profile?.role === 'admin' && !isImpersonating) {
+    const [
+      { data: profiles },
+      { data: properties },
+      { data: rawBookings },
+      { data: venues },
+    ] = await Promise.all([
+      supabase.from('profiles').select('id, full_name, email, role, created_at').order('created_at', { ascending: false }),
+      supabase.from('properties').select('id, owner_id'),
+      supabase.from('bookings')
+        .select('id, guest_name, total_amount, platform_fee, status, check_in, property:properties(name, venue_id)')
+        .order('check_in', { ascending: false })
+        .limit(300),
+      supabase.from('venues').select('id, name').order('name'),
+    ])
+
+    const venueMap = Object.fromEntries((venues ?? []).map(v => [v.id, v.name]))
+    const listingCounts = Object.fromEntries(
+      (profiles ?? []).map(p => [p.id, (properties ?? []).filter(pr => pr.owner_id === p.id).length])
+    )
+
+    const adminProfiles = (profiles ?? []).map(p => ({
+      id:            p.id,
+      full_name:     p.full_name ?? '',
+      email:         p.email ?? '',
+      role:          p.role,
+      created_at:    p.created_at,
+      listing_count: listingCounts[p.id] ?? 0,
+    }))
+
+    const adminBookings = (rawBookings ?? []).map((b: any) => ({
+      id:            b.id,
+      guest_name:    b.guest_name,
+      total_amount:  b.total_amount,
+      platform_fee:  b.platform_fee,
+      status:        b.status,
+      check_in:      b.check_in,
+      property_name: b.property?.name ?? '—',
+      venue_id:      b.property?.venue_id ?? null,
+      venue_name:    b.property?.venue_id ? (venueMap[b.property.venue_id] ?? null) : null,
+    }))
+
+    return (
+      <AdminDashboardClient
+        profiles={adminProfiles}
+        bookings={adminBookings}
+        venues={venues ?? []}
+      />
+    )
+  }
+
+  // Owner (or impersonating admin) → show owner overview
   const today = new Date().toISOString().split('T')[0]
   const monthStart = today.slice(0, 7) + '-01'
 

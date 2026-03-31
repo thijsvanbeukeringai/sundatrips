@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Building2, MapPin, Pencil, Bed, Compass, Activity, Car, Plus } from 'lucide-react'
@@ -19,9 +19,10 @@ const TYPE_COLORS: Record<string, string> = {
 
 export default async function VenueDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
 

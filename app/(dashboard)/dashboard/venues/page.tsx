@@ -1,23 +1,24 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, MapPin, Plus, Pencil } from 'lucide-react'
 
 export default async function VenuesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const supabase = await createClient()
 
-  const venueQuery = profile?.role === 'admin'
-    ? supabase.from('venues').select('*').order('created_at', { ascending: false })
-    : supabase.from('venues').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
-
-  const [{ data: venues }, { data: properties }] = await Promise.all([
-    venueQuery,
+  // Fetch all three in parallel; filter venues client-side based on role
+  const [{ data: profile }, { data: allVenues }, { data: properties }] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('venues').select('*').order('created_at', { ascending: false }),
     supabase.from('properties').select('id, venue_id, is_active, type'),
   ])
+
+  const venues = profile?.role === 'admin'
+    ? allVenues
+    : (allVenues ?? []).filter((v: { owner_id: string }) => v.owner_id === user.id)
 
   return (
     <div className="p-6 sm:p-8">

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PropertyForm from '@/components/dashboard/PropertyForm'
 
@@ -8,9 +8,10 @@ export default async function NewPropertyPage({
   searchParams: Promise<{ venue_id?: string }>
 }) {
   const { venue_id } = await searchParams
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) redirect('/login')
+
+  const supabase = await createClient()
 
   const { data: profile } = await supabase
     .from('profiles')
