@@ -1,4 +1,4 @@
-import { createClient, getCachedUser } from '@/lib/supabase/server'
+import { getCachedUser, getCachedProfile } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PropertyForm from '@/components/dashboard/PropertyForm'
 
@@ -11,13 +11,7 @@ export default async function NewPropertyPage({
   const user = await getCachedUser()
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('allowed_listing_types, role')
-    .eq('id', user.id)
-    .single()
+  const profile = await getCachedProfile()
 
   // Admins always get all types; owners use their allowed_listing_types (fallback = all)
   const allowedTypes: string[] | undefined =

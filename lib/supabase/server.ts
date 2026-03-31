@@ -38,3 +38,16 @@ export const getCachedUser = cache(async () => {
   const { data: { user } } = await supabase.auth.getUser()
   return user
 })
+
+// Deduplicated profile fetch: layout + pages share one DB round-trip per request.
+export const getCachedProfile = cache(async () => {
+  const user = await getCachedUser()
+  if (!user) return null
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+  return data
+})

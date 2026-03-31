@@ -1,4 +1,4 @@
-import { createClient, getCachedUser } from '@/lib/supabase/server'
+import { getCachedUser, getCachedProfile } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Profile } from '@/lib/types'
 import StripeConnectButton from '@/components/dashboard/StripeConnectButton'
@@ -14,15 +14,7 @@ export default async function SettingsPage({
   const user = await getCachedUser()
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
-
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  const profile = data as Profile
+  const profile = await getCachedProfile() as Profile
 
   const stripeReturn  = searchParams.stripe === 'return'
   const stripeRefresh = searchParams.stripe === 'refresh'

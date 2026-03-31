@@ -1,4 +1,4 @@
-import { createClient, getCachedUser } from '@/lib/supabase/server'
+import { createClient, getCachedUser, getCachedProfile } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Building2, MapPin, Pencil, Bed, Compass, Activity, Car, Plus } from 'lucide-react'
@@ -22,22 +22,13 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ id
   const user = await getCachedUser()
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
+  const profile = await getCachedProfile()
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const supabase = await createClient()
 
   // Fetch venue (owners can only see their own)
   let venueQuery = supabase.from('venues').select('*').eq('id', id)
   if (profile?.role !== 'admin') venueQuery = venueQuery.eq('owner_id', user.id)
-  const { data: venue } = await venueQuery.single()
-  if (!venue) notFound()
-
-  // Properties in this venue
-  const { data: venueProperties } = await supabase
-    .from('properties')
-    .select('id, name, type, location, island, is_active, price_per_unit, price_unit, images')
-    .eq('venue_id', id)
-    .order('name')
 
   // Unlinked properties: for admins show ALL unlinked, for owners show only their own
   let unlinkedQuery = supabase
@@ -46,7 +37,18 @@ export default async function VenueDetailPage({ params }: { params: Promise<{ id
     .is('venue_id', null)
     .order('name')
   if (profile?.role !== 'admin') unlinkedQuery = unlinkedQuery.eq('owner_id', user.id)
-  const { data: unlinkedProperties } = await unlinkedQuery
+
+  const [{ data: venue }, { data: venueProperties }, { data: unlinkedProperties }] = await Promise.all([
+    venueQuery.single(),
+    supabase
+      .from('properties')
+      .select('id, name, type, location, island, is_active, price_per_unit, price_unit, images')
+      .eq('venue_id', id)
+      .order('name'),
+    unlinkedQuery,
+  ])
+
+  if (!venue) notFound()
 
   const editHref = profile?.role === 'admin' ? `/admin/companies/${id}` : null
 

@@ -1,4 +1,4 @@
-import { createClient, getCachedUser } from '@/lib/supabase/server'
+import { createClient, getCachedUser, getCachedProfile } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { Booking, Profile } from '@/lib/types'
@@ -9,10 +9,9 @@ export default async function DashboardPage() {
   const user = await getCachedUser()
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
+  const profile = await getCachedProfile() as Profile | null
 
-  const { data: profile } = await supabase
-    .from('profiles').select('*').eq('id', user.id).single<Profile>()
+  const supabase = await createClient()
 
   // Check if admin is currently impersonating someone
   const cookieStore = await cookies()

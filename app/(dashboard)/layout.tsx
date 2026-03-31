@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { createClient, getCachedUser } from '@/lib/supabase/server'
+import { getCachedUser, getCachedProfile } from '@/lib/supabase/server'
 import Sidebar from '@/components/dashboard/Sidebar'
 import MobileNav from '@/components/dashboard/MobileNav'
 import ImpersonationBanner from '@/components/ImpersonationBanner'
@@ -10,13 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getCachedUser()
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single<Profile>()
+  const profile = await getCachedProfile() as Profile | null
 
   if (!profile) redirect('/login')
 

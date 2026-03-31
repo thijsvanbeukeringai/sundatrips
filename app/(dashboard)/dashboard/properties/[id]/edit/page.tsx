@@ -1,4 +1,4 @@
-import { createClient, getCachedUser } from '@/lib/supabase/server'
+import { createClient, getCachedUser, getCachedProfile } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import PropertyForm from '@/components/dashboard/PropertyForm'
 import type { Property } from '@/lib/types'
@@ -7,21 +7,17 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
   const user = await getCachedUser()
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
-
-  const [{ data }, { data: profile }] = await Promise.all([
-    supabase
-      .from('properties')
-      .select('*')
-      .eq('id', params.id)
-      .eq('owner_id', user.id)
-      .single(),
-    supabase
-      .from('profiles')
-      .select('allowed_listing_types, role')
-      .eq('id', user.id)
-      .single(),
+  const [profile, supabase] = await Promise.all([
+    getCachedProfile(),
+    createClient(),
   ])
+
+  const { data } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('id', params.id)
+    .eq('owner_id', user.id)
+    .single()
 
   if (!data) notFound()
 
