@@ -26,17 +26,24 @@ export default function POSTerminal({
   initialBookings,
   initialCatalog,
   userId,
+  initialSelectedId,
 }: {
-  initialBookings: BookingWithProperty[]
-  initialCatalog:  POSCatalogItem[]
-  userId:          string
+  initialBookings:  BookingWithProperty[]
+  initialCatalog:   POSCatalogItem[]
+  userId:           string
+  initialSelectedId?: string
 }) {
   const { t, lang } = useI18n()
   const pos = t.pos
 
   const [bookings]              = useState(initialBookings)
   const [catalog]               = useState(initialCatalog)
-  const [selectedBookingId, setSelectedBookingId] = useState(initialBookings[0]?.id ?? null)
+  const [selectedBookingId, setSelectedBookingId] = useState(
+    // Pre-select from URL param if valid, otherwise default to first booking
+    (initialSelectedId && initialBookings.some(b => b.id === initialSelectedId))
+      ? initialSelectedId
+      : (initialBookings[0]?.id ?? null)
+  )
   const [posItems, setPosItems]  = useState<POSItem[]>([])
   const [catFilter, setCatFilter] = useState('all')
   const [showCart, setShowCart]   = useState(false)
@@ -295,7 +302,14 @@ export default function POSTerminal({
               <div key={item.id} className="px-5 py-3 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
-                  <p className="text-xs text-gray-400">×{item.quantity} · {formatPriceRaw(item.unit_price, lang)}</p>
+                  <p className="text-xs text-gray-400">
+                    ×{item.quantity} · {formatPriceRaw(item.unit_price, lang)}
+                    {item.created_at && !item.id.startsWith('temp-') && (
+                      <span className="ml-1.5 text-gray-300">
+                        {new Date(item.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <p className="text-sm font-semibold text-gray-800 flex-shrink-0">{formatPriceRaw(item.total_price, lang)}</p>
                 <button

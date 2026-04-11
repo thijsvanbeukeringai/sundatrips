@@ -21,7 +21,7 @@ interface BillPayment {
   id:           string
   total_amount: number
   paid_at:      string
-  items:        Array<{ name: string; quantity: number; unit_price: number; total_price: number }>
+  items:        Array<{ name: string; quantity: number; unit_price: number; total_price: number; created_at?: string }>
 }
 
 function formatDateTime(iso: string) {
@@ -29,6 +29,10 @@ function formatDateTime(iso: string) {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function BookingPOSPanel({
@@ -155,8 +159,9 @@ export default function BookingPOSPanel({
     startTransition(async () => {
       const result = await markExtrasPaid(bookingId)
       if (!result?.error) {
-        // Items cleared server-side; real-time will update posItems
-        // Refresh payments locally for instant feedback
+        // Immediately reset bill to 0 — don't wait for real-time DELETE events
+        setPosItems([])
+        // Refresh payment history
         const { data } = await supabase
           .from('bill_payments')
           .select('*')
@@ -234,6 +239,9 @@ export default function BookingPOSPanel({
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium text-gray-800">{item.name}</span>
                   <span className="text-xs text-gray-400 ml-2">×{item.quantity} · {formatPriceRaw(item.unit_price, lang)}</span>
+                  {item.created_at && !item.id.startsWith('temp-') && (
+                    <span className="text-[10px] text-gray-300 ml-2">{formatTime(item.created_at)}</span>
+                  )}
                 </div>
                 <span className="text-sm font-semibold text-gray-700 flex-shrink-0">{formatPriceRaw(item.total_price, lang)}</span>
                 <button
@@ -283,7 +291,12 @@ export default function BookingPOSPanel({
                 <div className="space-y-1">
                   {p.items.map((item, i) => (
                     <div key={i} className="flex justify-between text-xs text-gray-500">
-                      <span>{item.name} <span className="text-gray-400">×{item.quantity}</span></span>
+                      <span>
+                        {item.name} <span className="text-gray-400">×{item.quantity}</span>
+                        {item.created_at && (
+                          <span className="text-gray-300 ml-1.5">{formatTime(item.created_at)}</span>
+                        )}
+                      </span>
                       <span>{formatPriceRaw(item.total_price, lang)}</span>
                     </div>
                   ))}

@@ -114,12 +114,23 @@ export default function BookingsPageClient({ bookings, counts, currentStatus, q 
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <Link
-                        href={`/dashboard/bookings/${b.id}`}
-                        className="text-xs text-jungle-700 hover:text-jungle-900 font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        {bp.view}
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        {b.status === 'checked_in' && (
+                          <Link
+                            href={`/dashboard/pos?booking=${b.id}`}
+                            className="flex items-center gap-1.5 text-xs bg-jungle-800 hover:bg-jungle-900 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                          >
+                            <ShoppingBag className="w-3 h-3" />
+                            Open bill
+                          </Link>
+                        )}
+                        <Link
+                          href={`/dashboard/bookings/${b.id}`}
+                          className="text-xs text-jungle-700 hover:text-jungle-900 font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          {bp.view}
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

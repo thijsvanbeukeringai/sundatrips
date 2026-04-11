@@ -65,13 +65,13 @@ export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
       <button
         ref={btnRef}
         onClick={toggle}
-        className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 px-2 py-1 rounded-lg ${
+        className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-200 px-3 py-1.5 rounded-full border ${
           dark
-            ? 'text-white/70 hover:text-white hover:bg-white/10'
-            : 'text-gray-600 hover:text-jungle-800 hover:bg-gray-100'
+            ? 'text-white/80 hover:text-white border-white/20 hover:border-white/40 hover:bg-white/10'
+            : 'text-gray-600 hover:text-jungle-800 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
         }`}
       >
-        <Globe className="w-4 h-4" />
+        <span className="text-base leading-none">{lang === 'en' ? '🇬🇧' : '🇮🇩'}</span>
         <span>{lang.toUpperCase()}</span>
       </button>
 

@@ -5,11 +5,16 @@ import POSTerminal from '@/components/dashboard/POSTerminal'
 
 type BookingWithProperty = Booking & { property: Pick<Property, 'name' | 'type'> | null }
 
-export default async function POSPage() {
+export default async function POSPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ booking?: string }>
+}) {
   const user = await getCachedUser()
   if (!user) redirect('/login')
 
   const supabase = await createClient()
+  const { booking: preselectedBookingId } = await searchParams
 
   const [{ data: bookings }, { data: catalog }] = await Promise.all([
     supabase
@@ -33,6 +38,7 @@ export default async function POSPage() {
       initialBookings={(bookings ?? []) as BookingWithProperty[]}
       initialCatalog={(catalog ?? []) as POSCatalogItem[]}
       userId={user.id}
+      initialSelectedId={preselectedBookingId}
     />
   )
 }
