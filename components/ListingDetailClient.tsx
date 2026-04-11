@@ -141,6 +141,14 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
               </div>
             </div>
 
+            {/* Stay: booking section directly below header as CTA */}
+            {p.type === 'stay' && (
+              <>
+                <hr className="border-gray-100" />
+                <StayBookingSection property={p} />
+              </>
+            )}
+
             <hr className="border-gray-100" />
 
             {/* Description */}
@@ -183,7 +191,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
               )
             })()}
 
-            {/* Variants — non-stay only (stays use the booking card directly) */}
+            {/* Variants — non-stay only */}
             {p.type !== 'stay' && variants.length > 0 && (
               <>
                 <hr className="border-gray-100" />
@@ -191,37 +199,35 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
               </>
             )}
 
-            <hr className="border-gray-100" />
-
-            {/* Stay: inline booking section */}
-            {p.type === 'stay' ? (
-              <StayBookingSection property={p} />
-            ) : (
-              /* Non-stay: availability calendar */
-              <div>
-                <h2 className="font-semibold text-gray-900 mb-1">{t.listing.availability}</h2>
-                {isActivity && timeSlots.length > 0 ? (
-                  <>
-                    <p className="text-sm text-gray-500 mb-5">{t.listing.selectDate}</p>
-                    <ActivityDatePicker
-                      blocks={availabilityBlocks}
-                      slots={timeSlots}
-                      durationHours={p.duration_hours}
-                      maxCapacity={p.max_capacity}
-                      slotAvailability={slotAvailability}
-                      onBook={date => openBooking({ date })}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-500 mb-5">{t.listing.calendarHint}</p>
-                    <PublicAvailabilityCalendar
-                      blocks={availabilityBlocks}
-                      maxCapacity={p.max_capacity}
-                    />
-                  </>
-                )}
-              </div>
+            {/* Non-stay: availability calendar at bottom */}
+            {p.type !== 'stay' && (
+              <>
+                <hr className="border-gray-100" />
+                <div>
+                  <h2 className="font-semibold text-gray-900 mb-1">{t.listing.availability}</h2>
+                  {isActivity && timeSlots.length > 0 ? (
+                    <>
+                      <p className="text-sm text-gray-500 mb-5">{t.listing.selectDate}</p>
+                      <ActivityDatePicker
+                        blocks={availabilityBlocks}
+                        slots={timeSlots}
+                        durationHours={p.duration_hours}
+                        maxCapacity={p.max_capacity}
+                        slotAvailability={slotAvailability}
+                        onBook={date => openBooking({ date })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-500 mb-5">{t.listing.calendarHint}</p>
+                      <PublicAvailabilityCalendar
+                        blocks={availabilityBlocks}
+                        maxCapacity={p.max_capacity}
+                      />
+                    </>
+                  )}
+                </div>
+              </>
             )}
           </div>
 
