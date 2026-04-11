@@ -21,7 +21,7 @@ export default async function POSPage({
       .from('bookings')
       .select('*, property:properties(name, type)')
       .eq('owner_id', user.id)
-      .in('status', ['confirmed', 'checked_in'])
+      .eq('status', 'checked_in')
       .order('check_in', { ascending: true })
       .returns<BookingWithProperty[]>(),
 

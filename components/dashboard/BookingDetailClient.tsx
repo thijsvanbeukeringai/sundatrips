@@ -76,7 +76,7 @@ export default function BookingDetailClient({ booking: b, posItems, catalog, bil
         {/* ── Left column: booking details ── */}
         <div className="space-y-5">
           {/* Status actions */}
-          <BookingStatusActions bookingId={b.id} currentStatus={b.status} />
+          <BookingStatusActions bookingId={b.id} currentStatus={b.status} checkOut={b.check_out} />
 
           {/* Guest info */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
