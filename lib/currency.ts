@@ -1,6 +1,13 @@
-// ─── Exchange rate config ─────────────────────────────────────────────────────
-// Change EUR_TO_IDR here to update the rate everywhere.
-export const EUR_TO_IDR = 19_800
+// ─── Live exchange rate ────────────────────────────────────────────────────────
+// Updated at runtime by the LanguageProvider from the Frankfurter API.
+// Falls back to a recent rate if the fetch fails.
+let EUR_TO_IDR = 19_800
+
+export { EUR_TO_IDR }
+
+export function setExchangeRate(rate: number) {
+  if (rate > 0) EUR_TO_IDR = rate
+}
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
