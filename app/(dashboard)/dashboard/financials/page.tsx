@@ -2,7 +2,7 @@ import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import FinancialsDashboard from '@/components/dashboard/FinancialsDashboard'
 
-interface BillPaymentRow {
+export interface BillPaymentRow {
   id:           string
   booking_id:   string
   total_amount: number
@@ -16,15 +16,23 @@ interface BillPaymentRow {
   }>
 }
 
-interface BookingRow {
-  id:          string
-  guest_name:  string
-  check_in:    string
-  base_amount: number
+export interface BookingRow {
+  id:           string
+  guest_name:   string
+  check_in:     string
+  base_amount:  number
   platform_fee: number
-  net_payout:  number
-  status:      string
-  property:    { name: string; type: string } | null
+  net_payout:   number
+  status:       string
+  property:     { name: string; type: string } | null
+}
+
+export interface OpenPOSItem {
+  name:        string
+  category:    string
+  quantity:    number
+  unit_price:  number
+  total_price: number
 }
 
 function getDateRange(
@@ -66,7 +74,7 @@ export default async function FinancialsPage({
 
   const supabase = await createClient()
 
-  const [{ data: bookings }, { data: billPayments }] = await Promise.all([
+  const [{ data: bookings }, { data: billPayments }, { data: openPosItems }] = await Promise.all([
     supabase
       .from('bookings')
       .select('id, guest_name, check_in, base_amount, platform_fee, net_payout, status, property:properties(name, type)')
@@ -84,12 +92,21 @@ export default async function FinancialsPage({
       .gte('paid_at', start)
       .lt('paid_at', end)
       .order('paid_at', { ascending: false }),
+
+    // Still-open POS items created in this period (not yet marked as paid)
+    supabase
+      .from('pos_items')
+      .select('name, category, quantity, unit_price, total_price')
+      .eq('owner_id', user.id)
+      .gte('created_at', start)
+      .lt('created_at', end),
   ])
 
   return (
     <FinancialsDashboard
       bookings={bookings ?? []}
       billPayments={(billPayments ?? []) as BillPaymentRow[]}
+      openPosItems={(openPosItems ?? []) as OpenPOSItem[]}
       period={period}
       year={year}
       month={month}
