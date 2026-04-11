@@ -136,7 +136,7 @@ export async function markExtrasPaid(bookingId: string, baseAmount = 0) {
 
   // Prepend room charge on first bill (baseAmount > 0)
   const roomItem = baseAmount > 0
-    ? [{ name: 'Room charge', category: 'room', unit_price: baseAmount, quantity: 1, total_price: baseAmount }]
+    ? [{ name: 'Room rate', category: 'room', unit_price: baseAmount, quantity: 1, total_price: baseAmount }]
     : []
   const allItems = [...roomItem, ...(items ?? [])]
 

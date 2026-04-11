@@ -242,7 +242,7 @@ export default function BookingPOSPanel({
             {isFirstBill && baseAmount > 0 && (
               <div className="flex items-center gap-3 py-2 border-b border-gray-50">
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-gray-800">Room charge</span>
+                  <span className="text-sm font-medium text-gray-800">Room rate</span>
                   <span className="text-xs text-gray-400 ml-2">×1 · {formatPriceRaw(baseAmount, lang)}</span>
                 </div>
                 <span className="text-sm font-semibold text-gray-700 flex-shrink-0">{formatPriceRaw(baseAmount, lang)}</span>

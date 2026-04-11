@@ -26,12 +26,14 @@ function formatDate(d: string) {
 type FullBooking = Booking & { property: Property | null }
 
 interface Props {
-  booking:  FullBooking
-  posItems: POSItem[]
-  catalog:  POSCatalogItem[]
+  booking:          FullBooking
+  posItems:         POSItem[]
+  catalog:          POSCatalogItem[]
+  billPaymentTotal: number
+  hasPayments:      boolean
 }
 
-export default function BookingDetailClient({ booking: b, posItems, catalog }: Props) {
+export default function BookingDetailClient({ booking: b, posItems, catalog, billPaymentTotal, hasPayments }: Props) {
   const { t, lang } = useI18n()
   const bd = t.bookingDetail
   const router = useRouter()
@@ -128,36 +130,87 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
             </div>
           </div>
 
-          {/* Financials */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
-              <CreditCard className="w-4 h-4" /> {bd.financials}
-            </h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between py-2 border-b border-gray-50">
-                <span className="text-gray-500">{bd.baseAmount}</span>
-                <span className="font-medium text-gray-800">{formatPriceRaw(b.base_amount, lang)}</span>
+          {/* Financials — outstanding only */}
+          {(() => {
+            const outstanding = hasPayments ? b.extras_amount : (b.base_amount + b.extras_amount)
+            const isPaid = outstanding === 0
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" /> {bd.financials}
+                </h2>
+                {isPaid ? (
+                  <div className="flex items-center gap-2 text-jungle-700 bg-jungle-50 px-4 py-3 rounded-xl">
+                    <span className="text-lg">✓</span>
+                    <span className="font-semibold text-sm">Paid in full</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-sm">
+                    {!hasPayments && (
+                      <div className="flex justify-between py-2 border-b border-gray-50">
+                        <span className="text-gray-500">Room rate</span>
+                        <span className="font-medium text-gray-800">{formatPriceRaw(b.base_amount, lang)}</span>
+                      </div>
+                    )}
+                    {b.extras_amount > 0 && (
+                      <div className="flex justify-between py-2 border-b border-gray-50">
+                        <span className="text-gray-500">Open bill</span>
+                        <span className="font-medium text-gray-800">{formatPriceRaw(b.extras_amount, lang)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between py-2 bg-amber-50 px-3 rounded-xl">
+                      <span className="font-bold text-amber-800">Outstanding</span>
+                      <span className="font-display text-lg font-bold text-amber-800">{formatPriceRaw(outstanding, lang)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              {b.extras_amount > 0 && (
-                <div className="flex justify-between py-2 border-b border-gray-50">
-                  <span className="text-gray-500">{bd.posExtras}</span>
-                  <span className="font-medium text-gray-800">{formatPriceRaw(b.extras_amount, lang)}</span>
+            )
+          })()}
+
+          {/* Full financial summary */}
+          {(() => {
+            const paidExtras  = hasPayments ? billPaymentTotal - b.base_amount : 0
+            const grandTotal  = hasPayments ? billPaymentTotal + b.extras_amount : b.base_amount + b.extras_amount
+            const outstanding = hasPayments ? b.extras_amount : grandTotal
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" /> Full summary
+                </h2>
+                <div className="space-y-0 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-50">
+                    <span className="text-gray-500">Room rate</span>
+                    <span className="font-medium text-gray-800">{formatPriceRaw(b.base_amount, lang)}</span>
+                  </div>
+                  {paidExtras > 0 && (
+                    <div className="flex justify-between py-2 border-b border-gray-50">
+                      <span className="text-gray-500">Extras paid</span>
+                      <span className="font-medium text-gray-800">{formatPriceRaw(paidExtras, lang)}</span>
+                    </div>
+                  )}
+                  {b.extras_amount > 0 && (
+                    <div className="flex justify-between py-2 border-b border-gray-50">
+                      <span className="text-gray-500">Current open bill</span>
+                      <span className="font-medium text-amber-700">{formatPriceRaw(b.extras_amount, lang)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between py-2 border-b border-gray-50">
+                    <span className="font-semibold text-gray-700">Grand total</span>
+                    <span className="font-bold text-gray-900">{formatPriceRaw(grandTotal, lang)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-gray-50">
+                    <span className="text-gray-400">{bd.platformFee} <span className="text-[11px]">(room only)</span></span>
+                    <span className="text-gray-400">−{formatPriceRaw(b.platform_fee, lang)}</span>
+                  </div>
+                  <div className="flex justify-between py-2 bg-jungle-50 px-3 rounded-xl">
+                    <span className="font-bold text-jungle-800">{bd.yourPayout}</span>
+                    <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(grandTotal - b.platform_fee, lang)}</span>
+                  </div>
                 </div>
-              )}
-              <div className="flex justify-between py-2 border-b border-gray-50">
-                <span className="font-semibold text-gray-700">{bd.total}</span>
-                <span className="font-bold text-gray-900">{formatPriceRaw(b.total_amount, lang)}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-50">
-                <span className="text-gray-400">{bd.platformFee} <span className="text-[11px]">(room only)</span></span>
-                <span className="text-gray-400">−{formatPriceRaw(b.platform_fee, lang)}</span>
-              </div>
-              <div className="flex justify-between py-2 bg-jungle-50 px-3 rounded-xl">
-                <span className="font-bold text-jungle-800">{bd.yourPayout}</span>
-                <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(b.net_payout, lang)}</span>
-              </div>
-            </div>
-          </div>
+            )
+          })()}
 
           {/* Notes */}
           {b.notes && (
@@ -187,7 +240,7 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
       </div>
 
       {/* ── Delete section — full width, below both columns ── */}
-      <div className="max-w-7xl mt-6 pt-6 border-t border-gray-100">
+      <div className="max-w-7xl mt-6 pt-6 border-t border-gray-100 pb-28 sm:pb-0">
         {!confirmOpen ? (
           <button
             onClick={() => { setConfirmOpen(true); setConfirmName('') }}

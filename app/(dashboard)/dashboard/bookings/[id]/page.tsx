@@ -20,7 +20,7 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
 
   if (!data) notFound()
 
-  const [{ data: posItems }, { data: catalog }] = await Promise.all([
+  const [{ data: posItems }, { data: catalog }, { data: billPayments }] = await Promise.all([
     supabase
       .from('pos_items')
       .select('*')
@@ -32,7 +32,22 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
       .eq('owner_id', user.id)
       .eq('is_active', true)
       .order('sort_order'),
+    supabase
+      .from('bill_payments')
+      .select('total_amount')
+      .eq('booking_id', data.id),
   ])
 
-  return <BookingDetailClient booking={data} posItems={posItems ?? []} catalog={catalog ?? []} />
+  const billPaymentTotal = (billPayments ?? []).reduce((s: number, p: { total_amount: number }) => s + p.total_amount, 0)
+  const hasPayments = (billPayments ?? []).length > 0
+
+  return (
+    <BookingDetailClient
+      booking={data}
+      posItems={posItems ?? []}
+      catalog={catalog ?? []}
+      billPaymentTotal={billPaymentTotal}
+      hasPayments={hasPayments}
+    />
+  )
 }
