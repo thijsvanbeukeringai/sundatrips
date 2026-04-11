@@ -180,16 +180,18 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
           </div>
         </div>
 
-        {/* ── Right column: live bill ── */}
-        <div className="xl:sticky xl:top-6 pb-24 sm:pb-0">
-          <BookingPOSPanel
-            bookingId={b.id}
-            initialPosItems={posItems}
-            catalog={catalog}
-            extrasPaid={b.extras_paid}
-            baseAmount={b.base_amount}
-          />
-        </div>
+        {/* ── Right column: live bill (only when checked in) ── */}
+        {b.status === 'checked_in' && (
+          <div className="xl:sticky xl:top-6 pb-24 sm:pb-0">
+            <BookingPOSPanel
+              bookingId={b.id}
+              initialPosItems={posItems}
+              catalog={catalog}
+              extrasPaid={b.extras_paid}
+              baseAmount={b.base_amount}
+            />
+          </div>
+        )}
 
       </div>
 
