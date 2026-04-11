@@ -18,7 +18,7 @@ export async function createRoom(data: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const { error } = await supabase.from('rooms').insert({
+  const { data: created, error } = await supabase.from('rooms').insert({
     owner_id:    user.id,
     property_id: data.property_id,
     variant_id:  data.variant_id,
@@ -28,12 +28,12 @@ export async function createRoom(data: {
     sort_order:  data.sort_order ?? 0,
     status:      'available',
     is_active:   true,
-  })
+  }).select().single()
 
   if (error) return { error: error.message }
   revalidatePath(`/dashboard/properties/${data.property_id}/rooms`)
   revalidatePath('/dashboard/rooms')
-  return { success: true }
+  return { success: true, room: created }
 }
 
 export async function updateRoom(id: string, propertyId: string, data: {

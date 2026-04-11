@@ -143,24 +143,11 @@ export default function RoomManager({
         floor:       form.floor ? parseInt(form.floor) : null,
         sort_order:  rooms.length,
       })
-      if (!res?.error) {
-        // Optimistic: add a placeholder (server will revalidate with real data)
-        setRooms(prev => [...prev, {
-          id:          crypto.randomUUID(),
-          owner_id:    '',
-          property_id: propertyId,
-          variant_id:  form.variant_id || null,
-          room_number: form.room_number,
-          name:        form.name || null,
-          floor:       form.floor ? parseInt(form.floor) : null,
-          status:      'available',
-          notes:       null,
-          is_active:   true,
-          sort_order:  rooms.length,
-          created_at:  new Date().toISOString(),
-        }])
-        setShowAdd(false)
+      if (res?.error) return
+      if (res?.room) {
+        setRooms(prev => [...prev, res.room])
       }
+      setShowAdd(false)
     })
   }
 
