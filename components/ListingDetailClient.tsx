@@ -12,6 +12,7 @@ import ActivityDatePicker from '@/components/ActivityDatePicker'
 import ListingVariants from '@/components/ListingVariants'
 import ListingGallery from '@/components/ListingGallery'
 import PublicBookingForm from '@/components/PublicBookingForm'
+import StayBookingSection from '@/components/StayBookingSection'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
@@ -69,10 +70,10 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
 
         <ListingGallery images={p.images} name={p.name} />
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid lg:grid-cols-3 gap-10">
+        <div className={`max-w-5xl mx-auto px-4 sm:px-6 py-10 ${p.type === 'stay' ? '' : 'grid lg:grid-cols-3 gap-10'}`}>
 
-          {/* Left */}
-          <div className="lg:col-span-2 space-y-8">
+          {/* Left / main content */}
+          <div className={`${p.type !== 'stay' ? 'lg:col-span-2' : 'max-w-3xl'} space-y-8`}>
 
             {/* Header */}
             <div>
@@ -192,42 +193,49 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
 
             <hr className="border-gray-100" />
 
-            {/* Availability */}
-            <div>
-              <h2 className="font-semibold text-gray-900 mb-1">{t.listing.availability}</h2>
-              {isActivity && timeSlots.length > 0 ? (
-                <>
-                  <p className="text-sm text-gray-500 mb-5">{t.listing.selectDate}</p>
-                  <ActivityDatePicker
-                    blocks={availabilityBlocks}
-                    slots={timeSlots}
-                    durationHours={p.duration_hours}
-                    maxCapacity={p.max_capacity}
-                    slotAvailability={slotAvailability}
-                    onBook={date => openBooking({ date })}
-                  />
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-500 mb-5">{t.listing.calendarHint}</p>
-                  <PublicAvailabilityCalendar
-                    blocks={availabilityBlocks}
-                    maxCapacity={p.max_capacity}
-                  />
-                </>
-              )}
-            </div>
+            {/* Stay: inline booking section */}
+            {p.type === 'stay' ? (
+              <StayBookingSection property={p} />
+            ) : (
+              /* Non-stay: availability calendar */
+              <div>
+                <h2 className="font-semibold text-gray-900 mb-1">{t.listing.availability}</h2>
+                {isActivity && timeSlots.length > 0 ? (
+                  <>
+                    <p className="text-sm text-gray-500 mb-5">{t.listing.selectDate}</p>
+                    <ActivityDatePicker
+                      blocks={availabilityBlocks}
+                      slots={timeSlots}
+                      durationHours={p.duration_hours}
+                      maxCapacity={p.max_capacity}
+                      slotAvailability={slotAvailability}
+                      onBook={date => openBooking({ date })}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-500 mb-5">{t.listing.calendarHint}</p>
+                    <PublicAvailabilityCalendar
+                      blocks={availabilityBlocks}
+                      maxCapacity={p.max_capacity}
+                    />
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Right: booking card */}
-          <div className="lg:col-span-1">
-            <PublicBookingForm
-              property={p}
-              variants={variants}
-              triggerVariantId={triggerVariantId}
-              triggerDate={triggerDate}
-            />
-          </div>
+          {/* Right sidebar: only for non-stay properties */}
+          {p.type !== 'stay' && (
+            <div className="lg:col-span-1">
+              <PublicBookingForm
+                property={p}
+                variants={variants}
+                triggerVariantId={triggerVariantId}
+                triggerDate={triggerDate}
+              />
+            </div>
+          )}
 
         </div>
       </main>

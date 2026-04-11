@@ -92,6 +92,10 @@ export async function updateBookingStatus(id: string, status: BookingStatus) {
     }
   }
 
+  // Also revalidate the public listing so availability is up-to-date
+  const { data: bk } = await supabase.from('bookings').select('property_id').eq('id', id).single()
+  if (bk?.property_id) revalidatePath(`/listings/${bk.property_id}`)
+
   revalidatePath('/dashboard/bookings')
   revalidatePath(`/dashboard/bookings/${id}`)
   revalidatePath('/dashboard/rooms')
