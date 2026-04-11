@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { addPOSItem, removePOSItem } from '@/app/actions/pos'
+import { addPOSItem, removePOSItem, markExtrasPaid } from '@/app/actions/pos'
 import type { Booking, POSCatalogItem, POSItem, Property } from '@/lib/types'
-import { ShoppingBag, Plus, Trash2, Zap, ChevronDown, Settings } from 'lucide-react'
+import { ShoppingBag, Plus, Trash2, Zap, ChevronDown, Settings, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
@@ -132,6 +132,17 @@ export default function POSTerminal({
     if (!selectedBookingId) return
     setPosItems(items => items.filter(i => i.id !== itemId))
     startTransition(() => { void removePOSItem(itemId, selectedBookingId) })
+  }
+
+  function handlePay() {
+    if (!selectedBookingId) return
+    startTransition(async () => {
+      const res = await markExtrasPaid(selectedBookingId, 0)
+      if (!res?.error) {
+        setPosItems([])
+        setShowCart(false)
+      }
+    })
   }
 
   const CATEGORIES = CATEGORY_IDS.map(id => ({
@@ -324,7 +335,7 @@ export default function POSTerminal({
           </div>
         </div>
 
-        {/* Total */}
+        {/* Total + pay */}
         <div className="border-t border-gray-100 p-5 space-y-3">
           <div className="flex justify-between font-bold">
             <span className="text-gray-800">{pos.total}</span>
@@ -334,6 +345,16 @@ export default function POSTerminal({
             <span>{pos.yourPayout}</span>
             <span>{formatPriceRaw((selectedBooking?.base_amount ?? 0) * 0.99 + tabTotal, lang)}</span>
           </div>
+          {posItems.length > 0 && (
+            <button
+              onClick={handlePay}
+              disabled={pending}
+              className="w-full flex items-center justify-center gap-2 bg-jungle-800 hover:bg-jungle-900 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {pending ? 'Processing…' : 'Mark as Paid'}
+            </button>
+          )}
         </div>
       </div>
     </div>

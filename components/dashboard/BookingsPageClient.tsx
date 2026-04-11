@@ -81,7 +81,7 @@ export default function BookingsPageClient({ bookings, counts, currentStatus, q 
               {bookings.map((b) => (
                 <Link
                   key={b.id}
-                  href={b.status === 'checked_in' ? `/dashboard/pos?booking=${b.id}` : `/dashboard/bookings/${b.id}`}
+                  href={`/dashboard/bookings/${b.id}`}
                   className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 >
                   {/* Status dot */}
