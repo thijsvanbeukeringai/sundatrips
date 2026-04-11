@@ -271,8 +271,9 @@ export default function BookingPOSPanel({
           </div>
         )}
 
+        {/* Desktop pay bar */}
         {(posItems.length > 0 || roomCharge > 0) && (
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          <div className="hidden sm:flex items-center justify-between pt-2 border-t border-gray-100">
             <div>
               <p className="text-xs text-gray-400">Bill total</p>
               <p className="font-display text-xl font-bold text-jungle-800">{formatPriceRaw(billTotal, lang)}</p>
@@ -288,6 +289,24 @@ export default function BookingPOSPanel({
           </div>
         )}
       </div>
+
+      {/* Mobile sticky pay bar — fixed at bottom when bill has items */}
+      {(posItems.length > 0 || roomCharge > 0) && (
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-4 shadow-2xl">
+          <div>
+            <p className="text-xs text-gray-400">Bill total</p>
+            <p className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(billTotal, lang)}</p>
+          </div>
+          <button
+            onClick={handlePay}
+            disabled={pending}
+            className="flex items-center gap-2 bg-jungle-800 hover:bg-jungle-900 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            {pending ? 'Processing…' : 'Mark as Paid'}
+          </button>
+        </div>
+      )}
 
       {/* Payment history */}
       {showHistory && payments.length > 0 && (

@@ -181,7 +181,7 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
         </div>
 
         {/* ── Right column: live bill ── */}
-        <div className="xl:sticky xl:top-6">
+        <div className="xl:sticky xl:top-6 pb-24 sm:pb-0">
           <BookingPOSPanel
             bookingId={b.id}
             initialPosItems={posItems}

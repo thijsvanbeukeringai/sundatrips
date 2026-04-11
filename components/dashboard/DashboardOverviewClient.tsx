@@ -111,8 +111,8 @@ export default function DashboardOverviewClient({
         </Link>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* Stat cards — hidden on mobile, shown from sm up */}
+      <div className="hidden sm:grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {stats.map((s) => {
           const Icon = s.icon
           return (
