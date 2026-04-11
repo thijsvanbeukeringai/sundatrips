@@ -74,6 +74,12 @@ export default function Navbar({ solid }: { solid?: boolean } = {}) {
             <div className="hidden md:flex items-center gap-3">
               <LanguageSwitcher dark={!isSolid} />
               <NextLink
+                href="/login"
+                className={`text-sm font-medium transition-colors duration-200 ${isSolid ? 'text-gray-600 hover:text-gray-900' : 'text-white/80 hover:text-white'}`}
+              >
+                Login
+              </NextLink>
+              <NextLink
                 href="/partners"
                 className="bg-sunset-500 hover:bg-sunset-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-200 hover:shadow-lg hover:shadow-sunset-500/25 active:scale-95"
               >
@@ -120,8 +126,16 @@ export default function Navbar({ solid }: { solid?: boolean } = {}) {
               })}
               <LanguageSwitcher />
               <NextLink
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="text-center text-gray-700 font-medium py-3 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
+              >
+                Login
+              </NextLink>
+              <NextLink
                 href="/partners"
-                className="mt-2 bg-sunset-500 text-white text-center font-semibold py-3 rounded-full"
+                onClick={() => setMobileOpen(false)}
+                className="bg-sunset-500 text-white text-center font-semibold py-3 rounded-full"
               >
                 {t.nav.listProperty}
               </NextLink>
