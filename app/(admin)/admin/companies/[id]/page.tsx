@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, Building2, MapPin } from 'lucide-react'
 import VenueForm from '@/components/admin/VenueForm'
 import AssignPropertyPanel from '@/components/admin/AssignPropertyPanel'
+import ImpersonateButton from '@/components/admin/ImpersonateButton'
 
 export default async function AdminEditCompanyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -40,6 +41,9 @@ export default async function AdminEditCompanyPage({ params }: { params: Promise
             {venue.island}
           </p>
         </div>
+        {venue.owner_id && (
+          <ImpersonateButton userId={venue.owner_id} label="Open backoffice" dark />
+        )}
       </header>
 
       <div className="max-w-3xl mx-auto p-6 sm:p-8 space-y-6">

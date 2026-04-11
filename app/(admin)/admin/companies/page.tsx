@@ -1,8 +1,9 @@
 import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Building2, Plus, MapPin, Check, X } from 'lucide-react'
+import { ArrowLeft, Building2, Plus, MapPin } from 'lucide-react'
 import DeleteVenueButton from '@/components/admin/DeleteVenueButton'
+import ImpersonateButton from '@/components/admin/ImpersonateButton'
 
 export default async function AdminCompaniesPage() {
   const user = await getCachedUser()
@@ -108,6 +109,10 @@ export default async function AdminCompaniesPage() {
                     >
                       Edit / Manage →
                     </Link>
+                    {venue.owner_id && (
+                      <ImpersonateButton userId={venue.owner_id} label="Open backoffice" />
+                    )}
+                    <div className="flex-1" />
                     <DeleteVenueButton id={venue.id} name={venue.name} />
                   </div>
                 </div>
