@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { Plus, Trash2, Pencil, Check, X, Users, ArrowRight, Car, Phone, Building2 } from 'lucide-react'
 import { addVariant, updateVariant, deleteVariant, toggleVariantActive } from '@/app/actions/variants'
 import type { ListingVariant, PropertyType } from '@/lib/types'
@@ -265,61 +265,82 @@ function VariantCard({
   const [pending, startTransition] = useTransition()
 
   return (
-    <div className={`flex items-start gap-3 p-4 rounded-xl border transition-colors ${
+    <div className={`rounded-xl border transition-colors ${
       variant.is_active ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'
     }`}>
-      {/* Thumbnail */}
-      <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-        {variant.images?.[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={variant.images[0]} alt={variant.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <Building2 className="w-5 h-5" />
-          </div>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-semibold text-sm text-gray-900">{variant.name}</p>
-          {variant.from_location && variant.to_location && (
-            <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              {variant.from_location}
-              <ArrowRight className="w-3 h-3" />
-              {variant.to_location}
-            </span>
+      {/* Main info row */}
+      <div className="flex items-start gap-3 p-4">
+        {/* Thumbnail */}
+        <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+          {variant.images?.[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={variant.images[0]} alt={variant.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-300">
+              <Building2 className="w-5 h-5" />
+            </div>
           )}
         </div>
-        {variant.description && (
-          <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{variant.description}</p>
-        )}
-        <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
-          <span className="font-bold text-jungle-800">€{variant.price_per_unit} / {variant.price_unit}</span>
-          {variant.max_capacity && (
-            <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              Max {variant.max_capacity}
-            </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-semibold text-sm text-gray-900">{variant.name}</p>
+            {variant.from_location && variant.to_location && (
+              <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                {variant.from_location}
+                <ArrowRight className="w-3 h-3" />
+                {variant.to_location}
+              </span>
+            )}
+          </div>
+          {variant.description && (
+            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{variant.description}</p>
           )}
-          {variant.vehicle_type && (
-            <span className="flex items-center gap-1">
-              <Car className="w-3 h-3" />
-              {variant.vehicle_type}
-            </span>
-          )}
-          {variant.driver_name && (
-            <span className="text-gray-400">{variant.driver_name}</span>
-          )}
-          {variant.driver_phone && (
-            <span className="flex items-center gap-1">
-              <Phone className="w-3 h-3" />
-              {variant.driver_phone}
-            </span>
-          )}
+          <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-500 flex-wrap">
+            <span className="font-bold text-jungle-800">€{variant.price_per_unit} / {variant.price_unit}</span>
+            {variant.max_capacity && (
+              <span className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                Max {variant.max_capacity}
+              </span>
+            )}
+            {variant.vehicle_type && (
+              <span className="flex items-center gap-1">
+                <Car className="w-3 h-3" />
+                {variant.vehicle_type}
+              </span>
+            )}
+            {variant.driver_name && (
+              <span className="text-gray-400">{variant.driver_name}</span>
+            )}
+            {variant.driver_phone && (
+              <span className="flex items-center gap-1">
+                <Phone className="w-3 h-3" />
+                {variant.driver_phone}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 flex-shrink-0">
+      {/* Action footer */}
+      <div className="border-t border-gray-100 px-3 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Edit
+          </button>
+          <button
+            onClick={() => startTransition(() => { void onDelete() })}
+            disabled={pending}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </button>
+        </div>
         <button
           onClick={() => startTransition(() => { void onToggle() })}
           disabled={pending}
@@ -330,19 +351,6 @@ function VariantCard({
           <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
             variant.is_active ? 'translate-x-4' : 'translate-x-0.5'
           }`} />
-        </button>
-        <button
-          onClick={onEdit}
-          className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <Pencil className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={() => startTransition(() => { void onDelete() })}
-          disabled={pending}
-          className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
@@ -384,6 +392,7 @@ export default function VariantManager({
   const [showAdd, setShowAdd]   = useState(false)
   const [editId, setEditId]     = useState<string | null>(null)
   const [saving, startTransition] = useTransition()
+  const addFormRef = useRef<HTMLDivElement>(null)
 
   const cfg = VARIANT_LABELS[propertyType]
 
@@ -457,16 +466,19 @@ export default function VariantManager({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="font-semibold text-gray-900">{cfg.title}</h3>
           <p className="text-xs text-gray-400 mt-0.5">{vm.helper}</p>
         </div>
         {!showAdd && (
           <button
             type="button"
-            onClick={() => setShowAdd(true)}
-            className="flex items-center gap-1.5 text-sm font-semibold text-jungle-700 hover:text-jungle-900 hover:bg-jungle-50 px-3 py-1.5 rounded-lg transition-colors"
+            onClick={() => {
+              setShowAdd(true)
+              setTimeout(() => addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+            }}
+            className="flex-shrink-0 flex items-center gap-1.5 text-sm font-semibold bg-jungle-800 hover:bg-jungle-900 text-white px-3 py-2 rounded-xl transition-colors"
           >
             <Plus className="w-4 h-4" />
             {cfg.addLabel}
@@ -514,20 +526,25 @@ export default function VariantManager({
 
       {/* Add form */}
       {showAdd && (
-        <VariantForm
-          type={propertyType}
-          userId={userId}
-          initial={blankForm(propertyType, PRICE_UNITS[propertyType])}
-          onSave={handleAdd}
-          onCancel={() => setShowAdd(false)}
-          saving={saving}
-        />
+        <div ref={addFormRef}>
+          <VariantForm
+            type={propertyType}
+            userId={userId}
+            initial={blankForm(propertyType, PRICE_UNITS[propertyType])}
+            onSave={handleAdd}
+            onCancel={() => setShowAdd(false)}
+            saving={saving}
+          />
+        </div>
       )}
 
       {variants.length === 0 && !showAdd && (
         <button
           type="button"
-          onClick={() => setShowAdd(true)}
+          onClick={() => {
+            setShowAdd(true)
+            setTimeout(() => addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+          }}
           className="w-full border-2 border-dashed border-gray-200 hover:border-jungle-300 text-gray-400 hover:text-jungle-600 rounded-xl py-8 text-sm font-medium transition-colors flex flex-col items-center gap-2"
         >
           <Plus className="w-5 h-5" />
