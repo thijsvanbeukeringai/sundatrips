@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, CalendarDays, ShoppingBag, Building2,
   BarChart3, Settings, LogOut, ChevronRight, UserPlus,
-  Pencil, Check, X, Landmark, Users,
+  Pencil, Check, X, Landmark, Users, BedDouble,
 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
@@ -61,6 +61,7 @@ export default function Sidebar({ profile, isImpersonating }: { profile: Profile
         { href: '/dashboard',             icon: LayoutDashboard, label: t.dashboard.overview },
         { href: '/dashboard/bookings',    icon: CalendarDays,    label: t.dashboard.bookings },
         { href: '/dashboard/pos',         icon: ShoppingBag,     label: t.dashboard.pos,      badge: 'Live' as const },
+        { href: '/dashboard/rooms',       icon: BedDouble,       label: 'Rooms' },
         { href: '/dashboard/properties',  icon: Building2,       label: t.dashboard.listings },
         { href: '/dashboard/financials',  icon: BarChart3,       label: t.dashboard.financials },
         { href: '/dashboard/settings',    icon: Settings,        label: t.dashboard.settings },

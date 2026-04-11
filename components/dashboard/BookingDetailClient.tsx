@@ -3,14 +3,15 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition, useState } from 'react'
-import { ArrowLeft, User, Calendar, CreditCard, FileText, Trash2, ShoppingBag, CheckCircle2, AlertTriangle } from 'lucide-react'
-import type { Booking, POSCatalogItem, POSItem, Property } from '@/lib/types'
+import { ArrowLeft, User, Calendar, CreditCard, FileText, Trash2, ShoppingBag, CheckCircle2, AlertTriangle, BedDouble } from 'lucide-react'
+import type { Booking, POSCatalogItem, POSItem, Property, Room, ListingVariant } from '@/lib/types'
 import BookingStatusActions from '@/components/dashboard/BookingStatusActions'
 import BookingPOSPanel from '@/components/dashboard/BookingPOSPanel'
 import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
 import { deleteBooking } from '@/app/actions/bookings'
 import { markExtrasPaid, clearPOSItems } from '@/app/actions/pos'
+import { assignRoomToBooking } from '@/app/actions/rooms'
 
 const STATUS_STYLE: Record<string, string> = {
   pending:    'bg-yellow-100 text-yellow-700',
@@ -24,7 +25,8 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-type FullBooking = Booking & { property: Property | null }
+type FullBooking = Booking & { property: Property | null; room: Room | null }
+type RoomOption = Room & { variant: Pick<ListingVariant, 'name'> | null }
 
 interface Props {
   booking:          FullBooking
@@ -32,17 +34,31 @@ interface Props {
   catalog:          POSCatalogItem[]
   billPaymentTotal: number
   hasPayments:      boolean
+  availableRooms:   RoomOption[]
 }
 
-export default function BookingDetailClient({ booking: b, posItems, catalog, billPaymentTotal, hasPayments }: Props) {
+export default function BookingDetailClient({ booking: b, posItems, catalog, billPaymentTotal, hasPayments, availableRooms }: Props) {
   const { t, lang } = useI18n()
   const bd = t.bookingDetail
   const router = useRouter()
-  const [delPending, startDelTransition]   = useTransition()
-  const [billPending, startBillTransition] = useTransition()
-  const [confirmOpen, setConfirmOpen]      = useState(false)
-  const [confirmName, setConfirmName]      = useState('')
-  const [openBillItems, setOpenBillItems]  = useState<POSItem[]>(posItems)
+  const [delPending, startDelTransition]     = useTransition()
+  const [billPending, startBillTransition]   = useTransition()
+  const [roomPending, startRoomTransition]   = useTransition()
+  const [confirmOpen, setConfirmOpen]        = useState(false)
+  const [confirmName, setConfirmName]        = useState('')
+  const [openBillItems, setOpenBillItems]    = useState<POSItem[]>(posItems)
+  const [assignedRoomId, setAssignedRoomId]  = useState<string | null>(b.room_id ?? null)
+  const [roomSelectOpen, setRoomSelectOpen]  = useState(false)
+
+  const assignedRoom = availableRooms.find(r => r.id === assignedRoomId) ?? null
+
+  function handleRoomChange(roomId: string | null) {
+    setRoomSelectOpen(false)
+    startRoomTransition(async () => {
+      const res = await assignRoomToBooking(b.id, roomId)
+      if (!res?.error) setAssignedRoomId(roomId)
+    })
+  }
 
   function handlePayBill() {
     startBillTransition(async () => {
@@ -93,7 +109,83 @@ export default function BookingDetailClient({ booking: b, posItems, catalog, bil
         {/* ── Left column: booking details ── */}
         <div className="space-y-5">
           {/* Status actions */}
-          <BookingStatusActions bookingId={b.id} currentStatus={b.status} checkOut={b.check_out} />
+          <BookingStatusActions
+            bookingId={b.id}
+            currentStatus={b.status}
+            checkOut={b.check_out}
+            roomStatus={assignedRoom?.status}
+          />
+
+          {/* Room assignment */}
+          {availableRooms.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                <BedDouble className="w-4 h-4" /> Room
+              </h2>
+              {assignedRoom ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-bold text-gray-900">Room {assignedRoom.room_number}</p>
+                    {assignedRoom.name && <p className="text-xs text-gray-400">{assignedRoom.name}</p>}
+                    {assignedRoom.variant && <p className="text-xs text-gray-400">{assignedRoom.variant.name}</p>}
+                  </div>
+                  <button
+                    onClick={() => setRoomSelectOpen(o => !o)}
+                    disabled={roomPending}
+                    className="text-xs font-semibold text-jungle-700 hover:text-jungle-900 hover:bg-jungle-50 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm text-gray-400 italic">No room assigned</p>
+                  <button
+                    onClick={() => setRoomSelectOpen(o => !o)}
+                    disabled={roomPending}
+                    className="text-xs font-semibold bg-jungle-800 hover:bg-jungle-900 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    Assign room
+                  </button>
+                </div>
+              )}
+
+              {/* Room picker */}
+              {roomSelectOpen && (
+                <div className="mt-3 border border-gray-100 rounded-xl overflow-hidden">
+                  {assignedRoom && (
+                    <button
+                      onClick={() => handleRoomChange(null)}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors border-b border-gray-50"
+                    >
+                      Remove assignment
+                    </button>
+                  )}
+                  {availableRooms.map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => handleRoomChange(r.id)}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors flex items-center justify-between ${r.id === assignedRoomId ? 'bg-jungle-50' : ''}`}
+                    >
+                      <span>
+                        <span className="font-semibold">Room {r.room_number}</span>
+                        {r.name && <span className="text-gray-400 ml-1.5">{r.name}</span>}
+                        {r.variant && <span className="text-xs text-gray-400 ml-2">· {r.variant.name}</span>}
+                      </span>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                        r.status === 'available'      ? 'bg-jungle-100 text-jungle-700' :
+                        r.status === 'occupied'       ? 'bg-blue-100 text-blue-700' :
+                        r.status === 'needs_cleaning' ? 'bg-amber-100 text-amber-700' :
+                        'bg-gray-100 text-gray-500'
+                      }`}>
+                        {r.status.replace('_', ' ')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Open bill warning */}
           {openBillItems.length > 0 && (

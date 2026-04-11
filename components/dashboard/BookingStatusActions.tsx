@@ -3,17 +3,20 @@
 import { useTransition, useEffect, useState } from 'react'
 import { updateBookingStatus } from '@/app/actions/bookings'
 import type { BookingStatus } from '@/lib/types'
-import { CheckCircle, LogIn, XCircle, Flag, LogOut, AlertTriangle } from 'lucide-react'
+import { CheckCircle, LogIn, XCircle, Flag, LogOut, AlertTriangle, BedDouble } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
+import type { RoomStatus } from '@/lib/types'
 
 export default function BookingStatusActions({
   bookingId,
   currentStatus,
   checkOut,
+  roomStatus,
 }: {
   bookingId:     string
   currentStatus: BookingStatus
   checkOut?:     string | null
+  roomStatus?:   RoomStatus | null
 }) {
   const [pending, startTransition] = useTransition()
   const { t } = useI18n()
@@ -75,20 +78,35 @@ export default function BookingStatusActions({
         </div>
       )}
 
+      {/* Room needs cleaning — block check-in */}
+      {currentStatus === 'confirmed' && roomStatus === 'needs_cleaning' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+          <BedDouble className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Room needs cleaning</p>
+            <p className="text-xs text-amber-600 mt-0.5">Mark the room as ready before checking in this guest.</p>
+          </div>
+        </div>
+      )}
+
       {/* Normal status actions */}
       {actions.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-2">
-          {actions.map(({ next, label, icon, color }) => (
-            <button
-              key={next}
-              disabled={pending}
-              onClick={() => doTransition(next)}
-              className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all disabled:opacity-50 ${color}`}
-            >
-              {icon}
-              {label}
-            </button>
-          ))}
+          {actions.map(({ next, label, icon, color }) => {
+            // Hide check-in button when room needs cleaning
+            if (next === 'checked_in' && roomStatus === 'needs_cleaning') return null
+            return (
+              <button
+                key={next}
+                disabled={pending}
+                onClick={() => doTransition(next)}
+                className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all disabled:opacity-50 ${color}`}
+              >
+                {icon}
+                {label}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

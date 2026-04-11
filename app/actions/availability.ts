@@ -6,8 +6,12 @@ import type { ListingVariant } from '@/lib/types'
 
 /**
  * Returns available variants (full objects) for the given date range and guest count.
- * A variant is unavailable if it has an active booking overlapping the dates,
- * or if its max_capacity is less than the requested guest count.
+ *
+ * If the property has physical rooms set up:
+ *   A variant is available if it has at least one room with no conflicting booking.
+ *
+ * If no rooms exist (legacy / non-stay properties):
+ *   Falls back to variant-level conflict check (one booking per variant at a time).
  */
 export async function getAvailableVariants(
   propertyId: string,
@@ -33,7 +37,38 @@ export async function getAvailableVariants(
 
   const variantIds = capacityFiltered.map((v: ListingVariant) => v.id)
 
-  // A booking overlaps if: check_in < searchCheckOut AND (check_out > searchCheckIn OR check_out IS NULL)
+  // ── Check if this property has rooms ──────────────────────────────────────
+  const { data: allRooms } = await supabase
+    .from('rooms')
+    .select('id, variant_id')
+    .eq('property_id', propertyId)
+    .eq('is_active', true)
+    .neq('status', 'maintenance')
+
+  if (allRooms && allRooms.length > 0) {
+    // ── Room-based availability ────────────────────────────────────────────
+    // For each room, check if it has a conflicting booking
+    const roomIds = allRooms.map(r => r.id)
+
+    const { data: conflicts } = await supabase
+      .from('bookings')
+      .select('room_id')
+      .in('room_id', roomIds)
+      .in('status', ['pending', 'confirmed', 'checked_in'])
+      .lt('check_in', checkOut)
+      .or(`check_out.gt.${checkIn},check_out.is.null`)
+
+    const bookedRoomIds = new Set((conflicts ?? []).map(b => b.room_id))
+
+    // A variant is available if it has at least one room that is NOT booked
+    return capacityFiltered.filter(v => {
+      const variantRooms = allRooms.filter(r => r.variant_id === v.id)
+      if (variantRooms.length === 0) return false  // variant has no rooms = not bookable
+      return variantRooms.some(r => !bookedRoomIds.has(r.id))
+    })
+  }
+
+  // ── Legacy: no rooms — one booking per variant ─────────────────────────
   const { data: conflicts } = await supabase
     .from('bookings')
     .select('variant_id')

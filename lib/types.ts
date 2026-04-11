@@ -2,6 +2,7 @@
 // Re-run `supabase gen types typescript` after schema changes.
 
 export type Role = 'owner' | 'admin' | 'crew'
+export type RoomStatus = 'available' | 'occupied' | 'needs_cleaning' | 'maintenance'
 export type CrewPermission =
   | 'view_bookings'
   | 'manage_pos'
@@ -115,11 +116,13 @@ export interface Booking {
   guest_user_id: string | null
   variant_id:    string | null
   extras_paid:   boolean
+  room_id:       string | null
   created_at: string
   updated_at: string
   // Joined
   property?: Property
   variant?:  ListingVariant
+  room?:     Room | null
 }
 
 export interface POSCatalogItem {
@@ -146,6 +149,24 @@ export interface POSItem {
   total_price: number         // generated
   notes: string | null
   created_at: string
+}
+
+export interface Room {
+  id:          string
+  owner_id:    string
+  property_id: string
+  variant_id:  string | null
+  room_number: string
+  name:        string | null
+  floor:       number | null
+  status:      RoomStatus
+  notes:       string | null
+  is_active:   boolean
+  sort_order:  number
+  created_at:  string
+  // Joined
+  variant?:    ListingVariant | null
+  property?:   Property | null
 }
 
 export interface Payout {

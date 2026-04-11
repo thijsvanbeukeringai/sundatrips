@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Plus, Building2, MapPin, Pencil, Bed, Compass, Activity, CalendarDays, LayoutList, Car } from 'lucide-react'
+import { Plus, Building2, MapPin, Pencil, Bed, Compass, Activity, CalendarDays, LayoutList, Car, BedDouble } from 'lucide-react'
 import type { Property } from '@/lib/types'
 import DeletePropertyButton from '@/components/dashboard/DeletePropertyButton'
 import ToggleActiveButton from '@/components/dashboard/ToggleActiveButton'
@@ -184,6 +184,15 @@ export default function PropertiesPageClient({ properties: initial }: { properti
                   <LayoutList className="w-3.5 h-3.5" />
                   {pr.variantLabel[p.type as keyof typeof pr.variantLabel]}
                 </Link>
+                {p.type === 'stay' && (
+                  <Link
+                    href={`/dashboard/properties/${p.id}/rooms`}
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-jungle-700 hover:bg-white px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-gray-200"
+                  >
+                    <BedDouble className="w-3.5 h-3.5" />
+                    Rooms
+                  </Link>
+                )}
                 <Link
                   href={`/dashboard/properties/${p.id}/edit`}
                   className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-white px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-gray-200"

@@ -1,9 +1,9 @@
 import { createClient, getCachedUser } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import type { Booking, Property } from '@/lib/types'
+import type { Booking, Property, Room, ListingVariant } from '@/lib/types'
 import BookingDetailClient from '@/components/dashboard/BookingDetailClient'
 
-type FullBooking = Booking & { property: Property | null }
+type FullBooking = Booking & { property: Property | null; room: Room | null }
 
 export default async function BookingDetailPage({ params }: { params: { id: string } }) {
   const user = await getCachedUser()
@@ -13,29 +13,44 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
 
   const { data } = await supabase
     .from('bookings')
-    .select('*, property:properties(*)')
+    .select('*, property:properties(*), room:rooms(*)')
     .eq('id', params.id)
     .eq('owner_id', user.id)
     .single<FullBooking>()
 
   if (!data) notFound()
 
-  const [{ data: posItems }, { data: catalog }, { data: billPayments }] = await Promise.all([
+  const [{ data: posItems }, { data: catalog }, { data: billPayments }, { data: availableRooms }] = await Promise.all([
     supabase
       .from('pos_items')
       .select('*')
       .eq('booking_id', data.id)
       .order('created_at', { ascending: true }),
+
     supabase
       .from('pos_catalog')
       .select('*')
       .eq('owner_id', user.id)
       .eq('is_active', true)
       .order('sort_order'),
+
     supabase
       .from('bill_payments')
       .select('total_amount')
       .eq('booking_id', data.id),
+
+    // Rooms for this property (for manual reassignment dropdown)
+    data.property_id
+      ? supabase
+          .from('rooms')
+          .select('*, variant:listing_variants(name)')
+          .eq('property_id', data.property_id)
+          .eq('owner_id', user.id)
+          .eq('is_active', true)
+          .order('sort_order')
+          .order('room_number')
+          .returns<(Room & { variant: Pick<ListingVariant, 'name'> | null })[]>()
+      : { data: [] },
   ])
 
   const billPaymentTotal = (billPayments ?? []).reduce((s: number, p: { total_amount: number }) => s + p.total_amount, 0)
@@ -48,6 +63,7 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
       catalog={catalog ?? []}
       billPaymentTotal={billPaymentTotal}
       hasPayments={hasPayments}
+      availableRooms={(availableRooms ?? []) as (Room & { variant: Pick<ListingVariant, 'name'> | null })[]}
     />
   )
 }
