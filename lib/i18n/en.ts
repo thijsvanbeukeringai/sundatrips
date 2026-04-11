@@ -470,7 +470,7 @@ export const en = {
     manageCatalog:  'Manage catalog',
     noBookingSelected: 'No booking selected',
     tabEmpty:       'Tab is empty',
-    baseBooking:    'Base booking',
+    baseBooking:    'Room rate',
     posExtras:      'POS extras',
     total:          'Total',
     yourPayout:     'Your payout (99%)',

@@ -472,7 +472,7 @@ export const id: Translations = {
     manageCatalog:  'Kelola katalog',
     noBookingSelected: 'Tidak ada pemesanan dipilih',
     tabEmpty:       'Tab kosong',
-    baseBooking:    'Pemesanan dasar',
+    baseBooking:    'Tarif kamar',
     posExtras:      'Ekstra POS',
     total:          'Total',
     yourPayout:     'Pembayaran Anda (99%)',

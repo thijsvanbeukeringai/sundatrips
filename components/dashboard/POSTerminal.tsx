@@ -44,10 +44,11 @@ export default function POSTerminal({
       ? initialSelectedId
       : (initialBookings[0]?.id ?? null)
   )
-  const [posItems, setPosItems]  = useState<POSItem[]>([])
-  const [catFilter, setCatFilter] = useState('all')
-  const [showCart, setShowCart]   = useState(false)
-  const [pending, startTransition] = useTransition()
+  const [posItems, setPosItems]      = useState<POSItem[]>([])
+  const [hasPayments, setHasPayments] = useState(false)
+  const [catFilter, setCatFilter]    = useState('all')
+  const [showCart, setShowCart]      = useState(false)
+  const [pending, startTransition]   = useTransition()
   const supabase = createClient()
 
   const selectedBooking = bookings.find(b => b.id === selectedBookingId)
@@ -55,12 +56,22 @@ export default function POSTerminal({
   useEffect(() => {
     if (!selectedBookingId) return
 
+    // Reset payment state when booking changes
+    setHasPayments(false)
+
     supabase
       .from('pos_items')
       .select('*')
       .eq('booking_id', selectedBookingId)
       .order('created_at', { ascending: true })
       .then(({ data }) => setPosItems((data ?? []) as POSItem[]))
+
+    // Check if room rate was already paid in a previous bill
+    supabase
+      .from('bill_payments')
+      .select('id', { count: 'exact', head: true })
+      .eq('booking_id', selectedBookingId)
+      .then(({ count }) => setHasPayments((count ?? 0) > 0))
 
     const channel = supabase
       .channel(`pos-${selectedBookingId}`)
@@ -99,7 +110,10 @@ export default function POSTerminal({
     ? catalog.filter(i => i.is_active)
     : catalog.filter(i => i.is_active && i.category === catFilter)
 
-  const tabTotal = posItems.reduce((s, i) => s + i.total_price, 0)
+  const isFirstBill = !hasPayments
+  const roomCharge  = isFirstBill && selectedBooking ? selectedBooking.base_amount : 0
+  const tabTotal    = posItems.reduce((s, i) => s + i.total_price, 0)
+  const billTotal   = tabTotal + roomCharge
 
   function handleAdd(item: POSCatalogItem) {
     if (!selectedBookingId) return
@@ -137,9 +151,10 @@ export default function POSTerminal({
   function handlePay() {
     if (!selectedBookingId) return
     startTransition(async () => {
-      const res = await markExtrasPaid(selectedBookingId, 0)
+      const res = await markExtrasPaid(selectedBookingId, isFirstBill ? (selectedBooking?.base_amount ?? 0) : 0)
       if (!res?.error) {
         setPosItems([])
+        setHasPayments(true)
         setShowCart(false)
       }
     })
@@ -248,13 +263,13 @@ export default function POSTerminal({
       </div>
 
       {/* Mobile cart toggle button */}
-      {posItems.length > 0 && (
+      {(posItems.length > 0 || roomCharge > 0) && (
         <button
           onClick={() => setShowCart(true)}
           className="fixed bottom-6 right-6 lg:hidden z-30 flex items-center gap-2 bg-jungle-800 text-white font-semibold px-5 py-3 rounded-full shadow-xl shadow-jungle-900/30"
         >
           <ShoppingBag className="w-4 h-4" />
-          {posItems.length} · {formatPriceRaw(tabTotal, lang)}
+          {posItems.length + (roomCharge > 0 ? 1 : 0)} · {formatPriceRaw(billTotal, lang)}
         </button>
       )}
 
@@ -291,8 +306,8 @@ export default function POSTerminal({
         {/* Items list */}
         <div className="flex-1 overflow-y-auto">
           <div className="divide-y divide-gray-50">
-            {/* Room rate — always shown as first line */}
-            {selectedBooking && (
+            {/* Room rate — only on first bill (not yet paid) */}
+            {isFirstBill && selectedBooking && (
               <div className="px-5 py-3 flex items-center gap-3 bg-gray-50/60">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-700">{pos.baseBooking}</p>
@@ -339,11 +354,11 @@ export default function POSTerminal({
         <div className="border-t border-gray-100 p-5 space-y-3">
           <div className="flex justify-between font-bold">
             <span className="text-gray-800">{pos.total}</span>
-            <span className="text-jungle-800 font-display text-lg">{formatPriceRaw((selectedBooking?.base_amount ?? 0) + tabTotal, lang)}</span>
+            <span className="text-jungle-800 font-display text-lg">{formatPriceRaw(billTotal, lang)}</span>
           </div>
           <div className="flex justify-between text-xs text-gray-400">
             <span>{pos.yourPayout}</span>
-            <span>{formatPriceRaw((selectedBooking?.base_amount ?? 0) * 0.99 + tabTotal, lang)}</span>
+            <span>{formatPriceRaw(billTotal - (selectedBooking?.platform_fee ?? 0), lang)}</span>
           </div>
           {posItems.length > 0 && (
             <button
