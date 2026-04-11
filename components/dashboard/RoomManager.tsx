@@ -143,7 +143,7 @@ export default function RoomManager({
         floor:       form.floor ? parseInt(form.floor) : null,
         sort_order:  rooms.length,
       })
-      if (res?.error) return
+      if (res?.error) { alert(`Could not create room: ${res.error}`); return }
       if (res?.room) {
         setRooms(prev => [...prev, res.room])
       }
