@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTransition, useState } from 'react'
-import { ArrowLeft, User, Calendar, CreditCard, FileText, Trash2 } from 'lucide-react'
+import { ArrowLeft, User, Calendar, CreditCard, FileText, Trash2, ShoppingBag, CheckCircle2, AlertTriangle } from 'lucide-react'
 import type { Booking, POSCatalogItem, POSItem, Property } from '@/lib/types'
 import BookingStatusActions from '@/components/dashboard/BookingStatusActions'
 import BookingPOSPanel from '@/components/dashboard/BookingPOSPanel'
 import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
 import { deleteBooking } from '@/app/actions/bookings'
+import { markExtrasPaid, clearPOSItems } from '@/app/actions/pos'
 
 const STATUS_STYLE: Record<string, string> = {
   pending:    'bg-yellow-100 text-yellow-700',
@@ -37,9 +38,25 @@ export default function BookingDetailClient({ booking: b, posItems, catalog, bil
   const { t, lang } = useI18n()
   const bd = t.bookingDetail
   const router = useRouter()
-  const [delPending, startDelTransition] = useTransition()
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [confirmName, setConfirmName] = useState('')
+  const [delPending, startDelTransition]   = useTransition()
+  const [billPending, startBillTransition] = useTransition()
+  const [confirmOpen, setConfirmOpen]      = useState(false)
+  const [confirmName, setConfirmName]      = useState('')
+  const [openBillItems, setOpenBillItems]  = useState<POSItem[]>(posItems)
+
+  function handlePayBill() {
+    startBillTransition(async () => {
+      const res = await markExtrasPaid(b.id, hasPayments ? 0 : b.base_amount)
+      if (!res?.error) setOpenBillItems([])
+    })
+  }
+
+  function handleClearBill() {
+    startBillTransition(async () => {
+      const res = await clearPOSItems(b.id)
+      if (!res?.error) setOpenBillItems([])
+    })
+  }
 
   function handleDelete() {
     startDelTransition(async () => {
@@ -77,6 +94,39 @@ export default function BookingDetailClient({ booking: b, posItems, catalog, bil
         <div className="space-y-5">
           {/* Status actions */}
           <BookingStatusActions bookingId={b.id} currentStatus={b.status} checkOut={b.check_out} />
+
+          {/* Open bill warning */}
+          {openBillItems.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Open bill</p>
+                  <p className="text-xs text-amber-600 mt-0.5">
+                    {openBillItems.length} item{openBillItems.length !== 1 ? 's' : ''} · {formatPriceRaw(openBillItems.reduce((s, i) => s + i.total_price, 0), lang)} unpaid
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  disabled={billPending}
+                  onClick={handlePayBill}
+                  className="flex items-center gap-2 text-sm font-semibold bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl transition-colors"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Mark as paid
+                </button>
+                <button
+                  disabled={billPending}
+                  onClick={handleClearBill}
+                  className="flex items-center gap-2 text-sm font-semibold bg-white hover:bg-red-50 disabled:opacity-50 text-red-500 border border-red-200 hover:border-red-300 px-4 py-2 rounded-xl transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete items
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Guest info */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
