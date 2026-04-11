@@ -41,10 +41,27 @@ export default function OnboardingPage() {
     // 2. Update the profiles row
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
+      const meta = user.user_metadata ?? {}
+      const isCrew = meta.role === 'crew'
+
       await supabase
         .from('profiles')
-        .update({ full_name: fullName, phone: phone || null })
+        .update({
+          full_name: fullName,
+          phone: phone || null,
+          ...(isCrew ? {
+            role: 'crew',
+            owner_id: meta.owner_id ?? null,
+            crew_permissions: meta.crew_permissions ?? [],
+          } : {}),
+        })
         .eq('id', user.id)
+
+      if (isCrew) {
+        router.push('/dashboard')
+        router.refresh()
+        return
+      }
     }
 
     router.push('/dashboard/properties')

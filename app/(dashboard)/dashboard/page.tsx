@@ -18,6 +18,14 @@ export default async function DashboardPage() {
   const adminRestoreCookie = cookieStore.get('admin_restore')
   const isImpersonating = !!adminRestoreCookie
 
+  // Crew member → redirect to first permitted page
+  if (profile?.role === 'crew') {
+    const perms = profile.crew_permissions ?? []
+    if (perms.includes('view_bookings')) redirect('/dashboard/bookings')
+    if (perms.includes('manage_pos')) redirect('/dashboard/pos')
+    redirect('/dashboard/settings')
+  }
+
   // Admin in their own account → show admin overview
   if (profile?.role === 'admin' && !isImpersonating) {
     const [

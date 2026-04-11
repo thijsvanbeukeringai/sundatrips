@@ -1,9 +1,10 @@
-import { getCachedUser, getCachedProfile } from '@/lib/supabase/server'
+import { getCachedUser, getCachedProfile, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import type { Profile } from '@/lib/types'
+import type { Profile, CrewPermission } from '@/lib/types'
 import StripeConnectButton from '@/components/dashboard/StripeConnectButton'
 import StripeStatusChecker from '@/components/dashboard/StripeStatusChecker'
 import ProfileEditForm from '@/components/dashboard/ProfileEditForm'
+import TeamPanel from '@/components/dashboard/TeamPanel'
 import { CheckCircle, AlertCircle, ExternalLink, CreditCard, User } from 'lucide-react'
 
 export default async function SettingsPage({
@@ -15,6 +16,19 @@ export default async function SettingsPage({
   if (!user) redirect('/login')
 
   const profile = await getCachedProfile() as Profile
+
+  // Fetch crew members for owners
+  let crewMembers: Array<{ id: string; full_name: string; email: string; crew_permissions: CrewPermission[]; created_at: string }> = []
+  if (profile.role === 'owner') {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, crew_permissions, created_at')
+      .eq('owner_id', user.id)
+      .eq('role', 'crew')
+      .order('created_at', { ascending: true })
+    crewMembers = (data ?? []) as typeof crewMembers
+  }
 
   const stripeReturn  = searchParams.stripe === 'return'
   const stripeRefresh = searchParams.stripe === 'refresh'
@@ -123,6 +137,10 @@ export default async function SettingsPage({
           <p>Payouts are sent by Stripe directly to your bank account on their standard schedule.</p>
         </div>
       </div>
+      {/* Team — only for owners */}
+      {profile.role === 'owner' && (
+        <TeamPanel initialCrew={crewMembers} />
+      )}
     </div>
   )
 }

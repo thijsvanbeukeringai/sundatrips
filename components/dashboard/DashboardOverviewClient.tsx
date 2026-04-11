@@ -149,43 +149,76 @@ export default function DashboardOverviewClient({
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[11px] uppercase tracking-widest text-gray-400 border-b border-gray-50">
-                  <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.guest}</th>
-                  <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.property}</th>
-                  <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.checkIn}</th>
-                  <th className="text-right px-6 py-3 font-semibold">Total</th>
-                  <th className="text-right px-6 py-3 font-semibold">{t.dashboard.bookings_page.yourCut}</th>
-                  <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.status}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {recentBookings.map((b) => (
-                  <tr key={b.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-3.5">
-                      <p className="font-medium text-gray-800">{b.guest_name}</p>
-                      <p className="text-gray-400 text-xs">{b.guest_email}</p>
-                    </td>
-                    <td className="px-6 py-3.5 text-gray-600">{b.property?.name ?? '—'}</td>
-                    <td className="px-6 py-3.5 text-gray-600">{formatDate(b.check_in)}</td>
-                    <td className="px-6 py-3.5 text-right font-semibold text-gray-800">
-                      {formatPriceRaw(b.total_amount, lang)}
-                    </td>
-                    <td className="px-6 py-3.5 text-right font-semibold text-jungle-700">
-                      {formatPriceRaw(b.net_payout, lang)}
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${STATUS_STYLE[b.status] ?? ''}`}>
-                        {b.status.replace('_', ' ')}
-                      </span>
-                    </td>
+          <>
+            {/* Mobile compact rows */}
+            <div className="md:hidden divide-y divide-gray-50">
+              {recentBookings.map((b) => (
+                <Link
+                  key={b.id}
+                  href={`/dashboard/bookings/${b.id}`}
+                  className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    b.status === 'checked_in' ? 'bg-jungle-500' :
+                    b.status === 'confirmed'  ? 'bg-blue-400' :
+                    b.status === 'pending'    ? 'bg-yellow-400' :
+                    b.status === 'completed'  ? 'bg-gray-300' : 'bg-red-400'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{b.guest_name}</p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {b.property?.name ?? '—'} · {formatDate(b.check_in)}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <p className="text-sm font-semibold text-jungle-700">{formatPriceRaw(b.net_payout, lang)}</p>
+                    <span className={`text-[10px] font-bold capitalize ${STATUS_STYLE[b.status] ?? ''} px-1.5 py-0.5 rounded-full`}>
+                      {b.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-widest text-gray-400 border-b border-gray-50">
+                    <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.guest}</th>
+                    <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.property}</th>
+                    <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.checkIn}</th>
+                    <th className="text-right px-6 py-3 font-semibold">Total</th>
+                    <th className="text-right px-6 py-3 font-semibold">{t.dashboard.bookings_page.yourCut}</th>
+                    <th className="text-left px-6 py-3 font-semibold">{t.dashboard.bookings_page.status}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {recentBookings.map((b) => (
+                    <tr key={b.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-3.5">
+                        <p className="font-medium text-gray-800">{b.guest_name}</p>
+                        <p className="text-gray-400 text-xs">{b.guest_email}</p>
+                      </td>
+                      <td className="px-6 py-3.5 text-gray-600">{b.property?.name ?? '—'}</td>
+                      <td className="px-6 py-3.5 text-gray-600">{formatDate(b.check_in)}</td>
+                      <td className="px-6 py-3.5 text-right font-semibold text-gray-800">
+                        {formatPriceRaw(b.total_amount, lang)}
+                      </td>
+                      <td className="px-6 py-3.5 text-right font-semibold text-jungle-700">
+                        {formatPriceRaw(b.net_payout, lang)}
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${STATUS_STYLE[b.status] ?? ''}`}>
+                          {b.status.replace('_', ' ')}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -194,7 +227,7 @@ export default function DashboardOverviewClient({
         <h2 className="font-semibold mb-4 text-white/80 text-sm uppercase tracking-widest">
           {op.thisMonth}
         </h2>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {[
             { label: op.grossRevenue,  value: formatPriceRaw(revenueMonth, lang), dim: false },
             { label: op.platformFee,   value: formatPriceRaw(revenueMonth * 0.01, lang), dim: true },

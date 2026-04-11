@@ -38,6 +38,8 @@ export default function Sidebar({ profile, isImpersonating }: { profile: Profile
   }
 
   const isAdminMode = profile.role === 'admin' && !isImpersonating
+  const isCrewMode  = profile.role === 'crew'
+  const crewPerms   = profile.crew_permissions ?? []
 
   const navItems = isAdminMode
     ? [
@@ -47,10 +49,18 @@ export default function Sidebar({ profile, isImpersonating }: { profile: Profile
         { href: '/admin/invite',       icon: UserPlus,        label: 'Invite Owner' },
         { href: '/dashboard/settings', icon: Settings,        label: t.dashboard.settings },
       ]
+    : isCrewMode
+    ? [
+        ...(crewPerms.includes('view_bookings')  ? [{ href: '/dashboard/bookings', icon: CalendarDays, label: t.dashboard.bookings }] : []),
+        ...(crewPerms.includes('manage_pos')     ? [{ href: '/dashboard/pos',      icon: ShoppingBag,  label: t.dashboard.pos, badge: 'Live' as const }] : []),
+        ...(crewPerms.includes('manage_catalog') && !crewPerms.includes('manage_pos')
+          ? [{ href: '/dashboard/pos/catalog',   icon: ShoppingBag,  label: 'POS Catalog' }] : []),
+        { href: '/dashboard/settings', icon: Settings, label: t.dashboard.settings },
+      ]
     : [
         { href: '/dashboard',             icon: LayoutDashboard, label: t.dashboard.overview },
         { href: '/dashboard/bookings',    icon: CalendarDays,    label: t.dashboard.bookings },
-        { href: '/dashboard/pos',         icon: ShoppingBag,     label: t.dashboard.pos,      badge: 'Live' },
+        { href: '/dashboard/pos',         icon: ShoppingBag,     label: t.dashboard.pos,      badge: 'Live' as const },
         { href: '/dashboard/properties',  icon: Building2,       label: t.dashboard.listings },
         { href: '/dashboard/financials',  icon: BarChart3,       label: t.dashboard.financials },
         { href: '/dashboard/settings',    icon: Settings,        label: t.dashboard.settings },

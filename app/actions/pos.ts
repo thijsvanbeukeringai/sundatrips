@@ -121,7 +121,7 @@ export async function toggleCatalogItem(id: string, is_active: boolean) {
   return { success: true }
 }
 
-export async function markExtrasPaid(bookingId: string) {
+export async function markExtrasPaid(bookingId: string, baseAmount = 0) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -134,15 +134,21 @@ export async function markExtrasPaid(bookingId: string) {
     .eq('owner_id', user.id)
     .order('created_at', { ascending: true })
 
-  if (!items || items.length === 0) return { error: 'No items on bill' }
+  // Prepend room charge on first bill (baseAmount > 0)
+  const roomItem = baseAmount > 0
+    ? [{ name: 'Room charge', category: 'room', unit_price: baseAmount, quantity: 1, total_price: baseAmount }]
+    : []
+  const allItems = [...roomItem, ...(items ?? [])]
 
-  const total = items.reduce((s: number, i: { total_price: number }) => s + i.total_price, 0)
+  if (allItems.length === 0) return { error: 'No items on bill' }
+
+  const total = allItems.reduce((s: number, i: { total_price: number }) => s + i.total_price, 0)
 
   // 2. Snapshot to bill_payments
   const { error: snapErr } = await supabase.from('bill_payments').insert({
     booking_id:   bookingId,
     owner_id:     user.id,
-    items:        items,
+    items:        allItems,
     total_amount: total,
   })
   if (snapErr) return { error: snapErr.message }

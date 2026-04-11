@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { getCachedUser, getCachedProfile } from '@/lib/supabase/server'
 import Sidebar from '@/components/dashboard/Sidebar'
 import MobileNav from '@/components/dashboard/MobileNav'
@@ -13,6 +13,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const profile = await getCachedProfile() as Profile | null
 
   if (!profile) redirect('/login')
+
+  // ── Crew access control ──────────────────────────────────────
+  if (profile.role === 'crew') {
+    const h = await headers()
+    const path = h.get('x-pathname') ?? ''
+    const perms = profile.crew_permissions ?? []
+
+    const blocked =
+      path.startsWith('/dashboard/properties') ||
+      path.startsWith('/dashboard/financials') ||
+      (path.startsWith('/dashboard/bookings') && !perms.includes('view_bookings')) ||
+      (path === '/dashboard/pos/catalog' && !perms.includes('manage_catalog')) ||
+      (path.startsWith('/dashboard/pos') && !perms.includes('manage_pos') && !perms.includes('manage_catalog'))
+
+    if (blocked) redirect('/dashboard')
+  }
 
   // Detect admin impersonation
   const cookieStore = await cookies()

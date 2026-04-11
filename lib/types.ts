@@ -1,7 +1,13 @@
 // Auto-generated from the Supabase schema.
 // Re-run `supabase gen types typescript` after schema changes.
 
-export type Role = 'owner' | 'admin'
+export type Role = 'owner' | 'admin' | 'crew'
+export type CrewPermission =
+  | 'view_bookings'
+  | 'manage_pos'
+  | 'check_in_guests'
+  | 'view_financials'
+  | 'manage_catalog'
 export type AllowedPaymentMethods = 'all' | 'cash_only' | 'online_only'
 export type PropertyType = 'stay' | 'trip' | 'activity' | 'transfer'
 export type Island = 'Lombok' | 'Bali' | 'Gili Islands'
@@ -38,6 +44,9 @@ export interface Profile {
   stripe_charges_enabled: boolean
   allowed_payment_methods: AllowedPaymentMethods
   allowed_listing_types:   PropertyType[]
+  // Crew fields
+  owner_id:          string | null
+  crew_permissions:  CrewPermission[]
   created_at: string
   updated_at: string
 }

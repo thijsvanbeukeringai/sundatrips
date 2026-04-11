@@ -39,11 +39,13 @@ export default function BookingPOSPanel({
   bookingId,
   initialPosItems,
   catalog,
+  baseAmount = 0,
 }: {
   bookingId:       string
   initialPosItems: POSItem[]
   catalog:         POSCatalogItem[]
   extrasPaid:      boolean  // kept for API compat, not used internally
+  baseAmount?:     number
 }) {
   const { lang } = useI18n()
   const [posItems, setPosItems]       = useState<POSItem[]>(initialPosItems)
@@ -121,8 +123,10 @@ export default function BookingPOSPanel({
     ? catalog.filter(i => i.is_active)
     : catalog.filter(i => i.is_active && i.category === catFilter)
 
-  const categories = ['all', ...Array.from(new Set(catalog.filter(i => i.is_active).map(i => i.category)))]
-  const billTotal  = posItems.reduce((s, i) => s + i.total_price, 0)
+  const categories   = ['all', ...Array.from(new Set(catalog.filter(i => i.is_active).map(i => i.category)))]
+  const isFirstBill  = payments.length === 0
+  const roomCharge   = isFirstBill ? baseAmount : 0
+  const billTotal    = posItems.reduce((s, i) => s + i.total_price, 0) + roomCharge
 
   function handleAdd(item: POSCatalogItem) {
     // Optimistic: show instantly, real-time INSERT will replace temp with DB record
@@ -157,7 +161,7 @@ export default function BookingPOSPanel({
 
   function handlePay() {
     startTransition(async () => {
-      const result = await markExtrasPaid(bookingId)
+      const result = await markExtrasPaid(bookingId, isFirstBill ? baseAmount : 0)
       if (!result?.error) {
         // Immediately reset bill to 0 — don't wait for real-time DELETE events
         setPosItems([])
@@ -230,10 +234,21 @@ export default function BookingPOSPanel({
 
       {/* Current bill */}
       <div className="px-6 py-4">
-        {posItems.length === 0 ? (
+        {posItems.length === 0 && roomCharge === 0 ? (
           <p className="text-sm text-gray-400 text-center py-4">No items on the bill yet.</p>
         ) : (
           <div className="space-y-1 mb-4">
+            {/* Room charge — first bill only, non-removable */}
+            {isFirstBill && baseAmount > 0 && (
+              <div className="flex items-center gap-3 py-2 border-b border-gray-50">
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-gray-800">Room charge</span>
+                  <span className="text-xs text-gray-400 ml-2">×1 · {formatPriceRaw(baseAmount, lang)}</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-700 flex-shrink-0">{formatPriceRaw(baseAmount, lang)}</span>
+                <div className="w-6 h-6 flex-shrink-0" />
+              </div>
+            )}
             {posItems.map(item => (
               <div key={item.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
                 <div className="flex-1 min-w-0">
@@ -256,7 +271,7 @@ export default function BookingPOSPanel({
           </div>
         )}
 
-        {posItems.length > 0 && (
+        {(posItems.length > 0 || roomCharge > 0) && (
           <div className="flex items-center justify-between pt-2 border-t border-gray-100">
             <div>
               <p className="text-xs text-gray-400">Bill total</p>

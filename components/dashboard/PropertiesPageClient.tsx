@@ -69,25 +69,26 @@ export default function PropertiesPageClient({ properties: initial }: { properti
   return (
     <div className="p-6 sm:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-jungle-800">{pr.title}</h1>
+      <div className="flex items-center justify-between gap-3 mb-8">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-jungle-800 truncate">{pr.title}</h1>
           <p className="text-gray-400 text-sm mt-1">
             {properties.length} {properties.length !== 1 ? pr.listingsPlural : pr.listings} · {active} {pr.active}
           </p>
         </div>
         <Link
           href="/dashboard/properties/new"
-          className="flex items-center gap-2 bg-jungle-800 hover:bg-jungle-900 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-jungle-800/25 text-sm"
+          className="flex-shrink-0 flex items-center gap-2 bg-jungle-800 hover:bg-jungle-900 text-white font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-jungle-800/25 text-sm"
         >
           <Plus className="w-4 h-4" />
-          {pr.newListing}
+          <span className="hidden sm:inline">{pr.newListing}</span>
+          <span className="sm:hidden">New</span>
         </Link>
       </div>
 
       {/* Stats row */}
       {properties.length > 0 && (
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {stats.map(({ label, count, color, bg }) => (
             <div key={label} className={`${bg} rounded-2xl p-4 text-center`}>
               <p className={`font-display text-2xl font-bold ${color}`}>{count}</p>
