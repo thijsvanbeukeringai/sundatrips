@@ -1,6 +1,6 @@
 // ─── Exchange rate config ─────────────────────────────────────────────────────
 // Change EUR_TO_IDR here to update the rate everywhere.
-export const EUR_TO_IDR = 17_000
+export const EUR_TO_IDR = 19_800
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
