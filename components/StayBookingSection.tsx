@@ -196,7 +196,7 @@ export default function StayBookingSection({ property }: { property: Property })
             <CalendarDays className="w-4 h-4 text-jungle-600" />
             <h3 className="font-semibold text-gray-900">Check availability</h3>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Check-in</label>
               <input
