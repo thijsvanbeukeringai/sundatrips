@@ -27,16 +27,18 @@ interface SelectedRoom {
 }
 
 interface GuestModalProps {
-  room:       SelectedRoom
-  checkIn:    string
-  checkOut:   string
-  property:   Property
-  onClose:    () => void
-  onSuccess:  () => void
+  room:      SelectedRoom
+  checkIn:   string
+  checkOut:  string
+  property:  Property
+  onClose:   () => void
+  onSuccess: () => void
 }
 
 function GuestModal({ room, checkIn, checkOut, property, onClose, onSuccess }: GuestModalProps) {
   const { t, lang } = useI18n()
+  const l = t.listing
+
   const nights = diffNights(checkIn, checkOut)
   const total  = room.priceUnit === 'night' || room.priceUnit === 'day'
     ? room.pricePerUnit * nights
@@ -75,19 +77,21 @@ function GuestModal({ room, checkIn, checkOut, property, onClose, onSuccess }: G
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal */}
       <div className="relative bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90dvh]">
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-gray-100">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <BedDouble className="w-4 h-4 text-jungle-600" />
-              <p className="font-bold text-gray-900">Room {room.roomNumber}{room.roomName ? ` · ${room.roomName}` : ''}</p>
+              <p className="font-bold text-gray-900">
+                Room {room.roomNumber}{room.roomName ? ` · ${room.roomName}` : ''}
+              </p>
             </div>
-            <p className="text-xs text-gray-500">{room.variantName} · {checkIn} → {checkOut} · {nights} night{nights !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-gray-500">
+              {room.variantName} · {checkIn} → {checkOut} · {l.nightsCount(nights)}
+            </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors ml-3 flex-shrink-0">
             <X className="w-5 h-5" />
@@ -98,27 +102,27 @@ function GuestModal({ room, checkIn, checkOut, property, onClose, onSuccess }: G
         <div className="overflow-y-auto p-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className={labelClass}>Full name *</label>
+              <label className={labelClass}>{l.yourName} *</label>
               <input type="text" required placeholder="John Smith" value={name} onChange={e => setName(e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className={labelClass}>Email *</label>
+              <label className={labelClass}>{l.yourEmail} *</label>
               <input type="email" required placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
             </div>
             <div>
-              <label className={labelClass}>Phone</label>
-              <input type="tel" placeholder="+62 812 345 6789" value={phone} onChange={e => setPhone(e.target.value)} className={inputClass} />
+              <label className={labelClass}>{l.yourPhone}</label>
+              <input type="tel" placeholder={l.phonePH} value={phone} onChange={e => setPhone(e.target.value)} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>
                 <Users className="inline w-3 h-3 mr-1" />
-                Guests
+                {l.guestsCount}
               </label>
               <input type="number" required min={1} max={property.max_capacity ?? 99} value={guests} onChange={e => setGuests(parseInt(e.target.value) || 1)} className={inputClass} />
             </div>
             <div>
-              <label className={labelClass}>Message (optional)</label>
-              <textarea rows={2} placeholder="Any special requests?" value={message} onChange={e => setMessage(e.target.value)} className={inputClass + ' resize-none'} />
+              <label className={labelClass}>{l.message}</label>
+              <textarea rows={2} placeholder={l.specialRequestsPH} value={message} onChange={e => setMessage(e.target.value)} className={inputClass + ' resize-none'} />
             </div>
 
             {error && (
@@ -128,14 +132,14 @@ function GuestModal({ room, checkIn, checkOut, property, onClose, onSuccess }: G
             {/* Price summary */}
             <div className="flex items-center justify-between bg-jungle-50 border border-jungle-100 rounded-xl px-4 py-3">
               <div className="text-sm text-jungle-700">
-                {formatPriceRaw(room.pricePerUnit, 'en')} × {nights} night{nights !== 1 ? 's' : ''}
+                {formatPriceRaw(room.pricePerUnit, lang)} × {l.nightsCount(nights)}
               </div>
-              <div className="font-bold text-jungle-800 text-lg">{formatPriceRaw(total, 'en')}</div>
+              <div className="font-bold text-jungle-800 text-lg">{formatPriceRaw(total, lang)}</div>
             </div>
 
             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
               <span className="text-base">💵</span>
-              <p className="text-xs text-emerald-700 font-medium">Pay on arrival — no online payment needed</p>
+              <p className="text-xs text-emerald-700 font-medium">{l.payOnArrival} — {l.noOnlinePayment}</p>
             </div>
 
             <button
@@ -143,8 +147,8 @@ function GuestModal({ room, checkIn, checkOut, property, onClose, onSuccess }: G
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 bg-jungle-800 hover:bg-jungle-900 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-colors"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {loading ? 'Sending request…' : 'Request booking'}
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loading ? l.submitting : l.requestBooking}
             </button>
           </form>
         </div>
@@ -154,7 +158,8 @@ function GuestModal({ room, checkIn, checkOut, property, onClose, onSuccess }: G
 }
 
 export default function StayBookingSection({ property }: { property: Property }) {
-  const { lang } = useI18n()
+  const { t, lang } = useI18n()
+  const l = t.listing
   const today = new Date().toISOString().split('T')[0]
 
   const [checkIn,           setCheckIn]           = useState('')
@@ -194,11 +199,11 @@ export default function StayBookingSection({ property }: { property: Property })
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <CalendarDays className="w-4 h-4 text-jungle-600" />
-            <h3 className="font-semibold text-gray-900">Check availability</h3>
+            <h3 className="font-semibold text-gray-900">{l.checkAvailability}</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>Check-in</label>
+              <label className={labelClass}>{l.checkIn}</label>
               <input
                 type="date"
                 min={today}
@@ -208,7 +213,7 @@ export default function StayBookingSection({ property }: { property: Property })
               />
             </div>
             <div>
-              <label className={labelClass}>Check-out</label>
+              <label className={labelClass}>{l.checkOut}</label>
               <input
                 type="date"
                 min={checkIn || today}
@@ -219,7 +224,7 @@ export default function StayBookingSection({ property }: { property: Property })
             </div>
           </div>
           {nights > 0 && (
-            <p className="text-xs text-gray-400 mt-2">{nights} night{nights !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-gray-400 mt-2">{l.nightsCount(nights)}</p>
           )}
         </div>
 
@@ -227,15 +232,15 @@ export default function StayBookingSection({ property }: { property: Property })
         {fetching && (
           <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            Checking availability…
+            {l.checkingAvailability}
           </div>
         )}
 
         {/* No rooms */}
         {!fetching && availableVariants !== null && availableVariants.length === 0 && (
           <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
-            <p className="text-sm font-semibold text-red-700">No rooms available for these dates</p>
-            <p className="text-xs text-red-500 mt-1">Try different dates.</p>
+            <p className="text-sm font-semibold text-red-700">{l.noRoomsAvailable}</p>
+            <p className="text-xs text-red-500 mt-1">{l.tryDifferentDates}</p>
           </div>
         )}
 
@@ -243,13 +248,13 @@ export default function StayBookingSection({ property }: { property: Property })
         {success && (
           <div className="bg-jungle-50 border border-jungle-200 rounded-2xl px-5 py-6 flex flex-col items-center text-center gap-3">
             <CheckCircle className="w-8 h-8 text-jungle-600" />
-            <p className="font-semibold text-jungle-800">Booking request sent!</p>
-            <p className="text-sm text-jungle-600">You'll receive a confirmation by email.</p>
+            <p className="font-semibold text-jungle-800">{l.successTitle}</p>
+            <p className="text-sm text-jungle-600">{l.successSub}</p>
             <button
               onClick={() => { setSuccess(false); setAvailableVariants(null); setCheckIn(''); setCheckOut('') }}
               className="text-xs text-jungle-700 underline underline-offset-2"
             >
-              Make another booking
+              {l.makeAnotherBooking}
             </button>
           </div>
         )}
@@ -259,7 +264,6 @@ export default function StayBookingSection({ property }: { property: Property })
           <div className="space-y-5">
             {availableVariants.map(variant => (
               <div key={variant.id}>
-                {/* Variant header */}
                 <div className="flex items-baseline justify-between mb-3">
                   <h3 className="font-semibold text-gray-900">{variant.name}</h3>
                   <span className="text-sm text-gray-500">
@@ -268,7 +272,6 @@ export default function StayBookingSection({ property }: { property: Property })
                   </span>
                 </div>
 
-                {/* Room cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {variant.rooms.map(room => (
                     <button
@@ -288,9 +291,9 @@ export default function StayBookingSection({ property }: { property: Property })
                       <BedDouble className="w-5 h-5 text-gray-400 group-hover:text-jungle-600 transition-colors" />
                       <p className="font-bold text-gray-900 text-sm">Room {room.room_number}</p>
                       {room.name && <p className="text-[11px] text-gray-400">{room.name}</p>}
-                      {room.floor != null && <p className="text-[11px] text-gray-400">Floor {room.floor}</p>}
+                      {room.floor != null && <p className="text-[11px] text-gray-400">{l.floor} {room.floor}</p>}
                       <span className="mt-1 text-[11px] font-semibold text-jungle-700 bg-jungle-50 group-hover:bg-jungle-100 px-2 py-0.5 rounded-full transition-colors">
-                        Select →
+                        {l.selectRoom}
                       </span>
                     </button>
                   ))}
