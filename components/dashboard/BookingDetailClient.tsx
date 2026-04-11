@@ -37,6 +37,7 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
   const router = useRouter()
   const [delPending, startDelTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmName, setConfirmName] = useState('')
 
   function handleDelete() {
     startDelTransition(async () => {
@@ -168,16 +169,6 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
             </div>
           )}
 
-          {/* Delete */}
-          <div className="pt-2">
-            <button
-              onClick={() => setConfirmOpen(true)}
-              className="flex items-center gap-2 text-xs text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-xl transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete booking
-            </button>
-          </div>
         </div>
 
         {/* ── Right column: live bill (only when checked in) ── */}
@@ -195,36 +186,50 @@ export default function BookingDetailClient({ booking: b, posItems, catalog }: P
 
       </div>
 
-      {/* Confirm dialog */}
-      {confirmOpen && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-            <h3 className="font-display font-bold text-gray-900 text-lg mb-1">Delete booking?</h3>
-            <p className="text-sm text-gray-500 mb-1">
-              <span className="font-semibold text-gray-700">{b.guest_name}</span> · {b.property?.name}
-            </p>
-            <p className="text-xs text-gray-400 mb-6">
-              All POS items and payment history for this booking will also be permanently deleted.
-            </p>
+      {/* ── Delete section — full width, below both columns ── */}
+      <div className="max-w-7xl mt-6 pt-6 border-t border-gray-100">
+        {!confirmOpen ? (
+          <button
+            onClick={() => { setConfirmOpen(true); setConfirmName('') }}
+            className="flex items-center gap-2 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 px-3 py-2 rounded-xl transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete booking
+          </button>
+        ) : (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-5 max-w-md space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-red-700 mb-0.5">Confirm deletion</p>
+              <p className="text-xs text-red-500">
+                Type <span className="font-bold">{b.guest_name}</span> to permanently delete this booking and all related data.
+              </p>
+            </div>
+            <input
+              type="text"
+              value={confirmName}
+              onChange={e => setConfirmName(e.target.value)}
+              placeholder={b.guest_name}
+              className="w-full px-3 py-2.5 rounded-xl border border-red-200 bg-white text-sm text-gray-800 focus:outline-none focus:border-red-400 placeholder-gray-300"
+            />
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmOpen(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                onClick={() => { setConfirmOpen(false); setConfirmName('') }}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-white transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                disabled={delPending}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+                disabled={delPending || confirmName !== b.guest_name}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5" />
                 {delPending ? 'Deleting…' : 'Delete permanently'}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
