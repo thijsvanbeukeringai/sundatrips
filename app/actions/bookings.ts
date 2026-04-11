@@ -11,14 +11,16 @@ export async function createBooking(_prevState: unknown, formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  const checkOut  = formData.get('check_out') as string
-  const variantId = formData.get('variant_id') as string
+  const checkOut   = formData.get('check_out') as string
+  const variantId  = formData.get('variant_id') as string
   const propertyId = formData.get('property_id') as string
+  const roomId     = (formData.get('room_id') as string) || null
 
   const { data: booking, error } = await supabase.from('bookings').insert({
     owner_id:          user.id,
     property_id:       propertyId,
     variant_id:        variantId || null,
+    room_id:           roomId,
     guest_name:        formData.get('guest_name') as string,
     guest_email:       formData.get('guest_email') as string,
     guest_phone:       (formData.get('guest_phone') as string) || null,
@@ -34,8 +36,8 @@ export async function createBooking(_prevState: unknown, formData: FormData) {
 
   if (error) return { error: error.message }
 
-  // Auto-assign a room if any exist for this property
-  if (booking) {
+  // If no room was manually chosen, auto-assign
+  if (booking && !roomId) {
     await autoAssignRoom(
       booking.id,
       propertyId,

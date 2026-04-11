@@ -83,6 +83,69 @@ export async function getAvailableVariants(
   return capacityFiltered.filter((v: ListingVariant) => !conflictIds.has(v.id))
 }
 
+// ─── Available rooms for booking form ────────────────────────────────────────
+
+export type AvailableVariant = {
+  id:             string
+  name:           string
+  price_per_unit: number
+  price_unit:     string
+  max_capacity:   number | null
+  rooms:          { id: string; room_number: string; name: string | null; floor: number | null }[]
+}
+
+export async function getAvailableRoomsForBooking(
+  propertyId: string,
+  checkIn:    string,
+  checkOut:   string,
+): Promise<AvailableVariant[]> {
+  const supabase = await createClient()
+
+  const { data: variants } = await supabase
+    .from('listing_variants')
+    .select('id, name, price_per_unit, price_unit, max_capacity')
+    .eq('property_id', propertyId)
+    .eq('is_active', true)
+    .order('sort_order')
+
+  if (!variants || variants.length === 0) return []
+
+  const { data: allRooms } = await supabase
+    .from('rooms')
+    .select('id, variant_id, room_number, name, floor')
+    .eq('property_id', propertyId)
+    .eq('is_active', true)
+    .neq('status', 'maintenance')
+    .order('sort_order')
+    .order('room_number')
+
+  if (!allRooms || allRooms.length === 0) return []
+
+  const roomIds = allRooms.map(r => r.id)
+
+  // Find booked rooms in the date range
+  let conflictQuery = supabase
+    .from('bookings')
+    .select('room_id')
+    .in('room_id', roomIds)
+    .in('status', ['pending', 'confirmed', 'checked_in'])
+    .lt('check_in', checkOut)
+
+  conflictQuery = conflictQuery.or(`check_out.gt.${checkIn},check_out.is.null`)
+
+  const { data: conflicts } = await conflictQuery
+  const bookedRoomIds = new Set((conflicts ?? []).map(b => b.room_id))
+
+  return variants
+    .map(v => {
+      const availableRooms = allRooms
+        .filter(r => r.variant_id === v.id && !bookedRoomIds.has(r.id))
+        .map(r => ({ id: r.id, room_number: r.room_number, name: r.name, floor: r.floor }))
+      return { ...v, rooms: availableRooms }
+    })
+    .filter(v => v.rooms.length > 0)
+}
+
 export async function setAvailability(
   propertyId: string,
   date: string,

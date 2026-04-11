@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { autoAssignRoom } from './rooms'
 
 interface PublicBookingInput {
   property_id:  string
@@ -16,6 +17,7 @@ interface PublicBookingInput {
   base_amount:  number
   notes:        string
   variant_id?:  string | null
+  room_id?:     string | null
 }
 
 export async function createPublicBooking(input: PublicBookingInput): Promise<{ error?: string; success?: true }> {
@@ -42,7 +44,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
   }
 
   // Create the booking
-  const { error } = await supabase.from('bookings').insert({
+  const { data: booking, error } = await supabase.from('bookings').insert({
     property_id:    input.property_id,
     owner_id:       input.owner_id,
     guest_name:     input.guest_name.trim(),
@@ -57,9 +59,21 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
     notes:          input.notes || null,
     guest_user_id:  guestUserId,
     variant_id:     input.variant_id || null,
-  })
+    room_id:        input.room_id || null,
+  }).select('id').single()
 
   if (error) return { error: error.message }
+
+  // If no room was manually chosen, auto-assign
+  if (booking && !input.room_id) {
+    await autoAssignRoom(
+      booking.id,
+      input.property_id,
+      input.variant_id ?? null,
+      input.check_in,
+      input.check_out,
+    )
+  }
 
   revalidatePath(`/listings/${input.property_id}`)
 
