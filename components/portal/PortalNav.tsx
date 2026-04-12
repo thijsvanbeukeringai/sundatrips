@@ -104,8 +104,11 @@ export default function PortalNav({ profile }: { profile: Profile }) {
           </div>
           <span className="font-display font-bold text-jungle-800 text-sm">{t.portal.nav.title}</span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-jungle-100 flex items-center justify-center text-jungle-700 font-bold text-sm">
-          {profile.full_name?.[0]?.toUpperCase() ?? '?'}
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <div className="w-8 h-8 rounded-full bg-jungle-100 flex items-center justify-center text-jungle-700 font-bold text-sm">
+            {profile.full_name?.[0]?.toUpperCase() ?? '?'}
+          </div>
         </div>
       </div>
 
