@@ -1,8 +1,10 @@
 -- 026_partner_role.sql
 -- Adds 'partner' role for drivers and trip organizers
 
--- 1. Extend the role enum
-ALTER TYPE role ADD VALUE IF NOT EXISTS 'partner';
+-- 1. Extend the role check constraint to include 'partner'
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE profiles ADD CONSTRAINT profiles_role_check
+  CHECK (role IN ('owner', 'admin', 'crew', 'partner'));
 
 -- 2. Add partner_id to properties (links a listing to its operator/partner)
 ALTER TABLE properties
