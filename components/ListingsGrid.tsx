@@ -7,7 +7,7 @@ import type { Property } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
 
-function TransferCard({ p, t, lang }: { p: Property; t: any; lang: string }) {
+function TransferCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }) {
   return (
     <Link
       href={`/listings/${p.id}`}
@@ -82,7 +82,7 @@ function TransferCard({ p, t, lang }: { p: Property; t: any; lang: string }) {
   )
 }
 
-function DefaultCard({ p, t, lang, displayUnit }: { p: Property; t: any; lang: string; displayUnit: (unit: string, type: string) => string }) {
+function DefaultCard({ p, t, lang, displayUnit }: { p: Property; t: any; lang: 'en' | 'id'; displayUnit: (unit: string, type: string) => string }) {
   return (
     <Link
       href={`/listings/${p.id}`}
