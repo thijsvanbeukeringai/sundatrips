@@ -33,8 +33,8 @@ export default function AuthCallbackPage() {
         })
 
         if (error) {
-          console.error('[auth/callback] Error setting session:', error)
-          router.replace('/login?error=auth_callback_failed')
+          console.error('[auth/callback] Error setting session:', error.message)
+          router.replace(`/login?error=${encodeURIComponent(error.message)}`)
           return
         }
 
