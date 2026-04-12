@@ -664,6 +664,7 @@ export const id: Translations = {
       customers: 'Pelanggan',
       new:       'Baru',
       signOut:   'Keluar',
+      settings:  'Pengaturan',
       title:     'Portal Mitra',
     },
     home: {

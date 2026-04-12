@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, List, Users, PlusCircle, LogOut, Compass, Briefcase } from 'lucide-react'
+import { CalendarDays, List, Users, PlusCircle, LogOut, Compass, Briefcase, Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/lib/i18n'
@@ -24,6 +24,7 @@ export default function PortalNav({ profile }: { profile: Profile }) {
     { href: '/portal/services',     label: t.portal.nav.services,  icon: Briefcase    },
     { href: '/portal/customers',    label: t.portal.nav.customers, icon: Users        },
     { href: '/portal/bookings/new', label: t.portal.nav.new,       icon: PlusCircle   },
+    { href: '/portal/settings',     label: t.portal.nav.settings ?? 'Settings', icon: Settings },
   ]
 
   async function handleLogout() {

@@ -662,6 +662,7 @@ export const en = {
       customers: 'Customers',
       new:       'New',
       signOut:   'Sign out',
+      settings:  'Settings',
       title:     'Partner Portal',
     },
     home: {

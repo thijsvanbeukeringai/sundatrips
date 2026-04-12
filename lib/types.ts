@@ -45,6 +45,13 @@ export interface Profile {
   stripe_charges_enabled: boolean
   allowed_payment_methods: AllowedPaymentMethods
   allowed_listing_types:   PropertyType[]
+  // Company/partner fields
+  company_name:        string | null
+  company_description: string | null
+  company_logo:        string | null
+  company_location:    string | null
+  company_island:      string | null
+  languages:           string[]
   // Crew fields
   owner_id:          string | null
   crew_permissions:  CrewPermission[]
