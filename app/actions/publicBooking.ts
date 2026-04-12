@@ -108,7 +108,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
       subject: bookingNumber
         ? `Booking request #${bookingNumber} received — ${property?.name ?? 'Sunda Trips'}`
         : `Booking request received — ${property?.name ?? 'Sunda Trips'}`,
-      template: 'trip-pending',
+      template: 'trip pending',
       variables: {
         guestName:     input.guest_name.trim(),
         bookingNumber,
