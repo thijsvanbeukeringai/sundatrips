@@ -62,9 +62,20 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
     guest_user_id:  guestUserId,
     variant_id:     input.variant_id || null,
     room_id:        input.room_id || null,
-  }).select('id, booking_number').single()
+  }).select('id').single()
 
   if (error) return { error: error.message }
+
+  // Fetch booking number (may not exist if migration hasn't run yet)
+  let bookingNumber = ''
+  try {
+    const { data: bk } = await supabase
+      .from('bookings')
+      .select('booking_number')
+      .eq('id', booking.id)
+      .single()
+    bookingNumber = String(bk?.booking_number ?? '')
+  } catch { /* column may not exist yet */ }
 
   // If no room was manually chosen, auto-assign
   if (booking && !input.room_id) {
@@ -94,11 +105,13 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
 
     await sendMailWithTemplate({
       to: email,
-      subject: `Booking request #${booking.booking_number} received — ${property?.name ?? 'Sunda Trips'}`,
+      subject: bookingNumber
+        ? `Booking request #${bookingNumber} received — ${property?.name ?? 'Sunda Trips'}`
+        : `Booking request received — ${property?.name ?? 'Sunda Trips'}`,
       template: 'trip-pending',
       variables: {
         guestName:     input.guest_name.trim(),
-        bookingNumber: String(booking.booking_number ?? ''),
+        bookingNumber,
         serviceName:   property?.name ?? 'Service',
         serviceType:   property?.type ?? '',
         date:          dateFormatted,
