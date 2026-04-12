@@ -91,7 +91,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
   // Fetch property details for the emails
   const { data: property } = await supabase
     .from('properties')
-    .select('name, type, location, island, transfer_from, transfer_to, owner_id')
+    .select('name, type, location, island, transfer_from, transfer_to, owner_id, pickup_available, private_tour_available, private_tour_price, max_capacity, duration')
     .eq('id', input.property_id)
     .single()
 
@@ -104,7 +104,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
         .single()
     : { data: null }
 
-  // Send "trip pending" notification email to the guest
+  // Send notification email to the guest
   try {
     const { sendMailWithTemplate } = await import('@/lib/mailgun')
 
@@ -112,28 +112,57 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     })
 
+    const isActivityType = property?.type === 'activity' || property?.type === 'trip'
+
+    // Parse activity-specific info from notes
+    const timeSlot      = input.notes?.match(/Time slot: (.+)/)?.[1] ?? ''
+    const isPrivateTour = input.notes?.includes('Private tour') ?? false
+    const pickupAddress = input.notes?.match(/Pickup: (.+)/)?.[1] ?? ''
+
+    const templateName = isActivityType ? 'activity pending' : 'trip pending'
+
+    const baseVariables: Record<string, string> = {
+      guestName:     input.guest_name.trim(),
+      bookingNumber,
+      serviceName:   property?.name ?? 'Service',
+      serviceType:   property?.type ?? '',
+      date:          dateFormatted,
+      location:      property?.location ?? '',
+      island:        property?.island ?? '',
+      guestsCount:   String(input.guests_count),
+      amount:        `Rp ${Math.round(input.base_amount).toLocaleString('id-ID')}`,
+      notes:         input.notes ?? '',
+    }
+
+    // Activity-specific variables
+    if (isActivityType) {
+      Object.assign(baseVariables, {
+        timeSlot,
+        duration:       property?.duration ?? '',
+        privateTour:    isPrivateTour ? 'yes' : 'no',
+        privateTourPrice: isPrivateTour && property?.private_tour_price
+          ? `Rp ${Math.round(property.private_tour_price).toLocaleString('id-ID')}`
+          : '',
+        maxCapacity:    String(property?.max_capacity ?? ''),
+        pickupAddress,
+      })
+    } else {
+      // Transfer/trip variables
+      Object.assign(baseVariables, {
+        pickupTime:    input.pickup_time ?? '',
+        transferFrom:  pickupAddress || property?.transfer_from || '',
+        transferTo:    property?.transfer_to ?? '',
+        pickupAddress,
+      })
+    }
+
     await sendMailWithTemplate({
       to: email,
       subject: bookingNumber
         ? `Booking request #${bookingNumber} received — ${property?.name ?? 'Sunda Trips'}`
         : `Booking request received — ${property?.name ?? 'Sunda Trips'}`,
-      template: 'trip pending',
-      variables: {
-        guestName:     input.guest_name.trim(),
-        bookingNumber,
-        serviceName:   property?.name ?? 'Service',
-        serviceType:   property?.type ?? '',
-        date:          dateFormatted,
-        pickupTime:    input.pickup_time ?? '',
-        location:      property?.location ?? '',
-        island:        property?.island ?? '',
-        guestsCount:   String(input.guests_count),
-        amount:        `Rp ${Math.round(input.base_amount).toLocaleString('id-ID')}`,
-        transferFrom:  input.notes?.match(/Pickup: (.+)/)?.[1] || property?.transfer_from || '',
-        transferTo:    property?.transfer_to ?? '',
-        pickupAddress: input.notes?.match(/Pickup: (.+)/)?.[1] ?? '',
-        notes:         input.notes ?? '',
-      },
+      template: templateName,
+      variables: baseVariables,
     })
   } catch (err: any) {
     console.error('[createPublicBooking] Mailgun guest error:', err)
