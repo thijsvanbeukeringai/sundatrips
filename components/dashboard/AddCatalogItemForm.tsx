@@ -87,19 +87,16 @@ export default function AddCatalogItemForm() {
           <option value="other">{pos.categories.other}</option>
         </select>
 
-        <div className="relative w-28">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-            {lang === 'id' ? 'Rp' : 'Rp '}
-          </span>
+        <div className="relative w-36">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">Rp</span>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             required
-            min="0"
-            step={lang === 'id' ? '500' : '0.01'}
-            placeholder={lang === 'id' ? '25000' : '4.50'}
-            value={price}
-            onChange={e => setPrice(e.target.value)}
-            className={inputClass + ' pl-7'}
+            placeholder="25.000"
+            value={price ? parseInt(price.replace(/\D/g, '')).toLocaleString('id-ID') : ''}
+            onChange={e => setPrice(e.target.value.replace(/\D/g, ''))}
+            className={inputClass + ' pl-8'}
           />
         </div>
 

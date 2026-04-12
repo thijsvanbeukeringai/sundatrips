@@ -121,7 +121,7 @@ export default function PartnerBookingsPage() {
                   {statusLabel(b.status)}
                 </span>
                 <p className="text-xs font-semibold text-gray-700">
-                  Rp {b.base_amount.toLocaleString(locale, { minimumFractionDigits: 0 })}
+                  Rp {Math.round(b.base_amount).toLocaleString('id-ID')}
                 </p>
               </div>
 

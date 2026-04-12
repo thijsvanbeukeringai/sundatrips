@@ -135,15 +135,12 @@ export default function CatalogItemRow({ item }: { item: POSCatalogItem }) {
 
               {/* Price */}
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                  {lang === 'id' ? 'Rp' : 'Rp '}
-                </span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">Rp</span>
                 <input
-                  type="number"
-                  value={price}
-                  min="0"
-                  step={lang === 'id' ? '500' : '0.01'}
-                  onChange={e => setPrice(e.target.value)}
+                  type="text"
+                  inputMode="numeric"
+                  value={price ? parseInt(price.replace(/\D/g, '')).toLocaleString('id-ID') : ''}
+                  onChange={e => setPrice(e.target.value.replace(/\D/g, ''))}
                   className={inputClass + ' pl-8'}
                 />
               </div>

@@ -6,6 +6,7 @@ import { getAvailableRoomsForBooking } from '@/app/actions/availability'
 import type { AvailableVariant } from '@/app/actions/availability'
 import type { Property } from '@/lib/types'
 import { ArrowLeft, Save, BedDouble, Loader2, CalendarDays, User, Banknote } from 'lucide-react'
+import CurrencyInput from './CurrencyInput'
 import Link from 'next/link'
 import { useState, useTransition, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
@@ -207,7 +208,7 @@ export default function BookingForm({ properties }: { properties: PropertyOption
                   <option value="" disabled>Select a room type…</option>
                   {availableVariants.map(v => (
                     <option key={v.id} value={v.id}>
-                      {v.name} — Rp {v.price_per_unit}/{v.price_unit}
+                      {v.name} — Rp {Math.round(v.price_per_unit).toLocaleString('id-ID')}/{v.price_unit}
                       {' '}· {v.rooms.length} room{v.rooms.length !== 1 ? 's' : ''} available
                     </option>
                   ))}
@@ -284,15 +285,11 @@ export default function BookingForm({ properties }: { properties: PropertyOption
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>{bk.baseAmount} *</label>
-              <input
+              <CurrencyInput
                 name="base_amount"
-                type="number"
                 required
-                min="0"
-                step="0.01"
                 key={`${propertyId}-${selectedVariantId}`}
                 defaultValue={basePrice}
-                className={inputClass}
               />
               <p className="text-[11px] text-gray-400 mt-1">{bk.baseAmountHelper}</p>
             </div>

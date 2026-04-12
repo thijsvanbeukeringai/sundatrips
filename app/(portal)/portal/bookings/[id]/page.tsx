@@ -215,7 +215,7 @@ export default function PortalBookingDetailPage() {
           <span className="text-sm font-medium">{t.portal.bookingDetail.priceAgreement}</span>
         </div>
         <p className="font-display text-xl font-bold text-jungle-800">
-          Rp {booking.base_amount.toLocaleString(locale, { minimumFractionDigits: 0 })}
+          Rp {Math.round(booking.base_amount).toLocaleString('id-ID')}
         </p>
       </div>
 

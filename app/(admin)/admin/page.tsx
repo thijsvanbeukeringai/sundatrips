@@ -71,7 +71,7 @@ export default async function AdminPage() {
             { label: 'Companies',        value: (venues ?? []).length,      icon: Landmark,     color: 'text-purple-700', bg: 'bg-purple-50', href: '/admin/companies' },
             { label: 'Active Listings',  value: activeProps.length,         icon: Building2,    color: 'text-blue-700',   bg: 'bg-blue-50',   href: null },
             { label: 'Total Bookings',   value: (bookings ?? []).length,    icon: CalendarDays, color: 'text-amber-700',  bg: 'bg-amber-50',  href: null },
-            { label: 'Platform Fees',    value: `Rp ${totalFees.toFixed(0)}`, icon: TrendingUp,   color: 'text-sunset-600', bg: 'bg-sunset-50', href: null },
+            { label: 'Platform Fees',    value: `Rp ${Math.round(totalFees).toLocaleString('id-ID')}`, icon: TrendingUp,   color: 'text-sunset-600', bg: 'bg-sunset-50', href: null },
           ].map(({ label, value, icon: Icon, color, bg, href }) => (
             href ? (
               <Link key={label} href={href} className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-purple-200 hover:shadow-md transition-all group">
@@ -120,15 +120,15 @@ export default async function AdminPage() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-xs text-gray-400 mb-1">Gross Revenue</p>
-              <p className="font-display text-2xl font-bold text-gray-900">Rp {totalRevenue.toFixed(0)}</p>
+              <p className="font-display text-2xl font-bold text-gray-900">Rp {Math.round(totalRevenue).toLocaleString('id-ID')}</p>
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Platform Fees (1%)</p>
-              <p className="font-display text-2xl font-bold text-jungle-700">Rp {totalFees.toFixed(0)}</p>
+              <p className="font-display text-2xl font-bold text-jungle-700">Rp {Math.round(totalFees).toLocaleString('id-ID')}</p>
             </div>
             <div>
               <p className="text-xs text-gray-400 mb-1">Owner Payouts (99%)</p>
-              <p className="font-display text-2xl font-bold text-gray-700">Rp {(totalRevenue - totalFees).toFixed(0)}</p>
+              <p className="font-display text-2xl font-bold text-gray-700">Rp {Math.round(totalRevenue - totalFees).toLocaleString('id-ID')}</p>
             </div>
           </div>
         </div>
@@ -232,8 +232,8 @@ export default async function AdminPage() {
                     <tr key={b.id}>
                       <td className="py-3 font-medium text-gray-800">{b.guest_name}</td>
                       <td className="py-3 text-gray-500">{new Date(b.check_in).toLocaleDateString('en-GB')}</td>
-                      <td className="py-3 font-semibold text-gray-900">Rp {b.total_amount?.toFixed(0)}</td>
-                      <td className="py-3 text-jungle-700 font-semibold">Rp {b.platform_fee?.toFixed(0)}</td>
+                      <td className="py-3 font-semibold text-gray-900">Rp {Math.round(b.total_amount ?? 0).toLocaleString('id-ID')}</td>
+                      <td className="py-3 text-jungle-700 font-semibold">Rp {Math.round(b.platform_fee ?? 0).toLocaleString('id-ID')}</td>
                       <td className="py-3">
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                           b.status === 'confirmed'  ? 'bg-blue-50 text-blue-700' :

@@ -121,7 +121,7 @@ export default function PartnerServicesPage() {
                       </div>
                       {service.price_per_unit > 0 && (
                         <p className="text-sm font-semibold text-jungle-700 mt-1.5">
-                          Rp {service.price_per_unit} / {service.price_unit}
+                          Rp {Math.round(service.price_per_unit).toLocaleString('id-ID')} / {service.price_unit}
                         </p>
                       )}
                     </div>

@@ -82,7 +82,7 @@ export default function AdminDashboardClient({ profiles, bookings, venues }: Pro
           { label: 'Company Users',   value: owners.length,             icon: Building2,    color: 'text-jungle-700', bg: 'bg-jungle-50' },
           { label: 'Total Bookings',  value: filteredBookings.length,   icon: CalendarDays, color: 'text-blue-700',   bg: 'bg-blue-50' },
           { label: 'Active Now',      value: active,                    icon: Users,        color: 'text-green-700',  bg: 'bg-green-50' },
-          { label: 'Platform Fees',   value: `Rp ${totalFees.toFixed(0)}`, icon: TrendingUp,  color: 'text-sunset-600', bg: 'bg-sunset-50' },
+          { label: 'Platform Fees',   value: `Rp ${Math.round(totalFees).toLocaleString('id-ID')}`, icon: TrendingUp,  color: 'text-sunset-600', bg: 'bg-sunset-50' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center mb-3`}>
@@ -159,7 +159,7 @@ export default function AdminDashboardClient({ profiles, bookings, venues }: Pro
             {(venueFilter || dateFrom || dateTo) && (
               <span className="ml-2 text-xs font-normal text-gray-400">
                 {filteredBookings.length} result{filteredBookings.length !== 1 ? 's' : ''}
-                {' '}· Rp {totalRevenue.toFixed(0)} gross
+                {' '}· Rp {Math.round(totalRevenue).toLocaleString('id-ID')} gross
               </span>
             )}
           </h2>
@@ -232,8 +232,8 @@ export default function AdminDashboardClient({ profiles, bookings, venues }: Pro
                     <td className="py-3 text-gray-500">{new Date(b.check_in).toLocaleDateString('en-GB')}</td>
                     <td className="py-3 text-gray-600 truncate max-w-[120px]">{b.property_name}</td>
                     <td className="py-3 text-gray-500 truncate max-w-[100px]">{b.venue_name ?? '—'}</td>
-                    <td className="py-3 font-semibold text-gray-900">Rp {b.total_amount?.toFixed(0)}</td>
-                    <td className="py-3 text-jungle-700 font-semibold">Rp {b.platform_fee?.toFixed(2)}</td>
+                    <td className="py-3 font-semibold text-gray-900">Rp {Math.round(b.total_amount ?? 0).toLocaleString('id-ID')}</td>
+                    <td className="py-3 text-jungle-700 font-semibold">Rp {Math.round(b.platform_fee ?? 0).toLocaleString('id-ID')}</td>
                     <td className="py-3">
                       <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[b.status] ?? 'bg-gray-100 text-gray-500'}`}>
                         {STATUS_ICONS[b.status]}

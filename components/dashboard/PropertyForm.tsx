@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import ImageUploader from './ImageUploader'
 import AmenitiesSelector from './AmenitiesSelector'
 import LocationAutocomplete from './LocationAutocomplete'
+import CurrencyInput from './CurrencyInput'
 import { useI18n } from '@/lib/i18n'
 
 interface Props {
@@ -231,14 +232,10 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
               {/* Price per km (custom route) */}
               <div>
                 <label className={labelClass}>Price per km (IDR)</label>
-                <input
+                <CurrencyInput
                   name="price_per_km"
-                  type="number"
-                  min="0"
-                  step="100"
                   defaultValue={property?.price_per_km ?? 12500}
                   placeholder="12500"
-                  className={inputClass}
                 />
                 <p className="text-[11px] text-gray-400 mt-1">Used to calculate custom route prices. Default: 12,500 IDR/km.</p>
               </div>
@@ -314,7 +311,7 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>{t.form.price}{type !== 'transfer' ? ' *' : ''}</label>
-                <input name="price_per_unit" type="number" required={type !== 'transfer'} min="0" step="0.01" defaultValue={property?.price_per_unit} placeholder={type === 'transfer' ? '0' : '48'} className={inputClass} />
+                <CurrencyInput name="price_per_unit" required={type !== 'transfer'} defaultValue={property?.price_per_unit} placeholder={type === 'transfer' ? '0' : '300000'} />
               </div>
               <div>
                 <label className={labelClass}>{t.form.per} *</label>
@@ -395,14 +392,10 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
               {privateTour && (
                 <div>
                   <label className={labelClass}>{t.form.privateTourPrice ?? 'Private tour price (Rp)'}</label>
-                  <input
+                  <CurrencyInput
                     name="private_tour_price"
-                    type="number"
-                    min="0"
-                    step="1000"
-                    defaultValue={property?.private_tour_price ?? ''}
+                    defaultValue={property?.private_tour_price}
                     placeholder="1500000"
-                    className={inputClass}
                   />
                   <p className="text-[11px] text-gray-400 mt-1">{t.form.privateTourPriceHelper ?? 'Fixed price for the entire group (regardless of group size)'}</p>
                 </div>

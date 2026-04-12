@@ -462,7 +462,7 @@ export async function acceptPartnerBooking(bookingId: string) {
         location:      property?.location ?? '',
         island:        property?.island ?? '',
         guestsCount:   String(booking.guests_count),
-        amount:        `Rp ${booking.base_amount}`,
+        amount:        `Rp ${Math.round(booking.base_amount).toLocaleString('id-ID')}`,
         transferFrom,
         transferTo:    property?.transfer_to ?? '',
         driverName,
