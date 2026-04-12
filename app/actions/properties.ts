@@ -43,6 +43,7 @@ export async function createProperty(_prevState: unknown, formData: FormData) {
     pickup_available:        formData.get('pickup_available') === 'on',
     private_tour_available:  formData.get('private_tour_available') === 'on',
     private_tour_price:      formData.get('private_tour_price') ? parseFloat(formData.get('private_tour_price') as string) : null,
+    start_location:          (formData.get('start_location') as string) || null,
   })
 
   if (error) return { error: error.message }
@@ -86,6 +87,7 @@ export async function updateProperty(_prevState: unknown, formData: FormData) {
       pickup_available:        formData.get('pickup_available') === 'on',
       private_tour_available:  formData.get('private_tour_available') === 'on',
       private_tour_price:      formData.get('private_tour_price') ? parseFloat(formData.get('private_tour_price') as string) : null,
+      start_location:          (formData.get('start_location') as string) || null,
     })
     .eq('id', id)
     .eq('owner_id', user.id)

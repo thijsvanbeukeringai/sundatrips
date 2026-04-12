@@ -548,7 +548,16 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
                   />
                 </div>
               )}
-              {hasPickup && (
+              {isActivity && !isPrivateTour && property.start_location && (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">{l.startLocation ?? 'Meeting point'}</p>
+                  <p className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-jungle-600 flex-shrink-0" />
+                    {property.start_location}
+                  </p>
+                </div>
+              )}
+              {isActivity && isPrivateTour && hasPickup && (
                 <div>
                   <label className={labelClass}>{l.pickupHotel ?? 'Hotel / pickup location'}</label>
                   <input

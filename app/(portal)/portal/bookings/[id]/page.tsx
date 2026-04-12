@@ -236,13 +236,22 @@ export default function PortalBookingDetailPage() {
         </div>
       )}
 
-      {/* Hotel pickup (for activities) */}
-      {isActivity && pickupAddress && (
+      {/* Activity: hotel pickup (private tour) or start location (regular) */}
+      {isActivity && isPrivateTour && pickupAddress && (
         <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3">
           <MapPin className="w-4 h-4 text-jungle-600" />
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Hotel pickup</p>
             <p className="text-sm font-semibold text-gray-800">{pickupAddress}</p>
+          </div>
+        </div>
+      )}
+      {isActivity && !isPrivateTour && property?.start_location && (
+        <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3">
+          <MapPin className="w-4 h-4 text-jungle-600" />
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Start / meeting point</p>
+            <p className="text-sm font-semibold text-gray-800">{property.start_location}</p>
           </div>
         </div>
       )}

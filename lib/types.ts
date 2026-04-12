@@ -94,6 +94,8 @@ export interface Property {
   // private tour option
   private_tour_available: boolean
   private_tour_price:     number | null
+  // activity start/meeting point
+  start_location:         string | null
   created_at: string
   updated_at: string
 }

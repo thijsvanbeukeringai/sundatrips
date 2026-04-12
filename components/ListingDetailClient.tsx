@@ -390,6 +390,12 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                     {p.duration}
                   </span>
                 )}
+                {p.start_location && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    {p.start_location}
+                  </span>
+                )}
                 {p.pickup_available && (
                   <span className="flex items-center gap-1.5">
                     <MapPin className="w-4 h-4 text-gray-400" />
