@@ -403,7 +403,8 @@ export async function acceptPartnerBooking(bookingId: string) {
     .from('bookings')
     .select(`
       *,
-      property:properties(name, type, location, island, transfer_from, transfer_to)
+      property:properties(name, type, location, island, transfer_from, transfer_to, driver_name, driver_phone),
+      variant:listing_variants(driver_name, driver_phone)
     `)
     .eq('id', bookingId)
     .single()
@@ -423,6 +424,11 @@ export async function acceptPartnerBooking(bookingId: string) {
   try {
     const { sendMailWithTemplate } = await import('@/lib/mailgun')
     const property = (booking as any).property
+    const variant  = (booking as any).variant
+
+    // Driver info: prefer variant driver, fallback to property driver
+    const driverName  = variant?.driver_name  || property?.driver_name  || ''
+    const driverPhone = variant?.driver_phone || property?.driver_phone || ''
 
     const dateFormatted = new Date(booking.check_in).toLocaleDateString('en-GB', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -446,6 +452,8 @@ export async function acceptPartnerBooking(bookingId: string) {
         amount:        `€${booking.base_amount}`,
         transferFrom:  property?.transfer_from ?? '',
         transferTo:    property?.transfer_to ?? '',
+        driverName,
+        driverPhone,
         notes:         booking.notes ?? '',
       },
     })
