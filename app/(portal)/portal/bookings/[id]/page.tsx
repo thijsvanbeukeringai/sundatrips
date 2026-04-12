@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getPartnerBookingById, acceptPartnerBooking } from '@/app/actions/partner'
+import { getPartnerBookingById, acceptPartnerBooking, declinePartnerBooking } from '@/app/actions/partner'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, MapPin, Users, Phone, Mail, CalendarDays,
-  MessageSquare, Euro, Loader2, CheckCircle, Clock,
+  MessageSquare, Euro, Loader2, CheckCircle, Clock, XCircle,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 
@@ -38,6 +38,8 @@ export default function PortalBookingDetailPage() {
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState(false)
   const [accepted, setAccepted] = useState(false)
+  const [declining, setDeclining] = useState(false)
+  const [declined, setDeclined] = useState(false)
 
   const locale = lang === 'id' ? 'id-ID' : 'en-GB'
   const statusLabel = (status: string) =>
@@ -74,6 +76,18 @@ export default function PortalBookingDetailPage() {
       setBooking({ ...booking, status: 'confirmed' })
       setAccepted(true)
       setTimeout(() => setAccepted(false), 4000)
+    }
+  }
+
+  async function handleDecline() {
+    if (!confirm('Are you sure you want to decline this booking?')) return
+    setDeclining(true)
+    const result = await declinePartnerBooking(booking.id)
+    setDeclining(false)
+    if (!result.error) {
+      setBooking({ ...booking, status: 'cancelled' })
+      setDeclined(true)
+      setTimeout(() => setDeclined(false), 4000)
     }
   }
 
@@ -120,25 +134,46 @@ export default function PortalBookingDetailPage() {
         )}
       </div>
 
-      {/* Accept button for pending bookings */}
+      {/* Accept / Decline buttons for pending bookings */}
       {booking.status === 'pending' && (
-        <button
-          onClick={handleAccept}
-          disabled={accepting}
-          className="w-full flex items-center justify-center gap-2 bg-jungle-700 hover:bg-jungle-800 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-colors"
-        >
-          {accepting ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> {t.portal.bookingDetail.accepting}</>
-          ) : (
-            <><CheckCircle className="w-4 h-4" /> {t.portal.bookingDetail.accept}</>
-          )}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleAccept}
+            disabled={accepting || declining}
+            className="flex-1 flex items-center justify-center gap-2 bg-jungle-700 hover:bg-jungle-800 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-colors"
+          >
+            {accepting ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> {t.portal.bookingDetail.accepting}</>
+            ) : (
+              <><CheckCircle className="w-4 h-4" /> {t.portal.bookingDetail.accept}</>
+            )}
+          </button>
+          <button
+            onClick={handleDecline}
+            disabled={accepting || declining}
+            className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60 font-semibold transition-colors"
+          >
+            {declining ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <XCircle className="w-4 h-4" />
+            )}
+            Decline
+          </button>
+        </div>
       )}
 
       {accepted && (
         <div className="bg-jungle-50 border border-jungle-200 text-jungle-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
           <CheckCircle className="w-4 h-4 flex-shrink-0" />
           {t.portal.bookingDetail.accepted}
+        </div>
+      )}
+
+      {declined && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+          <XCircle className="w-4 h-4 flex-shrink-0" />
+          Booking declined
         </div>
       )}
 

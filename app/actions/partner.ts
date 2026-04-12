@@ -474,6 +474,56 @@ export async function acceptPartnerBooking(bookingId: string) {
   return { success: true }
 }
 
+// ─── Partner: decline/cancel a pending booking ──────────────────────────────
+
+export async function declinePartnerBooking(bookingId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data: booking, error: fetchErr } = await supabase
+    .from('bookings')
+    .select('*, property:properties(name)')
+    .eq('id', bookingId)
+    .single()
+
+  if (fetchErr || !booking) return { error: 'Booking not found' }
+  if (booking.status !== 'pending') return { error: 'Booking is not pending' }
+
+  const { error: updateErr } = await supabase
+    .from('bookings')
+    .update({ status: 'cancelled', base_amount: 0 })
+    .eq('id', bookingId)
+
+  if (updateErr) return { error: updateErr.message }
+
+  // Notify guest via email
+  try {
+    const { sendMailWithTemplate } = await import('@/lib/mailgun')
+    const property = (booking as any).property
+
+    await sendMailWithTemplate({
+      to: booking.guest_email,
+      subject: `Booking request for ${property?.name ?? 'your trip'} — not available`,
+      template: 'trip declined',
+      variables: {
+        guestName:   booking.guest_name,
+        serviceName: property?.name ?? 'Service',
+        date:        new Date(booking.check_in).toLocaleDateString('en-GB', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        }),
+      },
+    })
+  } catch (err: any) {
+    console.error('[declinePartnerBooking] Mailgun error:', err)
+  }
+
+  revalidatePath('/portal/bookings')
+  revalidatePath(`/portal/bookings/${bookingId}`)
+  revalidatePath('/portal')
+  return { success: true }
+}
+
 // ─── Admin: assign partner to property ───────────────────────────────────────
 
 export async function assignPartnerToProperty(propertyId: string, partnerId: string | null) {
