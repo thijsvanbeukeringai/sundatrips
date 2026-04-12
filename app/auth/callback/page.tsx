@@ -4,7 +4,6 @@
 // /auth/callback?next=/onboarding#access_token=...&type=invite
 //
 // Hash fragments are invisible to the server, so we need a client page.
-// The Supabase JS client automatically reads the hash and creates a session.
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -12,38 +11,65 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
     const params      = new URLSearchParams(window.location.search)
     const next        = params.get('next') ?? '/dashboard'
     const impersonate = params.get('impersonate') === '1'
 
-    function handleSession(session: { user: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> } } | null) {
-      if (!session) return
-      if (!impersonate) {
-        const isInvite  = !!session.user.app_metadata?.invited_at
-        const onboarded = !!session.user.user_metadata?.onboarded
-        if (isInvite && !onboarded) {
-          router.replace('/onboarding')
-          return
-        }
+    async function handleCallback() {
+      // The hash fragment contains access_token, refresh_token, etc.
+      // supabase.auth.getSession() will automatically parse the hash
+      // and set the session if tokens are present.
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('[auth/callback] Error getting session:', error)
+        router.replace('/login?error=auth_callback_failed')
+        return
       }
-      router.replace(next)
+
+      if (session) {
+        if (!impersonate) {
+          const isInvite  = !!session.user.app_metadata?.invited_at
+          const onboarded = !!session.user.user_metadata?.onboarded
+          if (isInvite && !onboarded) {
+            router.replace('/onboarding')
+            return
+          }
+        }
+        router.replace(next)
+        return
+      }
+
+      // If no session yet, listen for auth state change (fallback)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, newSession) => {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            if (!newSession) return
+            if (!impersonate) {
+              const isInvite  = !!newSession.user.app_metadata?.invited_at
+              const onboarded = !!newSession.user.user_metadata?.onboarded
+              if (isInvite && !onboarded) {
+                router.replace('/onboarding')
+                return
+              }
+            }
+            router.replace(next)
+            subscription.unsubscribe()
+          }
+        }
+      )
+
+      // Timeout fallback — if nothing happens after 10 seconds, redirect to login
+      setTimeout(() => {
+        subscription.unsubscribe()
+        router.replace('/login?error=auth_callback_timeout')
+      }, 10000)
     }
 
-    // 1. Listen for auth state changes (covers the hash / token flow)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') handleSession(session)
-    })
-
-    // 2. Fallback: if already signed in (e.g. PKCE code already exchanged),
-    //    the event won't fire — check the session directly.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) handleSession(session)
-    })
-
-    return () => subscription.unsubscribe()
+    handleCallback()
   }, [])
 
   return (
