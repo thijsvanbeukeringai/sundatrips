@@ -182,7 +182,9 @@ export async function resendPartnerInvite(email: string, fullName: string) {
   const admin = createAdminClient()
 
   // Generate a new invite link (without sending Supabase's built-in email)
-  const { data, error } = await admin.auth.admin.generateLink({
+  // Try invite first; if user already exists, fall back to magic link
+  let data
+  const { data: inviteData, error: inviteError } = await admin.auth.admin.generateLink({
     type: 'invite',
     email,
     options: {
@@ -191,7 +193,20 @@ export async function resendPartnerInvite(email: string, fullName: string) {
     },
   })
 
-  if (error) return { error: error.message }
+  if (inviteError) {
+    // User already exists — use magic link instead
+    const { data: magicData, error: magicError } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
+      },
+    })
+    if (magicError) return { error: magicError.message }
+    data = magicData
+  } else {
+    data = inviteData
+  }
 
   // Look up the company/service name from the invites table
   const { data: invite } = await supabase

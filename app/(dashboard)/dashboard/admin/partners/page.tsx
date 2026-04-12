@@ -53,11 +53,17 @@ export default function PartnersAdminPage() {
     setTimeout(() => setSaved(null), 2000)
   }
 
+  const [resendError, setResendError] = useState<string | null>(null)
+
   async function handleResend(email: string, fullName: string) {
     setResending(email)
+    setResendError(null)
     const result = await resendPartnerInvite(email, fullName)
     setResending(null)
-    if (!result.error) {
+    if (result.error) {
+      setResendError(result.error)
+      setTimeout(() => setResendError(null), 5000)
+    } else {
       setResentOk(email)
       setTimeout(() => setResentOk(null), 3000)
     }
@@ -82,6 +88,12 @@ export default function PartnersAdminPage() {
           <p className="text-sm text-gray-500 mt-0.5">Assign drivers and organizers to their services</p>
         </div>
       </div>
+
+      {resendError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+          {resendError}
+        </div>
+      )}
 
       {/* Partners */}
       <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
