@@ -60,9 +60,8 @@ function TransferFeaturedCard({ p, t, lang }: { p: Property; t: any; lang: 'en' 
     >
       <div className="relative h-44 overflow-hidden flex-shrink-0 bg-jungle-800">
         {displayImage ? (
-          <Image src={displayImage} alt={displayName} fill unoptimized
-            className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw"
+          <img src={displayImage} alt={displayName}
+            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-jungle-700 to-jungle-900 flex items-center justify-center">
