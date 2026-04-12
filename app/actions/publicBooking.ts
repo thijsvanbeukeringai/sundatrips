@@ -168,7 +168,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
     console.error('[createPublicBooking] Mailgun guest error:', err)
   }
 
-  // Send "new booking arrived" notification to the partner/owner
+  // Send notification to the partner/owner
   try {
     const { sendMailWithTemplate } = await import('@/lib/mailgun')
 
@@ -177,28 +177,56 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       })
 
+      const isActivityType = property?.type === 'activity' || property?.type === 'trip'
+      const timeSlot       = input.notes?.match(/Time slot: (.+)/)?.[1] ?? ''
+      const isPrivateTour  = input.notes?.includes('Private tour') ?? false
+      const pickupAddress  = input.notes?.match(/Pickup: (.+)/)?.[1] ?? ''
+
+      const partnerTemplate = isActivityType ? 'activity pending - partner' : 'New booking arrived'
+
+      const partnerVariables: Record<string, string> = {
+        partnerName:   ownerProfile.company_name || ownerProfile.full_name || 'Partner',
+        bookingNumber,
+        serviceName:   property?.name ?? 'Service',
+        serviceType:   property?.type ?? '',
+        date:          dateFormatted,
+        guestName:     input.guest_name.trim(),
+        guestEmail:    email,
+        guestPhone:    input.guest_phone || '',
+        guestsCount:   String(input.guests_count),
+        amount:        `Rp ${Math.round(input.base_amount).toLocaleString('id-ID')}`,
+        notes:         input.notes ?? '',
+      }
+
+      if (isActivityType) {
+        Object.assign(partnerVariables, {
+          timeSlot,
+          duration:         property?.duration ?? '',
+          privateTour:      isPrivateTour ? 'yes' : 'no',
+          privateTourPrice: isPrivateTour && property?.private_tour_price
+            ? `Rp ${Math.round(property.private_tour_price).toLocaleString('id-ID')}`
+            : '',
+          maxCapacity:      String(property?.max_capacity ?? ''),
+          pickupAddress,
+          location:         property?.location ?? '',
+          island:           property?.island ?? '',
+        })
+      } else {
+        Object.assign(partnerVariables, {
+          transferFrom:  pickupAddress || property?.transfer_from || '',
+          transferTo:    property?.transfer_to ?? '',
+          pickupTime:    input.pickup_time ?? '',
+          pickupAddress,
+        })
+      }
+
       await sendMailWithTemplate({
         to: ownerProfile.email,
         subject: bookingNumber
           ? `New booking request #${bookingNumber} — ${input.guest_name.trim()}`
           : `New booking request — ${input.guest_name.trim()}`,
-        template: 'New booking arrived',
-        variables: {
-          partnerName:   ownerProfile.company_name || ownerProfile.full_name || 'Partner',
-          bookingNumber,
-          serviceName:   property?.name ?? 'Service',
-          transferFrom:  input.notes?.match(/Pickup: (.+)/)?.[1] || property?.transfer_from || '',
-          transferTo:    property?.transfer_to ?? '',
-          date:          dateFormatted,
-          pickupTime:    input.pickup_time ?? '',
-          pickupAddress: input.notes?.match(/Pickup: (.+)/)?.[1] ?? '',
-          guestName:     input.guest_name.trim(),
-          guestEmail:    email,
-          guestPhone:    input.guest_phone || '',
-          guestsCount:   String(input.guests_count),
-          amount:        `Rp ${Math.round(input.base_amount).toLocaleString('id-ID')}`,
-          notes:         input.notes ?? '',
-        },
+        template: partnerTemplate,
+        variables: partnerVariables,
       })
     }
   } catch (err: any) {
