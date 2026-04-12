@@ -77,8 +77,14 @@ function TransferCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }
             {t.types.transfer}
           </span>
           <div className="text-right">
-            <span className="text-xs text-gray-400">from </span>
-            <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+            {p.price_per_unit > 0 ? (
+              <>
+                <span className="text-xs text-gray-400">from </span>
+                <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+              </>
+            ) : (
+              <span className="text-xs font-semibold text-jungle-700">Custom pricing</span>
+            )}
           </div>
         </div>
       </div>

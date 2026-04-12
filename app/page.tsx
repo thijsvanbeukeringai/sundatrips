@@ -16,13 +16,30 @@ export default async function Home() {
   const supabase = await createClient()
   const { data } = await supabase
     .from('properties')
-    .select('*, owner:profiles!owner_id(company_name, company_logo, company_location, company_island, languages)')
+    .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
 
-  // For transfers: show one card per owner (the one with the lowest price)
-  // This prevents 100 separate routes from cluttering the homepage
   const all = (data ?? []) as Property[]
+
+  // For transfers: fetch owner profiles to get company data
+  const transferOwnerIds = [...new Set(all.filter(p => p.type === 'transfer').map(p => p.owner_id))]
+  let ownerMap = new Map<string, any>()
+  if (transferOwnerIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, company_name, company_logo, company_location, company_island, languages')
+      .in('id', transferOwnerIds)
+    for (const pr of profiles ?? []) ownerMap.set(pr.id, pr)
+  }
+  // Attach owner data to properties
+  for (const p of all) {
+    if (p.type === 'transfer' && ownerMap.has(p.owner_id)) {
+      ;(p as any).owner = ownerMap.get(p.owner_id)
+    }
+  }
+
+  // For transfers: show one card per owner (the one with the lowest price)
   const nonTransfers = all.filter(p => p.type !== 'transfer')
   const transfers = all.filter(p => p.type === 'transfer')
   const transferByOwner = new Map<string, Property>()

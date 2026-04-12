@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { CalendarDays, List, Users, PlusCircle, LogOut, Compass, Briefcase, Settings } from 'lucide-react'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/lib/i18n'
@@ -81,6 +82,9 @@ export default function PortalNav({ profile }: { profile: Profile }) {
               <p className="text-sm font-semibold text-gray-900 truncate">{profile.full_name}</p>
               <p className="text-[11px] text-gray-400 truncate">{profile.email}</p>
             </div>
+          </div>
+          <div className="mb-3">
+            <LanguageSwitcher />
           </div>
           <button
             onClick={handleLogout}
