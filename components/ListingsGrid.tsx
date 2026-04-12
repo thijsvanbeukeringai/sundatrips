@@ -21,13 +21,11 @@ function TransferCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }
       className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-jungle-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
     >
       {/* Driver image with dark overlay */}
-      <div className="relative h-48 overflow-hidden bg-jungle-800 flex-shrink-0">
-        {displayImage ? (
-          <img
-            src={displayImage} alt={displayName}
-            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
+      <div
+        className="relative h-48 overflow-hidden bg-jungle-800 flex-shrink-0 bg-cover bg-center"
+        style={displayImage ? { backgroundImage: `url(${displayImage})` } : undefined}
+      >
+        {!displayImage && (
           <div className="w-full h-full bg-gradient-to-br from-jungle-700 to-jungle-900 flex items-center justify-center">
             <Car className="w-12 h-12 text-white/20" />
           </div>

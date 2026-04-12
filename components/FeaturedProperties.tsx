@@ -58,12 +58,11 @@ function TransferFeaturedCard({ p, t, lang }: { p: Property; t: any; lang: 'en' 
       href={`/listings/${p.id}`}
       className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-jungle-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
     >
-      <div className="relative h-44 overflow-hidden flex-shrink-0 bg-jungle-800">
-        {displayImage ? (
-          <img src={displayImage} alt={displayName}
-            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
+      <div
+        className="relative h-44 overflow-hidden flex-shrink-0 bg-jungle-800 bg-cover bg-center"
+        style={displayImage ? { backgroundImage: `url(${displayImage})` } : undefined}
+      >
+        {!displayImage && (
           <div className="w-full h-full bg-gradient-to-br from-jungle-700 to-jungle-900 flex items-center justify-center">
             <Car className="w-12 h-12 text-white/20" />
           </div>
