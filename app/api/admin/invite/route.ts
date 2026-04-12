@@ -45,7 +45,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: inviteError.message }, { status: 400 })
     }
 
-    // 4. Record invite in our own table for tracking
+    // 4. If partner: set role on their profile immediately (don't wait for onboarding)
+    //    The handle_new_user trigger creates the profile synchronously, so it exists now.
+    if (inviteRole === 'partner') {
+      await admin.from('profiles').update({ role: 'partner' }).eq('email', email)
+    }
+
+    // 5. Record invite in our own table for tracking
     await supabase.from('invites').upsert({
       email,
       invited_by: user.id,
