@@ -115,7 +115,13 @@ export default function PartnerSettingsPage() {
       alert(`Upload failed: ${error.message}`)
     } else {
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
+      // Show cache-busted URL for preview, but save clean URL to database
       setCompanyLogo(publicUrl + '?t=' + Date.now())
+      // Update the database immediately with the clean URL
+      const { data: { user: u } } = await supabase.auth.getUser()
+      if (u) {
+        await supabase.from('profiles').update({ company_logo: publicUrl }).eq('id', u.id)
+      }
     }
     setUploading(false)
   }

@@ -48,7 +48,9 @@ const cardVariants = {
 function TransferFeaturedCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }) {
   const owner = (p as any).owner
   const displayName = owner?.company_name || p.name
-  const displayImage = owner?.company_logo || p.images[0]
+  // Strip cache buster from logo URL for reliable background-image rendering
+  const logoUrl = owner?.company_logo?.split('?')[0] ?? null
+  const displayImage = logoUrl || p.images[0]
   const displayLocation = owner?.company_location || p.location
   const displayIsland = owner?.company_island || p.island
   const ownerLanguages: string[] = owner?.languages ?? []
