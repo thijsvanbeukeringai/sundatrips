@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { getPartnerBookings } from '@/app/actions/partner'
-import { getCachedProfileClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { CalendarDays, Clock, Users, ChevronRight, TrendingUp, Loader2 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
