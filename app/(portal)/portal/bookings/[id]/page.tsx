@@ -81,7 +81,7 @@ export default function PortalBookingDetailPage() {
   }
 
   async function handleDecline() {
-    if (!confirm('Are you sure you want to decline this booking?')) return
+    if (!confirm(t.portal.bookingDetail.declineConfirm)) return
     setDeclining(true)
     const result = await declinePartnerBooking(booking.id)
     setDeclining(false)
@@ -185,7 +185,7 @@ export default function PortalBookingDetailPage() {
             ) : (
               <XCircle className="w-4 h-4" />
             )}
-            Decline
+            {t.portal.bookingDetail.decline}
           </button>
         </div>
       )}
@@ -200,7 +200,7 @@ export default function PortalBookingDetailPage() {
       {declined && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
           <XCircle className="w-4 h-4 flex-shrink-0" />
-          Booking declined
+          {t.portal.bookingDetail.declined}
         </div>
       )}
 
@@ -209,8 +209,8 @@ export default function PortalBookingDetailPage() {
         <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3">
           <Star className="w-4 h-4 text-amber-500 flex-shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-amber-800">Private tour</p>
-            <p className="text-xs text-amber-600">Entire time slot booked for this group</p>
+            <p className="text-sm font-semibold text-amber-800">{t.portal.bookingDetail.privateTour}</p>
+            <p className="text-xs text-amber-600">{t.portal.bookingDetail.privateTourSub}</p>
           </div>
         </div>
       )}
@@ -218,10 +218,10 @@ export default function PortalBookingDetailPage() {
       {/* Transfer route */}
       {isTransfer && (property?.transfer_from || pickupAddress || property?.transfer_to || dropoff) && (
         <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-1">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 pt-4 mb-1">Route</p>
-          <Row label="Pickup" value={pickupAddress || property?.transfer_from} icon={<Car className="w-3.5 h-3.5" />} />
-          <Row label="Dropoff" value={dropoff || property?.transfer_to} icon={<MapPin className="w-3.5 h-3.5" />} />
-          {distance && <Row label="Distance" value={distance} icon={<Car className="w-3.5 h-3.5" />} />}
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 pt-4 mb-1">{t.portal.bookingDetail.route}</p>
+          <Row label={t.portal.bookingDetail.pickup} value={pickupAddress || property?.transfer_from} icon={<Car className="w-3.5 h-3.5" />} />
+          <Row label={t.portal.bookingDetail.dropoff} value={dropoff || property?.transfer_to} icon={<MapPin className="w-3.5 h-3.5" />} />
+          {distance && <Row label={t.portal.bookingDetail.distance} value={distance} icon={<Car className="w-3.5 h-3.5" />} />}
         </div>
       )}
 
@@ -241,7 +241,7 @@ export default function PortalBookingDetailPage() {
         <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3">
           <MapPin className="w-4 h-4 text-jungle-600" />
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Hotel pickup</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">{t.portal.bookingDetail.hotelPickup}</p>
             <p className="text-sm font-semibold text-gray-800">{pickupAddress}</p>
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function PortalBookingDetailPage() {
         <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3">
           <MapPin className="w-4 h-4 text-jungle-600" />
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Start / meeting point</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">{t.portal.bookingDetail.startLocation}</p>
             <p className="text-sm font-semibold text-gray-800">{property.start_location}</p>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function PortalBookingDetailPage() {
         <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4">
           <div className="flex items-center gap-2 text-gray-500 mb-2">
             <MessageSquare className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">Message</span>
+            <span className="text-xs font-bold uppercase tracking-widest">{t.portal.bookingDetail.message}</span>
           </div>
           <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{guestMessage}</p>
         </div>

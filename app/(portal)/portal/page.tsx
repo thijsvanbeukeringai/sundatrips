@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getPartnerBookings } from '@/app/actions/partner'
 import Link from 'next/link'
-import { CalendarDays, Clock, Users, ChevronRight, TrendingUp, Loader2 } from 'lucide-react'
+import { CalendarDays, Clock, Users, ChevronRight, TrendingUp, Loader2, MapPin, Star } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 
 const STATUS_STYLES: Record<string, string> = {
@@ -27,7 +27,6 @@ export default function PortalHomePage() {
       ])
       setBookings(bData)
 
-      // Get name from supabase client
       const { createClient } = await import('@/lib/supabase/client')
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -59,11 +58,11 @@ export default function PortalHomePage() {
     )
   }
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
   const todayBookings    = bookings.filter(b => b.check_in === today)
   const upcomingBookings = bookings.filter(b => b.check_in > today).slice(0, 10)
 
-  const thisMonth = new Date().toISOString().slice(0, 7)
+  const thisMonth = today.slice(0, 7)
   const allThisMonth = bookings.filter(b => b.check_in.startsWith(thisMonth))
   const revenueMonth = allThisMonth.reduce((s: number, b: any) => s + (b.base_amount ?? 0), 0)
 
@@ -71,8 +70,13 @@ export default function PortalHomePage() {
   const statusLabel = (status: string) =>
     t.myBookings.statuses[status as keyof typeof t.myBookings.statuses] ?? status.replace('_', ' ')
 
+  // Parse time slot from notes
+  function getTimeSlot(notes: string | null) {
+    return notes?.match(/Time slot: (.+)/)?.[1] ?? ''
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Greeting */}
       <div>
         <p className="text-gray-400 text-sm">{greeting()},</p>
@@ -82,25 +86,32 @@ export default function PortalHomePage() {
       {/* Stats bar */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white border border-gray-100 rounded-2xl p-4">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-widest mb-1">{t.portal.home.thisMonth}</p>
+          <p className="text-[10px] sm:text-xs text-gray-400 font-medium uppercase tracking-widest mb-1">{t.portal.home.thisMonth}</p>
           <p className="font-display text-xl font-bold text-jungle-800">{allThisMonth.length}</p>
           <p className="text-xs text-gray-500 mt-0.5">{t.portal.home.bookings}</p>
         </div>
         <div className="bg-white border border-gray-100 rounded-2xl p-4">
           <TrendingUp className="w-4 h-4 text-jungle-400 mb-1" />
-          <p className="font-display text-xl font-bold text-jungle-800">
-            Rp {revenueMonth.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          <p className="font-display text-lg sm:text-xl font-bold text-jungle-800">
+            Rp {Math.round(revenueMonth).toLocaleString('id-ID')}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">{t.portal.home.revenue}</p>
         </div>
       </div>
 
-      {/* Today */}
+      {/* Today's bookings — detailed table */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <CalendarDays className="w-4 h-4 text-jungle-600" />
-          <h2 className="font-semibold text-gray-900">{t.portal.home.today}</h2>
-          <span className="text-xs text-gray-400">{new Date().toLocaleDateString(locale, { day: 'numeric', month: 'long' })}</span>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-jungle-600" />
+            <h2 className="font-semibold text-gray-900">{t.portal.home.today}</h2>
+            <span className="text-xs text-gray-400">{new Date().toLocaleDateString(locale, { day: 'numeric', month: 'long' })}</span>
+          </div>
+          {todayBookings.length > 0 && (
+            <span className="text-xs font-semibold text-jungle-700 bg-jungle-50 px-2 py-0.5 rounded-full">
+              {todayBookings.length} {todayBookings.length === 1 ? t.portal.home.person : t.portal.home.bookings}
+            </span>
+          )}
         </div>
 
         {todayBookings.length === 0 ? (
@@ -108,33 +119,79 @@ export default function PortalHomePage() {
             <p className="text-gray-400 text-sm">{t.portal.home.noBookingsToday}</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {todayBookings.map((b: any) => (
-              <Link
-                key={b.id}
-                href={`/portal/bookings/${b.id}`}
-                className="flex items-center gap-3 sm:gap-4 bg-white border border-gray-100 rounded-2xl px-3 sm:px-4 py-3 hover:border-jungle-200 hover:bg-jungle-50/30 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
-                    {b.property?.name ?? t.portal.bookingDetail.service}
-                  </p>
-                  <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
-                    <span className="truncate">{b.guest_name}</span>
-                    <span className="flex items-center gap-1 flex-shrink-0">
-                      <Users className="w-3 h-3" />
-                      {b.guests_count} {b.guests_count === 1 ? t.portal.home.person : t.portal.home.people}
+          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+            {/* Desktop table */}
+            <div className="hidden sm:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-left">
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.portal.bookingDetail.guest}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.portal.bookingDetail.service}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.timeslot.time}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t.portal.bookingDetail.groupSize}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {todayBookings.map((b: any) => {
+                    const timeSlot = getTimeSlot(b.notes)
+                    const isPrivate = b.notes?.includes('Private tour')
+                    return (
+                      <tr key={b.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                        <td className="px-4 py-3">
+                          <Link href={`/portal/bookings/${b.id}`} className="font-semibold text-gray-900 hover:text-jungle-700">
+                            {b.guest_name}
+                          </Link>
+                          {b.guest_phone && <p className="text-[11px] text-gray-400">{b.guest_phone}</p>}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {b.property?.name ?? '-'}
+                          {isPrivate && <span className="ml-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Private</span>}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">{timeSlot || b.pickup_time || '-'}</td>
+                        <td className="px-4 py-3 text-gray-600">{b.guests_count}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_STYLES[b.status]}`}>
+                            {statusLabel(b.status)}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y divide-gray-50">
+              {todayBookings.map((b: any) => {
+                const timeSlot = getTimeSlot(b.notes)
+                const isPrivate = b.notes?.includes('Private tour')
+                return (
+                  <Link
+                    key={b.id}
+                    href={`/portal/bookings/${b.id}`}
+                    className="flex items-center gap-3 px-4 py-3 active:bg-gray-50"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-gray-900 text-sm truncate">{b.guest_name}</p>
+                        {isPrivate && <Star className="w-3 h-3 text-amber-500 flex-shrink-0" />}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
+                        {b.property?.name}
+                        {timeSlot ? ` · ${timeSlot}` : b.pickup_time ? ` · ${b.pickup_time}` : ''}
+                        {` · ${b.guests_count} ${b.guests_count === 1 ? t.portal.home.person : t.portal.home.people}`}
+                      </p>
+                    </div>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex-shrink-0 ${STATUS_STYLES[b.status]}`}>
+                      {statusLabel(b.status)}
                     </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_STYLES[b.status]}`}>
-                    {statusLabel(b.status)}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-gray-300 hidden sm:block" />
-                </div>
-              </Link>
-            ))}
+                    <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  </Link>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -152,25 +209,31 @@ export default function PortalHomePage() {
               <Link
                 key={b.id}
                 href={`/portal/bookings/${b.id}`}
-                className="flex items-center gap-3 sm:gap-4 bg-white border border-gray-100 rounded-2xl px-3 sm:px-4 py-3 hover:border-jungle-200 hover:bg-jungle-50/30 transition-colors"
+                className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-3 sm:px-4 py-3 hover:border-jungle-200 hover:bg-jungle-50/30 transition-colors active:bg-jungle-50"
               >
-                <div className="w-12 text-center flex-shrink-0">
+                <div className="w-11 text-center flex-shrink-0">
                   <p className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">
-                    {new Date(b.check_in).toLocaleDateString(locale, { month: 'short' })}
+                    {new Date(b.check_in + 'T12:00:00').toLocaleDateString(locale, { month: 'short' })}
                   </p>
-                  <p className="font-display text-xl font-bold text-jungle-800 leading-none">
-                    {new Date(b.check_in).getDate()}
+                  <p className="font-display text-lg font-bold text-jungle-800 leading-none">
+                    {new Date(b.check_in + 'T12:00:00').getDate()}
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
-                    {b.property?.name ?? t.portal.bookingDetail.service}
+                  <p className="font-semibold text-gray-900 truncate text-sm">
+                    {b.guest_name}
+                    {b.booking_number && <span className="text-xs font-normal text-gray-400 ml-1">#{b.booking_number}</span>}
                   </p>
                   <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {b.guest_name} · {b.guests_count} {b.guests_count === 1 ? t.portal.home.person : t.portal.home.people}
+                    {b.property?.name} · {b.guests_count} {b.guests_count === 1 ? t.portal.home.person : t.portal.home.people}
                   </p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${STATUS_STYLES[b.status]}`}>
+                    {statusLabel(b.status)}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-gray-300 hidden sm:block" />
+                </div>
               </Link>
             ))}
           </div>
