@@ -504,12 +504,13 @@ export async function declinePartnerBooking(bookingId: string) {
 
     await sendMailWithTemplate({
       to: booking.guest_email,
-      subject: `Booking request for ${property?.name ?? 'your trip'} — not available`,
+      subject: `Booking #${booking.booking_number ?? ''} — driver not available`,
       template: 'trip declined',
       variables: {
-        guestName:   booking.guest_name,
-        serviceName: property?.name ?? 'Service',
-        date:        new Date(booking.check_in).toLocaleDateString('en-GB', {
+        guestName:     booking.guest_name,
+        bookingNumber: String(booking.booking_number ?? ''),
+        serviceName:   property?.name ?? 'Service',
+        date:          new Date(booking.check_in).toLocaleDateString('en-GB', {
           weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
         }),
       },
