@@ -11,7 +11,7 @@ interface Props {
 }
 
 function isoDate(date: Date) {
-  return date.toISOString().split('T')[0]
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 function addDays(date: Date, n: number) {
