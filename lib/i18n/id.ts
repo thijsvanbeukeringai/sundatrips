@@ -692,6 +692,7 @@ export const id: Translations = {
       activate:       'Aktifkan',
       deactivate:     'Nonaktifkan',
       deleteConfirm:  'Apakah Anda yakin ingin menghapus "{{name}}"? Tindakan ini tidak dapat dibatalkan.',
+      availability:   'Ketersediaan',
     },
     bookings: {
       title:          'Pemesanan',

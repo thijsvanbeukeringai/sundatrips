@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getPartnerOwnedServices, togglePartnerServiceActive, deletePartnerService } from '@/app/actions/partner'
-import { Compass, Car, MapPin, Plus, Pencil, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Compass, Car, MapPin, Plus, Pencil, Trash2, Eye, EyeOff, Loader2, CalendarDays } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/lib/i18n'
 import type { Property } from '@/lib/types'
@@ -142,6 +142,15 @@ export default function PartnerServicesPage() {
                         <EyeOff className="w-4 h-4" />
                       )}
                     </button>
+                    {(service.type === 'activity' || service.type === 'trip') && (
+                      <Link
+                        href={`/portal/services/${service.id}/availability`}
+                        className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-jungle-700 hover:border-jungle-300 transition-colors"
+                        title={t.portal.services.availability ?? 'Availability'}
+                      >
+                        <CalendarDays className="w-4 h-4" />
+                      </Link>
+                    )}
                     <Link
                       href={`/portal/services/${service.id}/edit`}
                       className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-jungle-700 hover:border-jungle-300 transition-colors"

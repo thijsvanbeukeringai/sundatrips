@@ -690,6 +690,7 @@ export const en = {
       activate:       'Activate',
       deactivate:     'Deactivate',
       deleteConfirm:  'Are you sure you want to delete "{{name}}"? This cannot be undone.',
+      availability:   'Availability',
     },
     bookings: {
       title:          'Bookings',
