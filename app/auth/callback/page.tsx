@@ -15,25 +15,32 @@ export default function AuthCallbackPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    // Supabase automatically exchanges the hash tokens for a session.
-    // We just need to wait for the auth state to settle, then redirect.
-    const params = new URLSearchParams(window.location.search)
+    const params      = new URLSearchParams(window.location.search)
     const next        = params.get('next') ?? '/dashboard'
     const impersonate = params.get('impersonate') === '1'
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        if (!impersonate) {
-          // Check if this is a new invited user who hasn't onboarded yet
-          const isInvite  = !!session.user.app_metadata?.invited_at
-          const onboarded = !!session.user.user_metadata?.onboarded
-          if (isInvite && !onboarded) {
-            router.replace('/onboarding')
-            return
-          }
+    function handleSession(session: { user: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> } } | null) {
+      if (!session) return
+      if (!impersonate) {
+        const isInvite  = !!session.user.app_metadata?.invited_at
+        const onboarded = !!session.user.user_metadata?.onboarded
+        if (isInvite && !onboarded) {
+          router.replace('/onboarding')
+          return
         }
-        router.replace(next)
       }
+      router.replace(next)
+    }
+
+    // 1. Listen for auth state changes (covers the hash / token flow)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') handleSession(session)
+    })
+
+    // 2. Fallback: if already signed in (e.g. PKCE code already exchanged),
+    //    the event won't fire — check the session directly.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) handleSession(session)
     })
 
     return () => subscription.unsubscribe()
