@@ -189,7 +189,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
               {(() => {
                 const activeVariants = variants.filter(v => v.is_active)
                 const hasVariants = activeVariants.length > 0
-                const hasRoutes = hasVariants || (p.price_per_unit > 0) || siblingTransfers.length > 0
+                const hasRoutes = hasVariants || siblingTransfers.length > 0 || p.transfer_from
                 if (!hasRoutes) return null
 
                 return (
@@ -199,7 +199,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                       <h2 className="font-semibold text-gray-900 mb-4">{t.variants.publicTransfer}</h2>
                       <div className="space-y-3">
                         {/* Current property as a route — only if it has NO variants */}
-                        {!hasVariants && p.price_per_unit > 0 && (
+                        {!hasVariants && (p.transfer_from || p.price_per_unit > 0) && (
                           <div className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1 min-w-0">
@@ -213,8 +213,21 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                               </div>
                               <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
                                 <div>
-                                  <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
-                                  <span className="text-sm text-gray-400 ml-1">/ {t.common[p.price_unit as keyof typeof t.common] ?? p.price_unit}</span>
+                                  {p.price_per_unit > 0 ? (
+                                    <>
+                                      <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+                                      <span className="text-sm text-gray-400 ml-1">/ {t.common[p.price_unit as keyof typeof t.common] ?? p.price_unit}</span>
+                                    </>
+                                  ) : p.distance_km && p.price_per_km ? (
+                                    <>
+                                      <span className="font-display text-2xl font-bold text-jungle-800">
+                                        {Math.round(p.distance_km * p.price_per_km).toLocaleString('id-ID')} IDR
+                                      </span>
+                                      <p className="text-xs text-gray-400 mt-0.5">{p.distance_km} km × {Number(p.price_per_km).toLocaleString('id-ID')} IDR/km</p>
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-gray-500">Price per km</span>
+                                  )}
                                 </div>
                                 <button type="button" onClick={() => openBooking({})} className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
                                   {t.variants.requestBook}
@@ -263,8 +276,21 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                               </div>
                               <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
                                 <div>
-                                  <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(s.price_per_unit, lang)}</span>
-                                  <span className="text-sm text-gray-400 ml-1">/ {t.common[s.price_unit as keyof typeof t.common] ?? s.price_unit}</span>
+                                  {s.price_per_unit > 0 ? (
+                                    <>
+                                      <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(s.price_per_unit, lang)}</span>
+                                      <span className="text-sm text-gray-400 ml-1">/ {t.common[s.price_unit as keyof typeof t.common] ?? s.price_unit}</span>
+                                    </>
+                                  ) : s.distance_km && s.price_per_km ? (
+                                    <>
+                                      <span className="font-display text-2xl font-bold text-jungle-800">
+                                        {Math.round(s.distance_km * s.price_per_km).toLocaleString('id-ID')} IDR
+                                      </span>
+                                      <p className="text-xs text-gray-400 mt-0.5">{s.distance_km} km</p>
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-gray-500">Price per km</span>
+                                  )}
                                 </div>
                                 <button type="button" onClick={() => openBooking({ property: s })} className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
                                   {t.variants.requestBook}
