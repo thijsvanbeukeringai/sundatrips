@@ -22,7 +22,7 @@ function TransferCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }
     >
       {/* Driver image with dark overlay */}
       <div
-        className="relative h-48 overflow-hidden bg-jungle-800 flex-shrink-0 bg-cover bg-center"
+        className="relative h-52 overflow-hidden bg-jungle-800 flex-shrink-0 bg-cover bg-center"
         style={displayImage ? { backgroundImage: `url(${displayImage})` } : undefined}
       >
         {!displayImage && (
