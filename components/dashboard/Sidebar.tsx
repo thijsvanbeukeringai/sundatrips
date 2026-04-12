@@ -44,10 +44,11 @@ export default function Sidebar({ profile, isImpersonating }: { profile: Profile
   const navItems = isAdminMode
     ? [
         { href: '/dashboard',          icon: LayoutDashboard, label: 'Overview' },
-        { href: '/admin/users',        icon: Users,           label: 'Users' },
-        { href: '/admin/companies',    icon: Landmark,        label: 'Companies' },
-        { href: '/admin/invite',       icon: UserPlus,        label: 'Invite Owner' },
-        { href: '/dashboard/settings', icon: Settings,        label: t.dashboard.settings },
+        { href: '/admin/users',                       icon: Users,           label: 'Users' },
+        { href: '/admin/companies',                   icon: Landmark,        label: 'Companies' },
+        { href: '/admin/invite',                      icon: UserPlus,        label: 'Invite' },
+        { href: '/dashboard/admin/partners',          icon: Users,           label: 'Partners' },
+        { href: '/dashboard/settings',                icon: Settings,        label: t.dashboard.settings },
       ]
     : isCrewMode
     ? [

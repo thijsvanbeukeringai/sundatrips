@@ -14,6 +14,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile) redirect('/login')
 
+  // ── Partners belong in the partner portal, not here ──────────
+  if (profile.role === 'partner') redirect('/portal')
+
   // ── Crew access control ──────────────────────────────────────
   if (profile.role === 'crew') {
     const h = await headers()

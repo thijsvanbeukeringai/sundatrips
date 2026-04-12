@@ -1,7 +1,7 @@
 // Auto-generated from the Supabase schema.
 // Re-run `supabase gen types typescript` after schema changes.
 
-export type Role = 'owner' | 'admin' | 'crew'
+export type Role = 'owner' | 'admin' | 'crew' | 'partner'
 export type RoomStatus = 'available' | 'occupied' | 'needs_cleaning' | 'maintenance'
 export type CrewPermission =
   | 'view_bookings'
@@ -70,6 +70,8 @@ export interface Property {
   amenities: string[]
   is_active: boolean
   venue_id: string | null
+  // partner operator
+  partner_id:       string | null
   // transfer-specific
   transfer_from:    string | null
   transfer_to:      string | null

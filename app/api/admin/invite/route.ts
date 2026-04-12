@@ -20,11 +20,13 @@ export async function POST(request: Request) {
     }
 
     // 2. Parse and validate body
-    const { email, fullName, propertyName } = await request.json()
+    const { email, fullName, propertyName, role } = await request.json()
 
     if (!email || !fullName) {
       return NextResponse.json({ success: false, error: 'email and fullName are required' }, { status: 400 })
     }
+
+    const inviteRole = role === 'partner' ? 'partner' : undefined
 
     // 3. Send invite via Supabase service role
     //    This creates the user + sends the magic-link email automatically.
@@ -34,6 +36,7 @@ export async function POST(request: Request) {
         full_name: fullName,
         property_name: propertyName ?? null,
         invited_by: user.id,
+        ...(inviteRole ? { role: inviteRole } : {}),
       },
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
     })

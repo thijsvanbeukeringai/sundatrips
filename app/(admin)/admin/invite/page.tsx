@@ -14,6 +14,7 @@ export default function InvitePage() {
   const [email, setEmail]             = useState('')
   const [fullName, setFullName]       = useState('')
   const [propertyName, setPropertyName] = useState('')
+  const [role, setRole]               = useState<'owner' | 'partner'>('owner')
   const [loading, setLoading]         = useState(false)
   const [result, setResult]           = useState<InviteResult | null>(null)
 
@@ -25,7 +26,7 @@ export default function InvitePage() {
     const res  = await fetch('/api/admin/invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, fullName, propertyName }),
+      body: JSON.stringify({ email, fullName, propertyName, role }),
     })
     const data = await res.json()
     setResult(data)
@@ -79,9 +80,30 @@ export default function InvitePage() {
             )}
 
             <form onSubmit={handleInvite} className="space-y-4">
+              {/* Role selector */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                  Owner's Email *
+                  Account type
+                </label>
+                <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+                  {(['owner', 'partner'] as const).map(r => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRole(r)}
+                      className={`flex-1 text-sm font-semibold py-1.5 rounded-lg transition-colors capitalize ${
+                        role === r ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                      }`}
+                    >
+                      {r === 'owner' ? 'Owner / Business' : 'Partner (driver / organizer)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                  {role === 'owner' ? "Owner's" : "Partner's"} Email *
                 </label>
                 <input
                   type="email"
@@ -95,7 +117,7 @@ export default function InvitePage() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                  Owner's Full Name *
+                  Full Name *
                 </label>
                 <input
                   type="text"
@@ -109,7 +131,8 @@ export default function InvitePage() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                  Property / Business Name <span className="text-gray-300 normal-case">(optional)</span>
+                  {role === 'owner' ? 'Property / Business Name' : 'Service / Company Name'}{' '}
+                  <span className="text-gray-300 normal-case">(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -119,7 +142,9 @@ export default function InvitePage() {
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-jungle-600 focus:ring-2 focus:ring-jungle-600/10 transition"
                 />
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Pre-fills their property name during onboarding.
+                  {role === 'partner'
+                    ? 'After signup you can link them to their service in the partner settings.'
+                    : 'Pre-fills their property name during onboarding.'}
                 </p>
               </div>
 
@@ -135,7 +160,7 @@ export default function InvitePage() {
                 ) : (
                   <UserPlus className="w-4 h-4" />
                 )}
-                {loading ? 'Sending invite…' : 'Send Invite Email'}
+                {loading ? 'Sending invite…' : `Invite ${role === 'partner' ? 'Partner' : 'Owner'}`}
               </button>
             </form>
 

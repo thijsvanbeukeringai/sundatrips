@@ -39,6 +39,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ── Protect /portal/* ─────────────────────────────────────
+  if (pathname.startsWith('/portal')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+  }
+
   // ── Protect /admin/* ──────────────────────────────────────
   // Auth check only — role check is handled by (admin)/layout.tsx to avoid
   // an extra sequential DB query on every admin request.
@@ -61,6 +68,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/portal/:path*',
     '/admin',
     '/admin/:path*',
     '/login',
