@@ -505,7 +505,7 @@ export async function declinePartnerBooking(bookingId: string) {
     await sendMailWithTemplate({
       to: booking.guest_email,
       subject: `Booking #${booking.booking_number ?? ''} — driver not available`,
-      template: 'trip declined',
+      template: 'afgewezen',
       variables: {
         guestName:     booking.guest_name,
         bookingNumber: String(booking.booking_number ?? ''),
