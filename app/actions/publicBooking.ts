@@ -88,12 +88,21 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
     )
   }
 
-  // Fetch property + owner details for the emails
+  // Fetch property details for the emails
   const { data: property } = await supabase
     .from('properties')
-    .select('name, type, location, island, transfer_from, transfer_to, owner:profiles!owner_id(full_name, email, company_name)')
+    .select('name, type, location, island, transfer_from, transfer_to, owner_id')
     .eq('id', input.property_id)
     .single()
+
+  // Fetch owner/partner profile separately (for partner notification email)
+  const { data: ownerProfile } = property?.owner_id
+    ? await supabase
+        .from('profiles')
+        .select('full_name, email, company_name')
+        .eq('id', property.owner_id)
+        .single()
+    : { data: null }
 
   // Send "trip pending" notification email to the guest
   try {
@@ -133,21 +142,20 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
   // Send "new booking arrived" notification to the partner/owner
   try {
     const { sendMailWithTemplate } = await import('@/lib/mailgun')
-    const owner = (property as any)?.owner
 
-    if (owner?.email) {
+    if (ownerProfile?.email) {
       const dateFormatted = new Date(input.check_in).toLocaleDateString('en-GB', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       })
 
       await sendMailWithTemplate({
-        to: owner.email,
+        to: ownerProfile.email,
         subject: bookingNumber
           ? `New booking request #${bookingNumber} — ${input.guest_name.trim()}`
           : `New booking request — ${input.guest_name.trim()}`,
         template: 'New booking arrived',
         variables: {
-          partnerName:   owner.company_name || owner.full_name || 'Partner',
+          partnerName:   ownerProfile.company_name || ownerProfile.full_name || 'Partner',
           bookingNumber,
           serviceName:   property?.name ?? 'Service',
           transferFrom:  input.notes?.match(/Pickup: (.+)/)?.[1] || property?.transfer_from || '',
