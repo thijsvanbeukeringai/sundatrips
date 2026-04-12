@@ -19,6 +19,7 @@ interface Props {
   triggerDate?:      string | null
   triggerOpen?:      number
   triggerMaxSpots?:  number | null
+  triggerSlotTime?:  string | null
 }
 
 function diffNights(a: string, b: string) {
@@ -36,7 +37,7 @@ function calcAmount(property: Property, variant: AvailableVariant | ListingVaria
   return price * Math.max(1, guests)
 }
 
-export default function PublicBookingForm({ property, variants, triggerVariantId, triggerDate, triggerOpen, triggerMaxSpots }: Props) {
+export default function PublicBookingForm({ property, variants, triggerVariantId, triggerDate, triggerOpen, triggerMaxSpots, triggerSlotTime }: Props) {
   const { t, lang } = useI18n()
   const l = t.listing
   const isStay     = property.type === 'stay'
@@ -65,6 +66,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const [pickupTime, setPickupTime] = useState('')
   const [pickupAddress, setPickupAddress] = useState('')
   const [maxSpots, setMaxSpots] = useState<number | null>(null)
+  const [slotTime, setSlotTime] = useState<string | null>(null)
 
   // Custom route (transfer)
   const [isCustomRoute,  setIsCustomRoute]  = useState(false)
@@ -125,10 +127,11 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
     } else {
       setMaxSpots(null)
     }
+    setSlotTime(triggerSlotTime ?? null)
     setOpen(true)
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerVariantId, triggerDate, triggerOpen, triggerMaxSpots])
+  }, [triggerVariantId, triggerDate, triggerOpen, triggerMaxSpots, triggerSlotTime])
 
   // Fetch room availability when both dates are filled (stay only)
   useEffect(() => {
@@ -207,6 +210,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
       base_amount:  amount,
       notes:        [
         !isStay && variant ? `Option: ${variant.name}` : '',
+        slotTime ? `Time slot: ${slotTime}` : '',
         isCustomRoute && customFrom ? `Pickup: ${customFrom}` : ((isTransfer || hasPickup) && pickupAddress ? `Pickup: ${pickupAddress}` : ''),
         isCustomRoute && customTo ? `Dropoff: ${customTo}` : '',
         isCustomRoute && customDistanceKm ? `Distance: ${customDistanceKm} km` : '',
@@ -507,6 +511,9 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
                   <p className="text-sm font-semibold text-jungle-800">
                     {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
+                  {slotTime && (
+                    <p className="text-xs text-jungle-600 mt-0.5">🕐 {slotTime}</p>
+                  )}
                 </div>
               ) : !isActivity ? (
                 <div className={isTransfer ? 'grid grid-cols-2 gap-2' : ''}>

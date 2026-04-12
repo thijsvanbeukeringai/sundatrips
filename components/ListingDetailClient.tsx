@@ -54,14 +54,16 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
   const [triggerDate,      setTriggerDate]      = useState<string | null>(null)
   const [triggerOpen,      setTriggerOpen]      = useState(0)
   const [triggerMaxSpots,  setTriggerMaxSpots]  = useState<number | null>(null)
+  const [triggerSlotTime,  setTriggerSlotTime]  = useState<string | null>(null)
   const [bookingProperty,  setBookingProperty]  = useState<Property>(p)
 
-  function openBooking(opts: { variantId?: string; date?: string; property?: Property; maxSpots?: number }) {
+  function openBooking(opts: { variantId?: string; date?: string; property?: Property; maxSpots?: number; slotTime?: string }) {
     if (opts.property) setBookingProperty(opts.property)
     else setBookingProperty(p)
     setTriggerVariantId(opts.variantId ?? null)
     setTriggerDate(opts.date ?? null)
     setTriggerMaxSpots(opts.maxSpots ?? null)
+    setTriggerSlotTime(opts.slotTime ?? null)
     setTriggerOpen(n => n + 1)
   }
 
@@ -317,6 +319,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 triggerDate={triggerDate}
                 triggerOpen={triggerOpen}
                 triggerMaxSpots={triggerMaxSpots}
+                triggerSlotTime={triggerSlotTime}
               />
             </div>
           </div>
@@ -468,7 +471,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                         durationHours={p.duration_hours}
                         maxCapacity={p.max_capacity}
                         slotAvailability={slotAvailability}
-                        onBook={(date, maxSpots) => openBooking({ date, maxSpots })}
+                        onBook={(date, maxSpots, slotTime) => openBooking({ date, maxSpots, slotTime })}
                       />
                     </>
                   ) : (
@@ -495,6 +498,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 triggerDate={triggerDate}
                 triggerOpen={triggerOpen}
                 triggerMaxSpots={triggerMaxSpots}
+                triggerSlotTime={triggerSlotTime}
               />
             </div>
           )}
