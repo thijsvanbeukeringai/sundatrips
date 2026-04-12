@@ -579,8 +579,8 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
             )}
           </div>
 
-          {/* Private tour toggle — only when spots are available */}
-          {hasPrivateTour && (maxSpots == null || maxSpots > 0) && (
+          {/* Private tour toggle — only when all spots are available (no other bookings on this slot) */}
+          {hasPrivateTour && (maxSpots == null || maxSpots === (property.max_capacity ?? 99)) && (
             <label className="flex items-center gap-3 cursor-pointer bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
               <input
                 type="checkbox"
