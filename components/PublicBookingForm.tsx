@@ -393,12 +393,25 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
         </div>
 
       ) : !open ? (
-        <button
-          onClick={() => setOpen(true)}
-          className="block w-full bg-jungle-800 hover:bg-jungle-900 text-white font-semibold py-4 rounded-xl text-center transition-colors"
-        >
-          {l.bookNow}
-        </button>
+        isActivity && !date ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              disabled
+              className="block w-full bg-gray-200 text-gray-500 font-semibold py-4 rounded-xl text-center cursor-not-allowed"
+            >
+              {l.bookNow}
+            </button>
+            <p className="text-xs text-center text-amber-600">{l.selectSlotFirst ?? 'Select a date and time slot below first'}</p>
+          </div>
+        ) : (
+          <button
+            onClick={() => setOpen(true)}
+            className="block w-full bg-jungle-800 hover:bg-jungle-900 text-white font-semibold py-4 rounded-xl text-center transition-colors"
+          >
+            {l.bookNow}
+          </button>
+        )
 
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -488,18 +501,27 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
           ) : (
             /* ── NON-STAY: single date + time + pickup address for transfers ── */
             <>
-              <div className={isTransfer ? 'grid grid-cols-2 gap-2' : ''}>
-                <div>
-                  <label className={labelClass}>{l.date}</label>
-                  <input type="date" required min={today} value={date} onChange={e => setDate(e.target.value)} className={inputClass} />
+              {isActivity && date ? (
+                <div className="bg-jungle-50 border border-jungle-200 rounded-xl px-4 py-3">
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-0.5">{l.date}</p>
+                  <p className="text-sm font-semibold text-jungle-800">
+                    {new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
                 </div>
-                {isTransfer && (
+              ) : !isActivity ? (
+                <div className={isTransfer ? 'grid grid-cols-2 gap-2' : ''}>
                   <div>
-                    <label className={labelClass}>{l.pickupTime ?? 'Pickup time'}</label>
-                    <input type="time" required value={pickupTime} onChange={e => setPickupTime(e.target.value)} className={inputClass} />
+                    <label className={labelClass}>{l.date}</label>
+                    <input type="date" required min={today} value={date} onChange={e => setDate(e.target.value)} className={inputClass} />
                   </div>
-                )}
-              </div>
+                  {isTransfer && (
+                    <div>
+                      <label className={labelClass}>{l.pickupTime ?? 'Pickup time'}</label>
+                      <input type="time" required value={pickupTime} onChange={e => setPickupTime(e.target.value)} className={inputClass} />
+                    </div>
+                  )}
+                </div>
+              ) : null}
               {isTransfer && (
                 <div>
                   <label className={labelClass}>{l.pickupAddress ?? 'Pickup address'}</label>
