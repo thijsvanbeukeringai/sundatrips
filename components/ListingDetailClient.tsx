@@ -36,9 +36,18 @@ interface Props {
   variants:          ListingVariant[]
   slotAvailability:  SlotAvailability[]
   siblingTransfers?: Property[]
+  ownerProfile?: {
+    company_name: string | null
+    company_logo: string | null
+    company_description: string | null
+    company_location: string | null
+    company_island: string | null
+    languages: string[]
+    amenities: string[]
+  }
 }
 
-export default function ListingDetailClient({ property: p, availabilityBlocks, timeSlots, variants, slotAvailability, siblingTransfers = [] }: Props) {
+export default function ListingDetailClient({ property: p, availabilityBlocks, timeSlots, variants, slotAvailability, siblingTransfers = [], ownerProfile }: Props) {
   const { t, lang } = useI18n()
   const isActivity  = p.type === 'activity' || p.type === 'trip'
   const [triggerVariantId, setTriggerVariantId] = useState<string | null>(null)
@@ -60,6 +69,17 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
       ? Math.min(...variants.filter(v => v.is_active).map(v => v.price_per_unit))
       : p.price_per_unit
 
+    // Use owner profile data where available
+    const companyName = ownerProfile?.company_name || p.name
+    const companyLogo = ownerProfile?.company_logo
+    const companyDesc = ownerProfile?.company_description || p.description
+    const companyLocation = ownerProfile?.company_location || p.location
+    const companyIsland = ownerProfile?.company_island || p.island
+    const companyAmenities = ownerProfile?.amenities ?? p.amenities
+    const companyLanguages = ownerProfile?.languages ?? []
+    // Use company logo as the gallery image if available
+    const galleryImages = companyLogo ? [companyLogo, ...p.images] : p.images
+
     return (
       <div className="min-h-screen bg-white">
         <Navbar />
@@ -75,7 +95,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
             </Link>
           </div>
 
-          <ListingGallery images={p.images} name={p.name} />
+          <ListingGallery images={galleryImages} name={companyName} />
 
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid lg:grid-cols-3 gap-10">
 
@@ -92,19 +112,19 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                     <span className="text-jungle-300 text-xs font-semibold uppercase tracking-widest">
                       {t.types.transfer}
                     </span>
-                    <h1 className="font-display text-2xl sm:text-3xl font-bold mt-1">{p.name}</h1>
+                    <h1 className="font-display text-2xl sm:text-3xl font-bold mt-1">{companyName}</h1>
                     <p className="flex items-center gap-1.5 text-jungle-200 mt-1.5 text-sm">
                       <MapPin className="w-3.5 h-3.5 text-jungle-400" />
-                      {p.location}, {p.island}
+                      {companyLocation}, {companyIsland}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-3 mt-5">
-                  {p.english_speaking && (
+                  {(companyLanguages.length > 0 || p.english_speaking) && (
                     <span className="flex items-center gap-1.5 text-xs font-medium text-jungle-100 bg-jungle-700/50 px-3 py-1.5 rounded-full">
                       <Languages className="w-3.5 h-3.5" />
-                      {t.listing.englishSpeaking}
+                      {companyLanguages.length > 0 ? companyLanguages.join(', ') : t.listing.englishSpeaking}
                     </span>
                   )}
                   {p.max_capacity && (
@@ -123,18 +143,18 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
               </div>
 
               {/* Description */}
-              {p.description && (
+              {companyDesc && (
                 <div>
                   <h2 className="font-semibold text-gray-900 mb-3">
                     {t.listing.aboutThis} {t.types.transfer.toLowerCase()}
                   </h2>
-                  <p className="text-gray-600 leading-relaxed whitespace-pre-line">{p.description}</p>
+                  <p className="text-gray-600 leading-relaxed whitespace-pre-line">{companyDesc}</p>
                 </div>
               )}
 
               {/* Amenities / highlights */}
-              {p.amenities.length > 0 && (() => {
-                const groups = groupAmenities(p.amenities, p.type)
+              {companyAmenities.length > 0 && (() => {
+                const groups = groupAmenities(companyAmenities, p.type)
                 if (groups.length === 0) return null
                 return (
                   <div>
@@ -160,115 +180,99 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 )
               })()}
 
-              {/* Routes: variants + sibling transfer properties */}
-              {(variants.length > 0 || siblingTransfers.length > 0) && (
-                <>
-                  <hr className="border-gray-100" />
-                  <div>
-                    <h2 className="font-semibold text-gray-900 mb-4">{t.variants.publicTransfer}</h2>
-                    <div className="space-y-3">
-                      {/* Current property as a route (if it has a price) */}
-                      {p.price_per_unit > 0 && (
-                        <div className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900">{p.name}</h3>
-                              {p.transfer_from && p.transfer_to && (
-                                <span className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                  {p.transfer_from} → {p.transfer_to}
-                                </span>
-                              )}
-                              {p.distance_km && (
-                                <span className="text-xs text-gray-400 mt-1 block">{p.distance_km} km · ±{p.duration_hours}h</span>
-                              )}
-                            </div>
-                            <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
-                              <div>
-                                <span className="font-display text-2xl font-bold text-jungle-800">
-                                  {formatPriceRaw(p.price_per_unit, lang)}
-                                </span>
-                                <span className="text-sm text-gray-400 ml-1">/ {t.common[p.price_unit as keyof typeof t.common] ?? p.price_unit}</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => openBooking({})}
-                                className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
-                              >
-                                {t.variants.requestBook}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+              {/* Routes: show property as route only if no variants exist, plus sibling transfers */}
+              {(() => {
+                const activeVariants = variants.filter(v => v.is_active)
+                const hasVariants = activeVariants.length > 0
+                const hasRoutes = hasVariants || (p.price_per_unit > 0) || siblingTransfers.length > 0
+                if (!hasRoutes) return null
 
-                      {/* Variants of this property */}
-                      {variants.filter(v => v.is_active).map(v => (
-                        <div key={v.id} className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900">{v.name}</h3>
-                              {v.from_location && v.to_location && (
-                                <span className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                  {v.from_location} → {v.to_location}
-                                </span>
-                              )}
-                              {v.description && <p className="text-sm text-gray-500 mt-1">{v.description}</p>}
-                            </div>
-                            <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
-                              <div>
-                                <span className="font-display text-2xl font-bold text-jungle-800">
-                                  {formatPriceRaw(v.price_per_unit, lang)}
-                                </span>
-                                <span className="text-sm text-gray-400 ml-1">/ {t.common[v.price_unit as keyof typeof t.common] ?? v.price_unit}</span>
+                return (
+                  <>
+                    <hr className="border-gray-100" />
+                    <div>
+                      <h2 className="font-semibold text-gray-900 mb-4">{t.variants.publicTransfer}</h2>
+                      <div className="space-y-3">
+                        {/* Current property as a route — only if it has NO variants */}
+                        {!hasVariants && p.price_per_unit > 0 && (
+                          <div className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900">{p.name}</h3>
+                                {p.transfer_from && p.transfer_to && (
+                                  <p className="text-xs text-gray-500 mt-1">{p.transfer_from} → {p.transfer_to}</p>
+                                )}
+                                {p.distance_km && (
+                                  <p className="text-xs text-gray-400 mt-1">{p.distance_km} km · ±{p.duration_hours}h</p>
+                                )}
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => openBooking({ variantId: v.id })}
-                                className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
-                              >
-                                {t.variants.requestBook}
-                              </button>
+                              <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
+                                <div>
+                                  <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+                                  <span className="text-sm text-gray-400 ml-1">/ {t.common[p.price_unit as keyof typeof t.common] ?? p.price_unit}</span>
+                                </div>
+                                <button type="button" onClick={() => openBooking({})} className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
+                                  {t.variants.requestBook}
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )}
 
-                      {/* Sibling transfer properties from the same owner */}
-                      {siblingTransfers.map(s => (
-                        <div key={s.id} className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900">{s.name}</h3>
-                              {s.transfer_from && s.transfer_to && (
-                                <span className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                  {s.transfer_from} → {s.transfer_to}
-                                </span>
-                              )}
-                              {s.distance_km && (
-                                <span className="text-xs text-gray-400 mt-1 block">{s.distance_km} km · ±{s.duration_hours}h</span>
-                              )}
-                            </div>
-                            <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
-                              <div>
-                                <span className="font-display text-2xl font-bold text-jungle-800">
-                                  {formatPriceRaw(s.price_per_unit, lang)}
-                                </span>
-                                <span className="text-sm text-gray-400 ml-1">/ {t.common[s.price_unit as keyof typeof t.common] ?? s.price_unit}</span>
+                        {/* Variants */}
+                        {activeVariants.map(v => (
+                          <div key={v.id} className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900">{v.name}</h3>
+                                {v.from_location && v.to_location && (
+                                  <p className="text-xs text-gray-500 mt-1">{v.from_location} → {v.to_location}</p>
+                                )}
+                                {v.description && <p className="text-sm text-gray-500 mt-1">{v.description}</p>}
                               </div>
-                              <Link
-                                href={`/listings/${s.id}`}
-                                className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
-                              >
-                                {t.variants.requestBook}
-                              </Link>
+                              <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
+                                <div>
+                                  <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(v.price_per_unit, lang)}</span>
+                                  <span className="text-sm text-gray-400 ml-1">/ {t.common[v.price_unit as keyof typeof t.common] ?? v.price_unit}</span>
+                                </div>
+                                <button type="button" onClick={() => openBooking({ variantId: v.id })} className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
+                                  {t.variants.requestBook}
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+
+                        {/* Sibling transfers from the same owner */}
+                        {siblingTransfers.map(s => (
+                          <div key={s.id} className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900">{s.name}</h3>
+                                {s.transfer_from && s.transfer_to && (
+                                  <p className="text-xs text-gray-500 mt-1">{s.transfer_from} → {s.transfer_to}</p>
+                                )}
+                                {s.distance_km && (
+                                  <p className="text-xs text-gray-400 mt-1">{s.distance_km} km · ±{s.duration_hours}h</p>
+                                )}
+                              </div>
+                              <div className="flex-shrink-0 text-right flex flex-col items-end gap-3">
+                                <div>
+                                  <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(s.price_per_unit, lang)}</span>
+                                  <span className="text-sm text-gray-400 ml-1">/ {t.common[s.price_unit as keyof typeof t.common] ?? s.price_unit}</span>
+                                </div>
+                                <button type="button" onClick={() => openBooking({})} className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
+                                  {t.variants.requestBook}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )
+              })()}
             </div>
 
             {/* Right sidebar: booking form */}

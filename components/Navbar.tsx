@@ -8,11 +8,12 @@ import Image from 'next/image'
 import { useI18n } from '@/lib/i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
-export default function Navbar({ solid }: { solid?: boolean } = {}) {
+export default function Navbar({ transparent }: { transparent?: boolean } = {}) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const { t } = useI18n()
-  const isSolid = solid || scrolled
+  // Default: solid white background. Only transparent on homepage (transparent=true)
+  const isSolid = transparent ? scrolled : true
 
   const navLinks = [
     { label: t.nav.stays,        href: '#destinations' },

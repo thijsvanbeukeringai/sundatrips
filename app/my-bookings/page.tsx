@@ -13,7 +13,7 @@ export default async function MyBookingsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar solid />
+        <Navbar />
         <GuestLoginForm />
         <Footer />
       </div>
@@ -31,7 +31,7 @@ export default async function MyBookingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar solid />
+      <Navbar />
       <MyBookingsClient bookings={bookings} />
       <Footer />
     </div>

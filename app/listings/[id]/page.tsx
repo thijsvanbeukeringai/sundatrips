@@ -23,8 +23,8 @@ export default async function ListingPage({ params }: { params: { id: string } }
   const from = today.toISOString().split('T')[0]
   const to   = endDate.toISOString().split('T')[0]
 
-  // For transfers: also load all other transfer properties from the same owner as "routes"
-  const [{ data: blocks }, { data: slots }, { data: variantRows }, { data: slotAvailRows }, { data: siblingTransfers }] = await Promise.all([
+  // For transfers: load owner profile + all other transfer properties from the same owner
+  const [{ data: blocks }, { data: slots }, { data: variantRows }, { data: slotAvailRows }, { data: siblingTransfers }, { data: ownerProfile }] = await Promise.all([
     supabase.from('availability').select('*').eq('property_id', p.id).gte('date', from).lte('date', to),
     supabase.from('time_slots').select('*').eq('property_id', p.id).eq('is_active', true).order('sort_order'),
     supabase.from('listing_variants').select('*').eq('property_id', p.id).eq('is_active', true).order('sort_order'),
@@ -32,6 +32,9 @@ export default async function ListingPage({ params }: { params: { id: string } }
     p.type === 'transfer'
       ? supabase.from('properties').select('*').eq('owner_id', p.owner_id).eq('type', 'transfer').eq('is_active', true).neq('id', p.id).order('name')
       : Promise.resolve({ data: [] }),
+    p.type === 'transfer'
+      ? supabase.from('profiles').select('company_name, company_logo, company_description, company_location, company_island, languages, amenities').eq('id', p.owner_id).single()
+      : Promise.resolve({ data: null }),
   ])
 
   return (
@@ -42,6 +45,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
       variants=         {(variantRows    ?? []) as ListingVariant[]}
       slotAvailability= {(slotAvailRows  ?? []) as SlotAvailability[]}
       siblingTransfers= {(siblingTransfers ?? []) as Property[]}
+      ownerProfile=     {ownerProfile ?? undefined}
     />
   )
 }
