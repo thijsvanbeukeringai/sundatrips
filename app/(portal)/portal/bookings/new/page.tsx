@@ -161,7 +161,7 @@ export default function NewPartnerBookingPage() {
                     <option value="">{t.portal.newBooking.noOption}</option>
                     {variants.map(v => (
                       <option key={v.id} value={v.id}>
-                        {v.name} — €{v.price_per_unit} / {v.price_unit}
+                        {v.name} — Rp {v.price_per_unit} / {v.price_unit}
                       </option>
                     ))}
                   </select>
@@ -246,12 +246,12 @@ export default function NewPartnerBookingPage() {
         {priceBase > 0 && propertyId && (
           <div className="flex items-center justify-between bg-jungle-50 border border-jungle-100 rounded-2xl px-4 sm:px-5 py-4">
             <div className="text-sm text-jungle-700">
-              €{priceBase} / {priceUnit}
+              Rp {priceBase} / {priceUnit}
               {(priceUnit === 'night' || priceUnit === 'day') && checkIn && checkOut && (
                 <span className="ml-1 text-jungle-500">× {nights} {priceUnit}{nights !== 1 ? 's' : ''}</span>
               )}
             </div>
-            <p className="font-display text-lg font-bold text-jungle-800">€{total.toLocaleString(locale, { minimumFractionDigits: 0 })}</p>
+            <p className="font-display text-lg font-bold text-jungle-800">Rp {total.toLocaleString(locale, { minimumFractionDigits: 0 })}</p>
           </div>
         )}
 

@@ -1,6 +1,8 @@
-// ─── Live exchange rate ────────────────────────────────────────────────────────
-// Updated at runtime by the LanguageProvider from the Frankfurter API.
-// Falls back to a recent rate if the fetch fails.
+// ─── Currency: IDR only ─────────────────────────────────────────────────────
+// The platform uses Indonesian Rupiah (IDR) as the sole currency.
+// Prices are stored in IDR in the database.
+
+// Legacy: exchange rate kept for backward compatibility with old EUR data
 let EUR_TO_IDR = 19_800
 
 export { EUR_TO_IDR }
@@ -11,18 +13,14 @@ export function setExchangeRate(rate: number) {
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
-export function formatPrice(eurAmount: number, lang: 'en' | 'id'): string {
-  if (lang === 'id') {
-    const idr = Math.round(eurAmount * EUR_TO_IDR)
-    return `Rp ${idr.toLocaleString('id-ID')}`
-  }
-  return `€${eurAmount.toLocaleString('en-EU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+/** Format a price amount as IDR (always, regardless of language) */
+export function formatPrice(amount: number, _lang?: 'en' | 'id'): string {
+  const rounded = Math.round(amount)
+  return `Rp ${rounded.toLocaleString('id-ID')}`
 }
 
-export function formatPriceRaw(eurAmount: number, lang: 'en' | 'id'): string {
-  if (lang === 'id') {
-    const idr = Math.round(eurAmount * EUR_TO_IDR)
-    return `Rp ${idr.toLocaleString('id-ID')}`
-  }
-  return `€${eurAmount.toLocaleString('en-EU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+/** Format a price amount as IDR (always, regardless of language) */
+export function formatPriceRaw(amount: number, _lang?: 'en' | 'id'): string {
+  const rounded = Math.round(amount)
+  return `Rp ${rounded.toLocaleString('id-ID')}`
 }

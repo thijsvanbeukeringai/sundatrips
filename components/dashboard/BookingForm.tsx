@@ -207,7 +207,7 @@ export default function BookingForm({ properties }: { properties: PropertyOption
                   <option value="" disabled>Select a room type…</option>
                   {availableVariants.map(v => (
                     <option key={v.id} value={v.id}>
-                      {v.name} — €{v.price_per_unit}/{v.price_unit}
+                      {v.name} — Rp {v.price_per_unit}/{v.price_unit}
                       {' '}· {v.rooms.length} room{v.rooms.length !== 1 ? 's' : ''} available
                     </option>
                   ))}

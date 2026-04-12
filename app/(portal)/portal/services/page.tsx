@@ -121,7 +121,7 @@ export default function PartnerServicesPage() {
                       </div>
                       {service.price_per_unit > 0 && (
                         <p className="text-sm font-semibold text-jungle-700 mt-1.5">
-                          €{service.price_per_unit} / {service.price_unit}
+                          Rp {service.price_per_unit} / {service.price_unit}
                         </p>
                       )}
                     </div>

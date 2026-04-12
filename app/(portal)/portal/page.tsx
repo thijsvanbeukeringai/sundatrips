@@ -89,7 +89,7 @@ export default function PortalHomePage() {
         <div className="bg-white border border-gray-100 rounded-2xl p-4">
           <TrendingUp className="w-4 h-4 text-jungle-400 mb-1" />
           <p className="font-display text-xl font-bold text-jungle-800">
-            €{revenueMonth.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            Rp {revenueMonth.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </p>
           <p className="text-xs text-gray-500 mt-0.5">{t.portal.home.revenue}</p>
         </div>

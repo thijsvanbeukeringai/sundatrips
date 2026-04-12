@@ -128,7 +128,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
         location:      property?.location ?? '',
         island:        property?.island ?? '',
         guestsCount:   String(input.guests_count),
-        amount:        `€${input.base_amount}`,
+        amount:        `Rp ${input.base_amount}`,
         transferFrom:  input.notes?.match(/Pickup: (.+)/)?.[1] || property?.transfer_from || '',
         transferTo:    property?.transfer_to ?? '',
         pickupAddress: input.notes?.match(/Pickup: (.+)/)?.[1] ?? '',
@@ -167,7 +167,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
           guestEmail:    email,
           guestPhone:    input.guest_phone || '',
           guestsCount:   String(input.guests_count),
-          amount:        `€${input.base_amount}`,
+          amount:        `Rp ${input.base_amount}`,
           notes:         input.notes ?? '',
         },
       })

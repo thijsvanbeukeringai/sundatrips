@@ -114,9 +114,9 @@ export default function OwnerCTA() {
                 {/* Revenue cards */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   {[
-                    { label: oc.mockGross,  value: '€2,840', color: 'text-jungle-800' },
-                    { label: oc.mockFee,    value: '€28',    color: 'text-gray-400', sub: '1%' },
-                    { label: oc.mockPayout, value: '€2,812', color: 'text-sunset-500', highlight: true },
+                    { label: oc.mockGross,  value: 'Rp 2,840', color: 'text-jungle-800' },
+                    { label: oc.mockFee,    value: 'Rp 28',    color: 'text-gray-400', sub: '1%' },
+                    { label: oc.mockPayout, value: 'Rp 2,812', color: 'text-sunset-500', highlight: true },
                   ].map((card, i) => (
                     <div
                       key={i}
@@ -139,9 +139,9 @@ export default function OwnerCTA() {
                   </div>
                   <div className="space-y-2">
                     {[
-                      { item: 'Snorkeling Tour × 2', amount: '€48', time: '09:14' },
-                      { item: 'Bintang Beer × 3',   amount: '€9',  time: '11:32' },
-                      { item: 'Airport Transfer',    amount: '€22', time: '13:05' },
+                      { item: 'Snorkeling Tour × 2', amount: 'Rp 48', time: '09:14' },
+                      { item: 'Bintang Beer × 3',   amount: 'Rp 9',  time: '11:32' },
+                      { item: 'Airport Transfer',    amount: 'Rp 22', time: '13:05' },
                     ].map((row, i) => (
                       <div key={i} className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">

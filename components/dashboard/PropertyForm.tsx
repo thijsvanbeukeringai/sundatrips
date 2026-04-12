@@ -312,7 +312,7 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>{t.form.price} (€){type !== 'transfer' ? ' *' : ''}</label>
+                <label className={labelClass}>{t.form.price}{type !== 'transfer' ? ' *' : ''}</label>
                 <input name="price_per_unit" type="number" required={type !== 'transfer'} min="0" step="0.01" defaultValue={property?.price_per_unit} placeholder={type === 'transfer' ? '0' : '48'} className={inputClass} />
               </div>
               <div>

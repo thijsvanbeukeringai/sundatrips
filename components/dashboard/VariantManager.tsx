@@ -296,7 +296,7 @@ function VariantCard({
             <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{variant.description}</p>
           )}
           <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-500 flex-wrap">
-            <span className="font-bold text-jungle-800">€{variant.price_per_unit} / {variant.price_unit}</span>
+            <span className="font-bold text-jungle-800">Rp {variant.price_per_unit} / {variant.price_unit}</span>
             {variant.max_capacity && (
               <span className="flex items-center gap-1">
                 <Users className="w-3 h-3" />

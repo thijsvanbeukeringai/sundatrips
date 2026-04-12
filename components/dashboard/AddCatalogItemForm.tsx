@@ -89,7 +89,7 @@ export default function AddCatalogItemForm() {
 
         <div className="relative w-28">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-            {lang === 'id' ? 'Rp' : '€'}
+            {lang === 'id' ? 'Rp' : 'Rp '}
           </span>
           <input
             type="number"
