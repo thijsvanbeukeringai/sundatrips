@@ -1,17 +1,21 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { getPartnerBookingById } from '@/app/actions/partner'
-import { notFound } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, MapPin, Users, Phone, Mail, CalendarDays,
-  MessageSquare, Euro, CheckCircle2, Clock,
+  MessageSquare, Euro, Loader2,
 } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  pending:    { label: 'Pending',    className: 'bg-amber-50 text-amber-700 border-amber-200' },
-  confirmed:  { label: 'Confirmed', className: 'bg-jungle-50 text-jungle-700 border-jungle-200' },
-  checked_in: { label: 'Active',    className: 'bg-blue-50 text-blue-700 border-blue-200' },
-  completed:  { label: 'Completed', className: 'bg-gray-50 text-gray-500 border-gray-200' },
-  cancelled:  { label: 'Cancelled', className: 'bg-red-50 text-red-600 border-red-200' },
+const STATUS_STYLES: Record<string, string> = {
+  pending:    'bg-amber-50 text-amber-700 border-amber-200',
+  confirmed:  'bg-jungle-50 text-jungle-700 border-jungle-200',
+  checked_in: 'bg-blue-50 text-blue-700 border-blue-200',
+  completed:  'bg-gray-50 text-gray-500 border-gray-200',
+  cancelled:  'bg-red-50 text-red-600 border-red-200',
 }
 
 function Row({ label, value, icon }: { label: string; value: string | null | undefined; icon?: React.ReactNode }) {
@@ -19,23 +23,51 @@ function Row({ label, value, icon }: { label: string; value: string | null | und
   return (
     <div className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0">
       {icon && <span className="text-gray-300 mt-0.5 flex-shrink-0">{icon}</span>}
-      <div className={icon ? '' : 'pl-0'}>
+      <div>
         <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">{label}</p>
-        <p className="text-sm text-gray-800">{value}</p>
+        <p className="text-sm text-gray-800 break-all sm:break-normal">{value}</p>
       </div>
     </div>
   )
 }
 
-export default async function PortalBookingDetailPage({ params }: { params: { id: string } }) {
-  const booking = await getPartnerBookingById(params.id)
-  if (!booking) notFound()
+export default function PortalBookingDetailPage() {
+  const { t, lang } = useI18n()
+  const params = useParams()
+  const [booking, setBooking] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  const property = (booking as any).property
-  const variant  = (booking as any).variant
-  const status   = STATUS_CONFIG[booking.status] ?? { label: booking.status, className: '' }
+  const locale = lang === 'id' ? 'id-ID' : 'en-GB'
+  const statusLabel = (status: string) =>
+    t.myBookings.statuses[status as keyof typeof t.myBookings.statuses] ?? status.replace('_', ' ')
 
-  const checkInDate  = new Date(booking.check_in).toLocaleDateString('en-GB', {
+  useEffect(() => {
+    getPartnerBookingById(params.id as string).then(data => {
+      setBooking(data)
+      setLoading(false)
+    })
+  }, [params.id])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+      </div>
+    )
+  }
+
+  if (!booking) {
+    return (
+      <div className="text-center py-20 text-gray-400 text-sm">
+        {t.portal.bookings.noBookings}
+      </div>
+    )
+  }
+
+  const property = booking.property
+  const variant  = booking.variant
+
+  const checkInDate = new Date(booking.check_in).toLocaleDateString(locale, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
 
@@ -44,21 +76,21 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
       {/* Back */}
       <Link href="/portal/bookings" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
         <ArrowLeft className="w-4 h-4" />
-        Bookings
+        {t.portal.bookings.title}
       </Link>
 
       {/* Service card */}
-      <div className="bg-jungle-800 rounded-2xl px-5 py-5 text-white">
+      <div className="bg-jungle-800 rounded-2xl px-4 sm:px-5 py-5 text-white">
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-jungle-300 text-xs font-semibold uppercase tracking-widest mb-1">
-              {property?.type ?? 'service'}
+              {property?.type ? (t.types[property.type as keyof typeof t.types] ?? property.type) : t.portal.bookingDetail.service}
             </p>
-            <p className="font-display text-xl font-bold">{property?.name ?? 'Booking'}</p>
+            <p className="font-display text-lg sm:text-xl font-bold truncate">{property?.name ?? t.portal.bookingDetail.booking}</p>
             {variant?.name && <p className="text-jungle-200 text-sm mt-0.5">{variant.name}</p>}
           </div>
-          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${status.className} flex-shrink-0`}>
-            {status.label}
+          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLES[booking.status] ?? ''} flex-shrink-0`}>
+            {statusLabel(booking.status)}
           </span>
         </div>
 
@@ -76,42 +108,42 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
       </div>
 
       {/* Guest details */}
-      <div className="bg-white border border-gray-100 rounded-2xl px-5 py-1">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 pt-4 mb-1">Guest</p>
-        <Row label="Name"   value={booking.guest_name}  icon={<Users className="w-3.5 h-3.5" />} />
-        <Row label="Email"  value={booking.guest_email} icon={<Mail className="w-3.5 h-3.5" />} />
-        <Row label="Phone"  value={booking.guest_phone} icon={<Phone className="w-3.5 h-3.5" />} />
+      <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-1">
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 pt-4 mb-1">{t.portal.bookingDetail.guest}</p>
+        <Row label={t.bookingDetail.name}  value={booking.guest_name}  icon={<Users className="w-3.5 h-3.5" />} />
+        <Row label={t.bookingDetail.email} value={booking.guest_email} icon={<Mail className="w-3.5 h-3.5" />} />
+        <Row label={t.bookingDetail.phone} value={booking.guest_phone} icon={<Phone className="w-3.5 h-3.5" />} />
         <Row
-          label="Group size"
-          value={`${booking.guests_count} ${booking.guests_count === 1 ? 'person' : 'people'}`}
+          label={t.portal.bookingDetail.groupSize}
+          value={`${booking.guests_count} ${booking.guests_count === 1 ? t.portal.bookingDetail.person : t.portal.bookingDetail.people}`}
           icon={<Users className="w-3.5 h-3.5" />}
         />
         {booking.check_out && (
           <Row
-            label="Check-out"
-            value={new Date(booking.check_out).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+            label={t.portal.bookingDetail.checkOut}
+            value={new Date(booking.check_out).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}
             icon={<CalendarDays className="w-3.5 h-3.5" />}
           />
         )}
       </div>
 
       {/* Price */}
-      <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4 flex items-center justify-between">
+      <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-gray-500">
           <Euro className="w-4 h-4" />
-          <span className="text-sm font-medium">Price agreement</span>
+          <span className="text-sm font-medium">{t.portal.bookingDetail.priceAgreement}</span>
         </div>
         <p className="font-display text-xl font-bold text-jungle-800">
-          €{booking.base_amount.toLocaleString('en-EU', { minimumFractionDigits: 0 })}
+          €{booking.base_amount.toLocaleString(locale, { minimumFractionDigits: 0 })}
         </p>
       </div>
 
       {/* Notes */}
       {booking.notes && (
-        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
+        <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4">
           <div className="flex items-center gap-2 text-gray-500 mb-2">
             <MessageSquare className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">Notes</span>
+            <span className="text-xs font-bold uppercase tracking-widest">{t.portal.bookingDetail.notes}</span>
           </div>
           <p className="text-sm text-gray-700 leading-relaxed">{booking.notes}</p>
         </div>
@@ -119,8 +151,8 @@ export default async function PortalBookingDetailPage({ params }: { params: { id
 
       {/* Booking metadata */}
       <p className="text-[11px] text-gray-300 text-center pb-2">
-        Booking #{booking.id.slice(0, 8).toUpperCase()} ·{' '}
-        {new Date(booking.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+        {t.portal.bookingDetail.booking} #{booking.id.slice(0, 8).toUpperCase()} ·{' '}
+        {new Date(booking.created_at).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}
       </p>
     </div>
   )

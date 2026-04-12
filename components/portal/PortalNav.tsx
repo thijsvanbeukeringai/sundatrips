@@ -5,15 +5,8 @@ import { usePathname } from 'next/navigation'
 import { CalendarDays, List, Users, PlusCircle, LogOut, Compass, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/lib/i18n'
 import type { Profile } from '@/lib/types'
-
-const NAV = [
-  { href: '/portal',              label: 'Upcoming',  icon: CalendarDays },
-  { href: '/portal/bookings',     label: 'Bookings',  icon: List         },
-  { href: '/portal/services',     label: 'Services',  icon: Briefcase    },
-  { href: '/portal/customers',    label: 'Customers', icon: Users        },
-  { href: '/portal/bookings/new', label: 'New',       icon: PlusCircle   },
-]
 
 function isActive(href: string, pathname: string) {
   if (href === '/portal') return pathname === '/portal'
@@ -23,6 +16,15 @@ function isActive(href: string, pathname: string) {
 export default function PortalNav({ profile }: { profile: Profile }) {
   const pathname = usePathname()
   const router   = useRouter()
+  const { t }    = useI18n()
+
+  const NAV = [
+    { href: '/portal',              label: t.portal.nav.upcoming,  icon: CalendarDays },
+    { href: '/portal/bookings',     label: t.portal.nav.bookings,  icon: List         },
+    { href: '/portal/services',     label: t.portal.nav.services,  icon: Briefcase    },
+    { href: '/portal/customers',    label: t.portal.nav.customers, icon: Users        },
+    { href: '/portal/bookings/new', label: t.portal.nav.new,       icon: PlusCircle   },
+  ]
 
   async function handleLogout() {
     const supabase = createClient()
@@ -42,7 +44,7 @@ export default function PortalNav({ profile }: { profile: Profile }) {
             </div>
             <div>
               <p className="font-display font-bold text-jungle-800 text-sm leading-tight">Sunda Trips</p>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">Partner Portal</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest">{t.portal.nav.title}</p>
             </div>
           </div>
         </div>
@@ -84,7 +86,7 @@ export default function PortalNav({ profile }: { profile: Profile }) {
             className="flex items-center gap-2 text-xs text-gray-400 hover:text-red-500 transition-colors w-full"
           >
             <LogOut className="w-3.5 h-3.5" />
-            Sign out
+            {t.portal.nav.signOut}
           </button>
         </div>
       </aside>
@@ -95,7 +97,7 @@ export default function PortalNav({ profile }: { profile: Profile }) {
           <div className="w-7 h-7 bg-jungle-800 rounded-lg flex items-center justify-center">
             <Compass className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="font-display font-bold text-jungle-800 text-sm">Partner Portal</span>
+          <span className="font-display font-bold text-jungle-800 text-sm">{t.portal.nav.title}</span>
         </div>
         <div className="w-8 h-8 rounded-full bg-jungle-100 flex items-center justify-center text-jungle-700 font-bold text-sm">
           {profile.full_name?.[0]?.toUpperCase() ?? '?'}
@@ -103,7 +105,7 @@ export default function PortalNav({ profile }: { profile: Profile }) {
       </div>
 
       {/* Mobile bottom tab bar */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-100 flex">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-100 flex safe-area-pb">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = isActive(href, pathname)
           return (
