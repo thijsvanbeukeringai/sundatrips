@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 // ─── Properties ───────────────────────────────────────────────────────────────
 
@@ -235,6 +236,158 @@ export async function resendPartnerInvite(email: string, fullName: string) {
     return { error: 'Failed to send email' }
   }
 
+  return { success: true }
+}
+
+// ─── Partner services (own listings) ─────────────────────────────────────────
+
+export async function getPartnerOwnedServices() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data } = await supabase
+    .from('properties')
+    .select('*, variants:listing_variants(*)')
+    .eq('owner_id', user.id)
+    .order('name')
+
+  return data ?? []
+}
+
+export async function getPartnerServiceById(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('id', id)
+    .eq('owner_id', user.id)
+    .single()
+
+  return data
+}
+
+function parseImages(raw: string): string[] {
+  return raw.split('\n').map(s => s.trim()).filter(Boolean)
+}
+function parseAmenities(raw: string): string[] {
+  return raw.split(',').map(s => s.trim()).filter(Boolean)
+}
+
+export async function createPartnerService(_prevState: unknown, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase.from('properties').insert({
+    owner_id:         user.id,
+    partner_id:       user.id,
+    name:             formData.get('name') as string,
+    type:             formData.get('type') as string,
+    island:           formData.get('island') as string,
+    location:         formData.get('location') as string,
+    description:      (formData.get('description') as string) || null,
+    tag:              (formData.get('tag') as string) || null,
+    price_per_unit:   parseFloat(formData.get('price_per_unit') as string),
+    price_unit:       formData.get('price_unit') as string,
+    max_capacity:     formData.get('max_capacity') ? parseInt(formData.get('max_capacity') as string) : null,
+    duration:         (formData.get('duration') as string) || null,
+    duration_hours:   formData.get('duration_hours') ? parseFloat(formData.get('duration_hours') as string) : null,
+    images:           parseImages(formData.get('images') as string),
+    amenities:        parseAmenities(formData.get('amenities') as string),
+    is_active:        formData.get('is_active') === 'on',
+    transfer_from:    (formData.get('transfer_from') as string) || null,
+    transfer_to:      (formData.get('transfer_to') as string) || null,
+    distance_km:      formData.get('distance_km') ? parseFloat(formData.get('distance_km') as string) : null,
+    english_speaking: formData.get('english_speaking') === 'on',
+    driver_name:      (formData.get('driver_name') as string) || null,
+    driver_phone:     (formData.get('driver_phone') as string) || null,
+  })
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/portal/services')
+  revalidatePath('/')
+  redirect('/portal/services')
+}
+
+export async function updatePartnerService(_prevState: unknown, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = formData.get('id') as string
+
+  const { error } = await supabase
+    .from('properties')
+    .update({
+      name:             formData.get('name') as string,
+      type:             formData.get('type') as string,
+      island:           formData.get('island') as string,
+      location:         formData.get('location') as string,
+      description:      (formData.get('description') as string) || null,
+      tag:              (formData.get('tag') as string) || null,
+      price_per_unit:   parseFloat(formData.get('price_per_unit') as string),
+      price_unit:       formData.get('price_unit') as string,
+      max_capacity:     formData.get('max_capacity') ? parseInt(formData.get('max_capacity') as string) : null,
+      duration:         (formData.get('duration') as string) || null,
+      duration_hours:   formData.get('duration_hours') ? parseFloat(formData.get('duration_hours') as string) : null,
+      images:           parseImages(formData.get('images') as string),
+      amenities:        parseAmenities(formData.get('amenities') as string),
+      is_active:        formData.get('is_active') === 'on',
+      transfer_from:    (formData.get('transfer_from') as string) || null,
+      transfer_to:      (formData.get('transfer_to') as string) || null,
+      distance_km:      formData.get('distance_km') ? parseFloat(formData.get('distance_km') as string) : null,
+      english_speaking: formData.get('english_speaking') === 'on',
+      driver_name:      (formData.get('driver_name') as string) || null,
+      driver_phone:     (formData.get('driver_phone') as string) || null,
+    })
+    .eq('id', id)
+    .eq('owner_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/portal/services')
+  revalidatePath('/')
+  redirect('/portal/services')
+}
+
+export async function togglePartnerServiceActive(id: string, is_active: boolean) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('properties')
+    .update({ is_active })
+    .eq('id', id)
+    .eq('owner_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/portal/services')
+  revalidatePath('/')
+  return { success: true }
+}
+
+export async function deletePartnerService(id: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('properties')
+    .delete()
+    .eq('id', id)
+    .eq('owner_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/portal/services')
+  revalidatePath('/')
   return { success: true }
 }
 

@@ -2,16 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, List, Users, PlusCircle, LogOut, Compass } from 'lucide-react'
+import { CalendarDays, List, Users, PlusCircle, LogOut, Compass, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/lib/types'
 
 const NAV = [
-  { href: '/portal',           label: 'Upcoming',   icon: CalendarDays },
-  { href: '/portal/bookings',  label: 'Bookings',   icon: List         },
-  { href: '/portal/customers', label: 'Customers',  icon: Users        },
-  { href: '/portal/bookings/new', label: 'New',     icon: PlusCircle   },
+  { href: '/portal',              label: 'Upcoming',  icon: CalendarDays },
+  { href: '/portal/bookings',     label: 'Bookings',  icon: List         },
+  { href: '/portal/services',     label: 'Services',  icon: Briefcase    },
+  { href: '/portal/customers',    label: 'Customers', icon: Users        },
+  { href: '/portal/bookings/new', label: 'New',       icon: PlusCircle   },
 ]
 
 function isActive(href: string, pathname: string) {

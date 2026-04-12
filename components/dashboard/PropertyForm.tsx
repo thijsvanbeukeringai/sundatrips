@@ -16,6 +16,9 @@ interface Props {
   property?:       Property
   allowedTypes?:   string[]
   defaultVenueId?: string
+  backHref?:       string
+  createAction?:   (prev: unknown, formData: FormData) => Promise<{ error?: string } | null>
+  updateAction?:   (prev: unknown, formData: FormData) => Promise<{ error?: string } | null>
 }
 
 const labelClass = 'block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5'
@@ -43,10 +46,11 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   )
 }
 
-export default function PropertyForm({ userId, property, allowedTypes, defaultVenueId }: Props) {
+export default function PropertyForm({ userId, property, allowedTypes, defaultVenueId, backHref, createAction: customCreate, updateAction: customUpdate }: Props) {
   const { t } = useI18n()
   const isEdit = !!property
-  const action = isEdit ? updateProperty : createProperty
+  const backLink = backHref ?? '/dashboard/properties'
+  const action = isEdit ? (customUpdate ?? updateProperty) : (customCreate ?? createProperty)
   const [state, formAction] = useFormState(action, null)
   const [images,       setImages]       = useState<string[]>(property?.images ?? [])
   const [amenities,    setAmenities]    = useState<string[]>(property?.amenities ?? [])
@@ -94,7 +98,7 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/dashboard/properties" className="text-gray-400 hover:text-gray-600 transition-colors">
+        <Link href={backLink} className="text-gray-400 hover:text-gray-600 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
@@ -381,7 +385,7 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
 
         <div className="flex gap-3 pb-8">
           <SubmitButton isEdit={isEdit} />
-          <Link href="/dashboard/properties" className="px-6 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+          <Link href={backLink} className="px-6 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
             {t.form.cancel}
           </Link>
         </div>
