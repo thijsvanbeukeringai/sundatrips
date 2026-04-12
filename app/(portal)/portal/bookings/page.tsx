@@ -104,6 +104,9 @@ export default function PartnerBookingsPage() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
                   {b.guest_name}
+                  {(b as any).booking_number && (
+                    <span className="text-xs font-normal text-gray-400 ml-1.5">#{(b as any).booking_number}</span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-500 truncate mt-0.5">
                   {(b as any).property?.name ?? t.portal.bookingDetail.service}

@@ -96,6 +96,7 @@ export interface TimeSlot {
 
 export interface Booking {
   id: string
+  booking_number: number
   property_id: string
   owner_id: string
   guest_name: string

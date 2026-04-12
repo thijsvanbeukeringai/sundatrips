@@ -197,7 +197,7 @@ export default function PortalBookingDetailPage() {
 
       {/* Booking metadata */}
       <p className="text-[11px] text-gray-300 text-center pb-2">
-        {t.portal.bookingDetail.booking} #{booking.id.slice(0, 8).toUpperCase()} ·{' '}
+        {t.portal.bookingDetail.booking} #{booking.booking_number ?? booking.id.slice(0, 8).toUpperCase()} ·{' '}
         {new Date(booking.created_at).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}
       </p>
     </div>

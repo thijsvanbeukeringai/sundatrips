@@ -62,7 +62,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
     guest_user_id:  guestUserId,
     variant_id:     input.variant_id || null,
     room_id:        input.room_id || null,
-  }).select('id').single()
+  }).select('id, booking_number').single()
 
   if (error) return { error: error.message }
 
@@ -75,6 +75,46 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
       input.check_in,
       input.check_out,
     )
+  }
+
+  // Fetch property details for the email
+  const { data: property } = await supabase
+    .from('properties')
+    .select('name, type, location, island, transfer_from, transfer_to')
+    .eq('id', input.property_id)
+    .single()
+
+  // Send "trip pending" notification email to the guest
+  try {
+    const { sendMailWithTemplate } = await import('@/lib/mailgun')
+
+    const dateFormatted = new Date(input.check_in).toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    })
+
+    await sendMailWithTemplate({
+      to: email,
+      subject: `Booking request #${booking.booking_number} received — ${property?.name ?? 'Sunda Trips'}`,
+      template: 'trip-pending',
+      variables: {
+        guestName:     input.guest_name.trim(),
+        bookingNumber: String(booking.booking_number ?? ''),
+        serviceName:   property?.name ?? 'Service',
+        serviceType:   property?.type ?? '',
+        date:          dateFormatted,
+        pickupTime:    input.pickup_time ?? '',
+        location:      property?.location ?? '',
+        island:        property?.island ?? '',
+        guestsCount:   String(input.guests_count),
+        amount:        `€${input.base_amount}`,
+        transferFrom:  property?.transfer_from ?? '',
+        transferTo:    property?.transfer_to ?? '',
+        notes:         input.notes ?? '',
+      },
+    })
+  } catch (err: any) {
+    console.error('[createPublicBooking] Mailgun error:', err)
+    // Don't fail the booking if email fails
   }
 
   revalidatePath(`/listings/${input.property_id}`)
