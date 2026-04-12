@@ -17,7 +17,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
       {/* Content — offset for mobile top bar + bottom tabs */}
       <main className="flex-1 pt-14 pb-24 lg:pt-0 lg:pb-0 lg:overflow-auto">
-        <div className="max-w-2xl mx-auto px-4 py-6 lg:py-10 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 py-6 lg:py-10 lg:px-8">
           {children}
         </div>
       </main>

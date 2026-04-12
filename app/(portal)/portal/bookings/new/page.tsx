@@ -22,6 +22,9 @@ export default function NewPartnerBookingPage() {
   const [variantId,     setVariantId]     = useState('')
   const [checkIn,       setCheckIn]       = useState('')
   const [checkOut,      setCheckOut]      = useState('')
+  const [pickupTime,    setPickupTime]    = useState('')
+  const [pickupAddress, setPickupAddress] = useState('')
+  const [dropoffAddress,setDropoffAddress]= useState('')
   const [guestName,     setGuestName]     = useState('')
   const [guestEmail,    setGuestEmail]    = useState('')
   const [guestPhone,    setGuestPhone]    = useState('')
@@ -37,6 +40,7 @@ export default function NewPartnerBookingPage() {
   }, [])
 
   const selectedProperty = properties.find(p => p.id === propertyId)
+  const isTransfer = selectedProperty?.type === 'transfer'
   const variants: Variant[] = selectedProperty?.variants ?? []
   const selectedVariant = variants.find(v => v.id === variantId)
 
@@ -57,6 +61,13 @@ export default function NewPartnerBookingPage() {
     setLoading(true)
     setError(null)
 
+    // Build notes with pickup/dropoff for transfers
+    const allNotes = [
+      isTransfer && pickupAddress ? `Pickup: ${pickupAddress}` : '',
+      isTransfer && dropoffAddress ? `Dropoff: ${dropoffAddress}` : '',
+      notes,
+    ].filter(Boolean).join('\n')
+
     const result = await createPartnerBooking({
       property_id:  propertyId,
       variant_id:   variantId || null,
@@ -65,9 +76,10 @@ export default function NewPartnerBookingPage() {
       guest_phone:  guestPhone || null,
       guests_count: guestsCount,
       check_in:     checkIn,
-      check_out:    checkOut || null,
+      check_out:    isTransfer ? null : (checkOut || null),
+      pickup_time:  isTransfer && pickupTime ? pickupTime : null,
       base_amount:  total,
-      notes:        notes || null,
+      notes:        allNotes || null,
     })
 
     setLoading(false)
@@ -83,7 +95,7 @@ export default function NewPartnerBookingPage() {
         <p className="text-gray-500 text-sm">{t.portal.newBooking.successMsg}</p>
         <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full sm:w-auto">
           <button
-            onClick={() => { setDone(false); setGuestName(''); setGuestEmail(''); setGuestPhone(''); setNotes(''); setCheckIn(''); setCheckOut('') }}
+            onClick={() => { setDone(false); setGuestName(''); setGuestEmail(''); setGuestPhone(''); setNotes(''); setCheckIn(''); setCheckOut(''); setPickupTime(''); setPickupAddress(''); setDropoffAddress('') }}
             className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
           >
             {t.portal.newBooking.newBooking}
@@ -159,19 +171,49 @@ export default function NewPartnerBookingPage() {
           )}
         </div>
 
-        {/* Dates */}
+        {/* Dates + transfer-specific fields */}
         <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 space-y-4">
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{t.portal.newBooking.date}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>{t.portal.newBooking.dateLabel}</label>
-              <input type="date" required min={today} value={checkIn} onChange={e => setCheckIn(e.target.value)} className={inputClass} />
+
+          {isTransfer ? (
+            /* Transfer: date + time, no end date */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>{t.portal.newBooking.dateLabel}</label>
+                <input type="date" required min={today} value={checkIn} onChange={e => setCheckIn(e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>{t.portal.newBooking.pickupTime} *</label>
+                <input type="time" required value={pickupTime} onChange={e => setPickupTime(e.target.value)} className={inputClass} />
+              </div>
             </div>
-            <div>
-              <label className={labelClass}>{t.portal.newBooking.endDate} <span className="font-normal normal-case text-gray-400">{t.portal.newBooking.optional}</span></label>
-              <input type="date" min={checkIn || today} value={checkOut} onChange={e => setCheckOut(e.target.value)} className={inputClass} />
+          ) : (
+            /* Non-transfer: date + optional end date */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>{t.portal.newBooking.dateLabel}</label>
+                <input type="date" required min={today} value={checkIn} onChange={e => setCheckIn(e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>{t.portal.newBooking.endDate} <span className="font-normal normal-case text-gray-400">{t.portal.newBooking.optional}</span></label>
+                <input type="date" min={checkIn || today} value={checkOut} onChange={e => setCheckOut(e.target.value)} className={inputClass} />
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Transfer: pickup + dropoff address */}
+          {isTransfer && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Pickup address</label>
+                <input type="text" value={pickupAddress} onChange={e => setPickupAddress(e.target.value)} placeholder="Hotel name or address…" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Dropoff address</label>
+                <input type="text" value={dropoffAddress} onChange={e => setDropoffAddress(e.target.value)} placeholder="Destination…" className={inputClass} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Guests */}

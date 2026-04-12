@@ -163,182 +163,15 @@ export default function PartnerSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-xl sm:text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Manage your profile and company details</p>
-      </div>
-
-      {/* Company logo */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Company photo</p>
-        <div className="flex items-center gap-5">
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-200 hover:border-jungle-300 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0"
-          >
-            {companyLogo ? (
-              <img src={companyLogo} alt="Logo" className="w-full h-full object-cover" />
-            ) : (
-              <Camera className="w-6 h-6 text-gray-300" />
-            )}
-            {uploading && (
-              <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-jungle-600" />
-              </div>
-            )}
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-          <div>
-            <p className="text-sm font-semibold text-gray-700">Upload your company photo</p>
-            <p className="text-xs text-gray-400 mt-0.5">This will be shown on your public profile and listing cards</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Online / Offline toggle per service */}
-      {services.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Services visibility</p>
-          <div className="space-y-3">
-            {services.map(s => (
-              <div key={s.id} className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{s.name}</p>
-                  <p className="text-xs text-gray-400">{s.is_active ? 'Online — visible on homepage' : 'Offline — hidden from homepage'}</p>
-                </div>
-                <button
-                  onClick={() => handleToggleService(s.id, s.is_active)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex-shrink-0 ${
-                    s.is_active
-                      ? 'bg-jungle-50 text-jungle-700 border border-jungle-200'
-                      : 'bg-gray-100 text-gray-500 border border-gray-200'
-                  }`}
-                >
-                  {s.is_active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  {s.is_active ? 'Online' : 'Offline'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Personal details */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Personal details</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Full name</label>
-            <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Phone / WhatsApp</label>
-            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+62 812 345 678" className={inputClass} />
-          </div>
-        </div>
+      <div className="flex items-center justify-between">
         <div>
-          <label className={labelClass}>Email</label>
-          <input type="email" value={profile?.email ?? ''} disabled className={inputClass + ' bg-gray-50 text-gray-400'} />
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-gray-900">Settings</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage your profile and company details</p>
         </div>
-      </div>
-
-      {/* Company details */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Company details</p>
-        <div>
-          <label className={labelClass}>Company / Service name</label>
-          <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Made's Transport Service" className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Description</label>
-          <textarea rows={3} value={companyDescription} onChange={e => setCompanyDescription(e.target.value)} placeholder="Tell customers about your service…" className={inputClass + ' resize-none'} />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Location</label>
-            <input type="text" value={companyLocation} onChange={e => setCompanyLocation(e.target.value)} placeholder="Kuta, Lombok" className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Island</label>
-            <select value={companyIsland} onChange={e => setCompanyIsland(e.target.value)} className={selectClass}>
-              <option value="">Select island…</option>
-              {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Languages */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
-          <Globe className="inline w-3 h-3 mr-1" />
-          Languages spoken
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {LANGUAGES.map(lang => (
-            <button
-              key={lang}
-              type="button"
-              onClick={() => toggleLanguage(lang)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                languages.includes(lang)
-                  ? 'bg-jungle-100 text-jungle-800 border border-jungle-200'
-                  : 'bg-gray-50 text-gray-500 border border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              {lang}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Amenities / highlights */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Amenities / Highlights</p>
-        {TRANSFER_AMENITIES.map(cat => {
-          const selected = cat.items.filter(i => amenities.includes(i))
-          return (
-            <div key={cat.category}>
-              <p className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2.5">
-                <span>{cat.emoji}</span>{cat.category}
-                {selected.length > 0 && (
-                  <span className="text-[11px] font-normal text-jungle-600">{selected.length} selected</span>
-                )}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {cat.items.map(item => {
-                  const active = amenities.includes(item)
-                  return (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => setAmenities(prev =>
-                        active ? prev.filter(a => a !== item) : [...prev, item]
-                      )}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                        active
-                          ? 'bg-jungle-50 text-jungle-800 border border-jungle-200'
-                          : 'bg-gray-50 text-gray-500 border border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      {active && <CheckCircle2 className="w-3 h-3 text-jungle-500" />}
-                      {item}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Save */}
-      <div className="flex items-center gap-3">
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 bg-jungle-800 hover:bg-jungle-900 disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-jungle-800/25 active:scale-[0.98]"
+          className="flex items-center gap-2 bg-jungle-800 hover:bg-jungle-900 disabled:opacity-60 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-jungle-800/25 active:scale-[0.98] text-sm"
         >
           {saving ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -349,6 +182,170 @@ export default function PartnerSettingsPage() {
           )}
           {saving ? 'Saving…' : saved ? 'Saved!' : 'Save changes'}
         </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* ── LEFT COLUMN ── */}
+        <div className="space-y-6">
+          {/* Company photo + name */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Company profile</p>
+            <div className="flex items-center gap-5">
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="relative w-20 h-20 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-200 hover:border-jungle-300 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0"
+              >
+                {companyLogo ? (
+                  <img src={companyLogo} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <Camera className="w-6 h-6 text-gray-300" />
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-jungle-600" />
+                  </div>
+                )}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              <div className="flex-1">
+                <label className={labelClass}>Company / Service name</label>
+                <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Made's Transport Service" className={inputClass} />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Description</label>
+              <textarea rows={3} value={companyDescription} onChange={e => setCompanyDescription(e.target.value)} placeholder="Tell customers about your service…" className={inputClass + ' resize-none'} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Location</label>
+                <input type="text" value={companyLocation} onChange={e => setCompanyLocation(e.target.value)} placeholder="Kuta, Lombok" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Island</label>
+                <select value={companyIsland} onChange={e => setCompanyIsland(e.target.value)} className={selectClass}>
+                  <option value="">Select…</option>
+                  {ISLANDS.map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Personal details */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Personal details</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Full name</label>
+                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Phone / WhatsApp</label>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+62 812 345 678" className={inputClass} />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Email</label>
+              <input type="email" value={profile?.email ?? ''} disabled className={inputClass + ' bg-gray-50 text-gray-400'} />
+            </div>
+          </div>
+
+          {/* Services visibility */}
+          {services.length > 0 && (
+            <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Services visibility</p>
+              <div className="space-y-3">
+                {services.map(s => (
+                  <div key={s.id} className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{s.name}</p>
+                      <p className="text-xs text-gray-400">{s.is_active ? 'Online — visible on homepage' : 'Offline — hidden'}</p>
+                    </div>
+                    <button
+                      onClick={() => handleToggleService(s.id, s.is_active)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex-shrink-0 ${
+                        s.is_active
+                          ? 'bg-jungle-50 text-jungle-700 border border-jungle-200'
+                          : 'bg-gray-100 text-gray-500 border border-gray-200'
+                      }`}
+                    >
+                      {s.is_active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      {s.is_active ? 'Online' : 'Offline'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── RIGHT COLUMN ── */}
+        <div className="space-y-6">
+          {/* Languages */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+              <Globe className="inline w-3 h-3 mr-1" />
+              Languages spoken
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {LANGUAGES.map(lang => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => toggleLanguage(lang)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    languages.includes(lang)
+                      ? 'bg-jungle-100 text-jungle-800 border border-jungle-200'
+                      : 'bg-gray-50 text-gray-500 border border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Amenities / highlights */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Amenities / Highlights</p>
+            {TRANSFER_AMENITIES.map(cat => {
+              const selected = cat.items.filter(i => amenities.includes(i))
+              return (
+                <div key={cat.category}>
+                  <p className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2.5">
+                    <span>{cat.emoji}</span>{cat.category}
+                    {selected.length > 0 && (
+                      <span className="text-[11px] font-normal text-jungle-600">{selected.length} selected</span>
+                    )}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {cat.items.map(item => {
+                      const active = amenities.includes(item)
+                      return (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setAmenities(prev =>
+                            active ? prev.filter(a => a !== item) : [...prev, item]
+                          )}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            active
+                              ? 'bg-jungle-50 text-jungle-800 border border-jungle-200'
+                              : 'bg-gray-50 text-gray-500 border border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          {active && <CheckCircle2 className="w-3 h-3 text-jungle-500" />}
+                          {item}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )

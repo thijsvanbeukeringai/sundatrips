@@ -106,6 +106,7 @@ export async function createPartnerBooking(input: {
   guests_count: number
   check_in:     string
   check_out:    string | null
+  pickup_time?: string | null
   base_amount:  number
   notes:        string | null
 }) {
