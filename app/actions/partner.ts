@@ -140,7 +140,7 @@ export async function createPartnerBooking(input: {
   return { success: true, id: data.id }
 }
 
-// ─── Admin: list all partners ─────────────────────────────────────────────────
+// ─── Admin: list all partners with onboarding status ──────────────────────────
 
 export async function getPartnerProfiles() {
   const supabase = await createClient()
@@ -150,6 +150,44 @@ export async function getPartnerProfiles() {
     .eq('role', 'partner')
     .order('full_name')
   return data ?? []
+}
+
+export async function getPartnerProfilesWithStatus() {
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const supabase = await createClient()
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, phone')
+    .eq('role', 'partner')
+    .order('full_name')
+
+  if (!profiles?.length) return []
+
+  const admin = createAdminClient()
+  const withStatus = await Promise.all(
+    profiles.map(async p => {
+      const { data: { user } } = await admin.auth.admin.getUserById(p.id)
+      return { ...p, onboarded: !!user?.user_metadata?.onboarded }
+    })
+  )
+  return withStatus
+}
+
+export async function resendPartnerInvite(email: string, fullName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const admin = createAdminClient()
+
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: fullName, role: 'partner' },
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
+  })
+
+  if (error) return { error: error.message }
+  return { success: true }
 }
 
 // ─── Admin: assign partner to property ───────────────────────────────────────

@@ -1,13 +1,17 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { getPartnerProfiles, getPartnerProperties, assignPartnerToProperty } from '@/app/actions/partner'
+import {
+  getPartnerProfilesWithStatus,
+  assignPartnerToProperty,
+  resendPartnerInvite,
+} from '@/app/actions/partner'
 import { createClient } from '@/lib/supabase/client'
-import { Users, Link2, CheckCircle, X, Loader2 } from 'lucide-react'
+import { Users, Link2, CheckCircle, X, Loader2, Send, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
-type Partner  = Awaited<ReturnType<typeof getPartnerProfiles>>[number]
+type Partner  = Awaited<ReturnType<typeof getPartnerProfilesWithStatus>>[number]
 type Property = { id: string; name: string; type: string; partner_id: string | null }
 
 export default function PartnersAdminPage() {
@@ -15,13 +19,15 @@ export default function PartnersAdminPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [saving,     setSaving]     = useState<string | null>(null)
   const [saved,      setSaved]      = useState<string | null>(null)
+  const [resending,  setResending]  = useState<string | null>(null)
+  const [resentOk,   setResentOk]   = useState<string | null>(null)
   const [loading,    setLoading]    = useState(true)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       const [partnerData, { data: propData }] = await Promise.all([
-        getPartnerProfiles(),
+        getPartnerProfilesWithStatus(),
         supabase
           .from('properties')
           .select('id, name, type, partner_id')
@@ -47,6 +53,16 @@ export default function PartnersAdminPage() {
     setTimeout(() => setSaved(null), 2000)
   }
 
+  async function handleResend(email: string, fullName: string) {
+    setResending(email)
+    const result = await resendPartnerInvite(email, fullName)
+    setResending(null)
+    if (!result.error) {
+      setResentOk(email)
+      setTimeout(() => setResentOk(null), 3000)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -69,9 +85,18 @@ export default function PartnersAdminPage() {
 
       {/* Partners */}
       <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-          <Users className="w-4 h-4 text-jungle-600" />
-          <h2 className="font-semibold text-gray-900">Partners ({partners.length})</h2>
+        <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-jungle-600" />
+            <h2 className="font-semibold text-gray-900">Partners ({partners.length})</h2>
+          </div>
+          <Link
+            href="/admin/invite"
+            className="flex items-center gap-1.5 text-xs font-semibold bg-jungle-800 text-white px-3 py-1.5 rounded-lg hover:bg-jungle-900 transition-colors"
+          >
+            <Send className="w-3 h-3" />
+            Invite partner
+          </Link>
         </div>
 
         {partners.length === 0 ? (
@@ -83,21 +108,51 @@ export default function PartnersAdminPage() {
           <div className="divide-y divide-gray-50">
             {partners.map(p => {
               const assignedProperties = properties.filter(prop => prop.partner_id === p.id)
+              const isResent = resentOk === p.email
+              const isSending = resending === p.email
+
               return (
                 <div key={p.id} className="px-5 py-4">
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-900">{p.full_name}</p>
-                      <p className="text-xs text-gray-400">{p.email}{p.phone ? ` · ${p.phone}` : ''}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-gray-900">{p.full_name}</p>
+                        {p.onboarded ? (
+                          <span className="flex items-center gap-1 text-[11px] font-semibold bg-jungle-50 text-jungle-700 border border-jungle-200 px-2 py-0.5 rounded-full">
+                            <CheckCircle className="w-3 h-3" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                            <Clock className="w-3 h-3" />
+                            Pending invite
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{p.email}{p.phone ? ` · ${p.phone}` : ''}</p>
                     </div>
-                    {assignedProperties.length > 0 && (
-                      <span className="text-[11px] font-semibold bg-jungle-50 text-jungle-700 border border-jungle-200 px-2 py-0.5 rounded-full flex-shrink-0">
-                        {assignedProperties.length} service{assignedProperties.length !== 1 ? 's' : ''}
-                      </span>
+
+                    {/* Resend button — only for pending */}
+                    {!p.onboarded && (
+                      <button
+                        onClick={() => handleResend(p.email, p.full_name)}
+                        disabled={isSending || isResent}
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:border-jungle-400 hover:text-jungle-700 disabled:opacity-50 transition-colors flex-shrink-0"
+                      >
+                        {isSending ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : isResent ? (
+                          <CheckCircle className="w-3 h-3 text-jungle-500" />
+                        ) : (
+                          <Send className="w-3 h-3" />
+                        )}
+                        {isResent ? 'Sent!' : isSending ? 'Sending…' : 'Resend link'}
+                      </button>
                     )}
                   </div>
+
                   {assignedProperties.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    <div className="flex flex-wrap gap-1.5 mt-2.5">
                       {assignedProperties.map(prop => (
                         <span key={prop.id} className="flex items-center gap-1 text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg">
                           {prop.name}
