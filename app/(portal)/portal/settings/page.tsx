@@ -5,7 +5,8 @@ import { useI18n } from '@/lib/i18n'
 import { createClient } from '@/lib/supabase/client'
 import { updatePartnerProfile } from '@/app/actions/profile'
 import { getPartnerOwnedServices, togglePartnerServiceActive } from '@/app/actions/partner'
-import { Camera, Loader2, CheckCircle, Save, Globe, Eye, EyeOff } from 'lucide-react'
+import { Camera, Loader2, CheckCircle, Save, Globe, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import { TRANSFER_AMENITIES } from '@/lib/amenities'
 import type { Profile, Property } from '@/lib/types'
 
 const inputClass = 'w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-jungle-600 focus:ring-2 focus:ring-jungle-600/10 transition bg-white'
@@ -35,6 +36,7 @@ export default function PartnerSettingsPage() {
   const [companyLocation, setCompanyLocation] = useState('')
   const [companyIsland, setCompanyIsland] = useState('')
   const [languages, setLanguages] = useState<string[]>([])
+  const [amenities, setAmenities] = useState<string[]>([])
 
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -59,6 +61,7 @@ export default function PartnerSettingsPage() {
         setCompanyLocation(p.company_location ?? '')
         setCompanyIsland(p.company_island ?? '')
         setLanguages(p.languages ?? [])
+        setAmenities(p.amenities ?? [])
       }
 
       const svc = await getPartnerOwnedServices()
@@ -129,6 +132,7 @@ export default function PartnerSettingsPage() {
         company_location: companyLocation,
         company_island: companyIsland,
         languages,
+        amenities,
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -287,6 +291,46 @@ export default function PartnerSettingsPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Amenities / highlights */}
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 space-y-5">
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Amenities / Highlights</p>
+        {TRANSFER_AMENITIES.map(cat => {
+          const selected = cat.items.filter(i => amenities.includes(i))
+          return (
+            <div key={cat.category}>
+              <p className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2.5">
+                <span>{cat.emoji}</span>{cat.category}
+                {selected.length > 0 && (
+                  <span className="text-[11px] font-normal text-jungle-600">{selected.length} selected</span>
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {cat.items.map(item => {
+                  const active = amenities.includes(item)
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setAmenities(prev =>
+                        active ? prev.filter(a => a !== item) : [...prev, item]
+                      )}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        active
+                          ? 'bg-jungle-50 text-jungle-800 border border-jungle-200'
+                          : 'bg-gray-50 text-gray-500 border border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {active && <CheckCircle2 className="w-3 h-3 text-jungle-500" />}
+                      {item}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Save */}

@@ -52,6 +52,7 @@ export interface Profile {
   company_location:    string | null
   company_island:      string | null
   languages:           string[]
+  amenities:           string[]
   // Crew fields
   owner_id:          string | null
   crew_permissions:  CrewPermission[]

@@ -32,6 +32,7 @@ export async function updatePartnerProfile(data: {
   company_location:    string
   company_island:      string
   languages:           string[]
+  amenities:           string[]
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -48,6 +49,7 @@ export async function updatePartnerProfile(data: {
       company_location:    data.company_location.trim() || null,
       company_island:      data.company_island.trim() || null,
       languages:           data.languages.filter(Boolean),
+      amenities:           data.amenities.filter(Boolean),
     })
     .eq('id', user.id)
 

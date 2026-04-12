@@ -304,10 +304,16 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
             <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wider">{t.form.pricing}</h2>
+            {type === 'transfer' && (
+              <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5">
+                <span className="text-amber-500 text-sm mt-0.5">💡</span>
+                <p className="text-xs text-amber-700">Optional for transfers. If you set a fixed price here, the per-km price calculation will not apply for this route.</p>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>{t.form.price} (€) *</label>
-                <input name="price_per_unit" type="number" required min="0" step="0.01" defaultValue={property?.price_per_unit} placeholder="48" className={inputClass} />
+                <label className={labelClass}>{t.form.price} (€){type !== 'transfer' ? ' *' : ''}</label>
+                <input name="price_per_unit" type="number" required={type !== 'transfer'} min="0" step="0.01" defaultValue={property?.price_per_unit} placeholder={type === 'transfer' ? '0' : '48'} className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>{t.form.per} *</label>
@@ -377,14 +383,22 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
             />
           </div>
 
-          <div>
-            <label className={labelClass}>{t.form.amenities}</label>
-            <AmenitiesSelector
-              type={type as any}
-              initial={property?.amenities ?? []}
-              onChange={setAmenities}
-            />
-          </div>
+          {/* Amenities — hidden for transfers (set in partner profile settings) */}
+          {type !== 'transfer' && (
+            <div>
+              <label className={labelClass}>{t.form.amenities}</label>
+              <AmenitiesSelector
+                type={type as any}
+                initial={property?.amenities ?? []}
+                onChange={setAmenities}
+              />
+            </div>
+          )}
+          {type === 'transfer' && (
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs text-gray-500">
+              Amenities and highlights are managed in your <strong>Profile Settings</strong>.
+            </div>
+          )}
         </div>
 
         {/* Status */}
