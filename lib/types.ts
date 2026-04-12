@@ -104,6 +104,7 @@ export interface Booking {
   guest_nationality: string | null
   check_in: string
   check_out: string | null
+  pickup_time: string | null
   guests_count: number
   base_amount: number
   extras_amount: number

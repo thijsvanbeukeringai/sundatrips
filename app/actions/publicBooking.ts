@@ -14,6 +14,7 @@ interface PublicBookingInput {
   guests_count: number
   check_in:     string
   check_out:    string | null
+  pickup_time?: string | null
   base_amount:  number
   notes:        string
   variant_id?:  string | null
@@ -53,6 +54,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
     guests_count:   input.guests_count,
     check_in:       input.check_in,
     check_out:      input.check_out || null,
+    pickup_time:    input.pickup_time || null,
     base_amount:    input.base_amount,
     status:         'pending',
     payment_method: 'cash',

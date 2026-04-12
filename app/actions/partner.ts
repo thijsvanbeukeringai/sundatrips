@@ -391,6 +391,71 @@ export async function deletePartnerService(id: string) {
   return { success: true }
 }
 
+// ─── Partner: accept/confirm a pending booking ──────────────────────────────
+
+export async function acceptPartnerBooking(bookingId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  // Fetch booking with property details
+  const { data: booking, error: fetchErr } = await supabase
+    .from('bookings')
+    .select(`
+      *,
+      property:properties(name, type, location, island, transfer_from, transfer_to)
+    `)
+    .eq('id', bookingId)
+    .single()
+
+  if (fetchErr || !booking) return { error: 'Booking not found' }
+  if (booking.status !== 'pending') return { error: 'Booking is not pending' }
+
+  // Update status to confirmed
+  const { error: updateErr } = await supabase
+    .from('bookings')
+    .update({ status: 'confirmed' })
+    .eq('id', bookingId)
+
+  if (updateErr) return { error: updateErr.message }
+
+  // Send confirmation email via Mailgun
+  try {
+    const { sendMailWithTemplate } = await import('@/lib/mailgun')
+    const property = (booking as any).property
+
+    const dateFormatted = new Date(booking.check_in).toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    })
+
+    await sendMailWithTemplate({
+      to: booking.guest_email,
+      subject: `Your booking for ${property?.name ?? 'your trip'} is confirmed!`,
+      template: 'booking-confirmed',
+      variables: {
+        guestName:    booking.guest_name,
+        serviceName:  property?.name ?? 'Service',
+        serviceType:  property?.type ?? '',
+        date:         dateFormatted,
+        pickupTime:   booking.pickup_time ?? '',
+        location:     property?.location ?? '',
+        guestsCount:  String(booking.guests_count),
+        amount:       `€${booking.base_amount}`,
+        transferFrom: property?.transfer_from ?? '',
+        transferTo:   property?.transfer_to ?? '',
+      },
+    })
+  } catch (err: any) {
+    console.error('[acceptPartnerBooking] Mailgun error:', err)
+    // Don't fail the booking accept if email fails
+  }
+
+  revalidatePath('/portal/bookings')
+  revalidatePath(`/portal/bookings/${bookingId}`)
+  revalidatePath('/portal')
+  return { success: true }
+}
+
 // ─── Admin: assign partner to property ───────────────────────────────────────
 
 export async function assignPartnerToProperty(propertyId: string, partnerId: string | null) {

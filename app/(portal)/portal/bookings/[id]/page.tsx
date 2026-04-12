@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getPartnerBookingById } from '@/app/actions/partner'
+import { getPartnerBookingById, acceptPartnerBooking } from '@/app/actions/partner'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, MapPin, Users, Phone, Mail, CalendarDays,
-  MessageSquare, Euro, Loader2,
+  MessageSquare, Euro, Loader2, CheckCircle, Clock,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 
@@ -36,6 +36,8 @@ export default function PortalBookingDetailPage() {
   const params = useParams()
   const [booking, setBooking] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [accepting, setAccepting] = useState(false)
+  const [accepted, setAccepted] = useState(false)
 
   const locale = lang === 'id' ? 'id-ID' : 'en-GB'
   const statusLabel = (status: string) =>
@@ -62,6 +64,17 @@ export default function PortalBookingDetailPage() {
         {t.portal.bookings.noBookings}
       </div>
     )
+  }
+
+  async function handleAccept() {
+    setAccepting(true)
+    const result = await acceptPartnerBooking(booking.id)
+    setAccepting(false)
+    if (!result.error) {
+      setBooking({ ...booking, status: 'confirmed' })
+      setAccepted(true)
+      setTimeout(() => setAccepted(false), 4000)
+    }
   }
 
   const property = booking.property
@@ -106,6 +119,39 @@ export default function PortalBookingDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Accept button for pending bookings */}
+      {booking.status === 'pending' && (
+        <button
+          onClick={handleAccept}
+          disabled={accepting}
+          className="w-full flex items-center justify-center gap-2 bg-jungle-700 hover:bg-jungle-800 disabled:opacity-60 text-white font-semibold py-3.5 rounded-xl transition-colors"
+        >
+          {accepting ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> {t.portal.bookingDetail.accepting}</>
+          ) : (
+            <><CheckCircle className="w-4 h-4" /> {t.portal.bookingDetail.accept}</>
+          )}
+        </button>
+      )}
+
+      {accepted && (
+        <div className="bg-jungle-50 border border-jungle-200 text-jungle-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+          {t.portal.bookingDetail.accepted}
+        </div>
+      )}
+
+      {/* Pickup time (for transfers) */}
+      {booking.pickup_time && (
+        <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3">
+          <Clock className="w-4 h-4 text-jungle-600" />
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">{t.portal.bookingDetail.pickupTime}</p>
+            <p className="text-sm font-semibold text-gray-800">{booking.pickup_time}</p>
+          </div>
+        </div>
+      )}
 
       {/* Guest details */}
       <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-1">
