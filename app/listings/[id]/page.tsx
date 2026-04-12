@@ -23,11 +23,15 @@ export default async function ListingPage({ params }: { params: { id: string } }
   const from = today.toISOString().split('T')[0]
   const to   = endDate.toISOString().split('T')[0]
 
-  const [{ data: blocks }, { data: slots }, { data: variantRows }, { data: slotAvailRows }] = await Promise.all([
+  // For transfers: also load all other transfer properties from the same owner as "routes"
+  const [{ data: blocks }, { data: slots }, { data: variantRows }, { data: slotAvailRows }, { data: siblingTransfers }] = await Promise.all([
     supabase.from('availability').select('*').eq('property_id', p.id).gte('date', from).lte('date', to),
     supabase.from('time_slots').select('*').eq('property_id', p.id).eq('is_active', true).order('sort_order'),
     supabase.from('listing_variants').select('*').eq('property_id', p.id).eq('is_active', true).order('sort_order'),
     supabase.from('slot_availability').select('*').eq('property_id', p.id).gte('date', from).lte('date', to),
+    p.type === 'transfer'
+      ? supabase.from('properties').select('*').eq('owner_id', p.owner_id).eq('type', 'transfer').eq('is_active', true).neq('id', p.id).order('name')
+      : Promise.resolve({ data: [] }),
   ])
 
   return (
@@ -37,6 +41,7 @@ export default async function ListingPage({ params }: { params: { id: string } }
       timeSlots=        {(slots          ?? []) as TimeSlot[]}
       variants=         {(variantRows    ?? []) as ListingVariant[]}
       slotAvailability= {(slotAvailRows  ?? []) as SlotAvailability[]}
+      siblingTransfers= {(siblingTransfers ?? []) as Property[]}
     />
   )
 }
