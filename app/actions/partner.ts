@@ -305,6 +305,7 @@ export async function createPartnerService(_prevState: unknown, formData: FormDa
     english_speaking: formData.get('english_speaking') === 'on',
     driver_name:      (formData.get('driver_name') as string) || null,
     driver_phone:     (formData.get('driver_phone') as string) || null,
+    price_per_km:     formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
   })
 
   if (error) return { error: error.message }
@@ -344,6 +345,7 @@ export async function updatePartnerService(_prevState: unknown, formData: FormDa
       english_speaking: formData.get('english_speaking') === 'on',
       driver_name:      (formData.get('driver_name') as string) || null,
       driver_phone:     (formData.get('driver_phone') as string) || null,
+      price_per_km:     formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
     })
     .eq('id', id)
     .eq('owner_id', user.id)

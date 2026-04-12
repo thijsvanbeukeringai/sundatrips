@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { CheckCircle, Users, BedDouble, Loader2, ChevronDown } from 'lucide-react'
+import { CheckCircle, Users, BedDouble, Loader2, ChevronDown, MapPin } from 'lucide-react'
 import { createPublicBooking } from '@/app/actions/publicBooking'
 import { getAvailableRoomsForBooking } from '@/app/actions/availability'
 import type { AvailableVariant } from '@/app/actions/availability'
@@ -61,6 +61,44 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const [pickupTime, setPickupTime] = useState('')
   const [pickupAddress, setPickupAddress] = useState('')
 
+  // Custom route (transfer)
+  const [isCustomRoute,  setIsCustomRoute]  = useState(false)
+  const [customFrom,     setCustomFrom]     = useState('')
+  const [customTo,       setCustomTo]       = useState('')
+  const [customFromCoords, setCustomFromCoords] = useState<{ lat: number; lon: number } | null>(null)
+  const [customToCoords,   setCustomToCoords]   = useState<{ lat: number; lon: number } | null>(null)
+  const [customDistanceKm, setCustomDistanceKm] = useState(0)
+
+  // Auto-calculate distance when both custom route points are selected
+  const LocationAutocomplete = isTransfer
+    ? require('@/components/dashboard/LocationAutocomplete').default
+    : null
+
+  // Calculate distance between two coordinates (Haversine)
+  function calcDistance(from: { lat: number; lon: number }, to: { lat: number; lon: number }): number {
+    const R = 6371
+    const dLat = (to.lat - from.lat) * Math.PI / 180
+    const dLon = (to.lon - from.lon) * Math.PI / 180
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(from.lat * Math.PI / 180) *
+              Math.cos(to.lat * Math.PI / 180) *
+              Math.sin(dLon / 2) ** 2
+    return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10
+  }
+
+  // Update distance when both coords change
+  useEffect(() => {
+    if (customFromCoords && customToCoords) {
+      setCustomDistanceKm(calcDistance(customFromCoords, customToCoords))
+    } else {
+      setCustomDistanceKm(0)
+    }
+  }, [customFromCoords, customToCoords])
+
+  // Custom route price (IDR per km → EUR)
+  const pricePerKm = property.price_per_km ?? 12500
+  const customPriceIDR = customDistanceKm * pricePerKm
+
   // Guest details
   const [guests,  setGuests]  = useState(1)
   const [name,    setName]    = useState('')
@@ -115,11 +153,13 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
 
   // Pricing
   const displayVariant    = isStay ? selectedVariant : variant
-  const displayPrice      = displayVariant ? displayVariant.price_per_unit : property.price_per_unit
+  const displayPrice      = isCustomRoute ? 0 : (displayVariant ? displayVariant.price_per_unit : property.price_per_unit)
   const displayUnit       = displayVariant ? displayVariant.price_unit     : property.price_unit
-  const amount            = isStay
-    ? calcAmount(property, selectedVariant ?? null, checkIn, checkOut, guests)
-    : calcAmount(property, variant, isStay ? checkIn : date, isStay ? checkOut : date, guests)
+  const amount            = isCustomRoute
+    ? customPriceIDR
+    : isStay
+      ? calcAmount(property, selectedVariant ?? null, checkIn, checkOut, guests)
+      : calcAmount(property, variant, isStay ? checkIn : date, isStay ? checkOut : date, guests)
 
   const unitLabel: Record<string, string> = {
     night:   `/ ${t.common.night}`,
@@ -133,7 +173,9 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   // Whether the form can be submitted
   const canSubmit = isStay
     ? !!(checkIn && checkOut && selectedVariantId && selectedRoomId && name && email)
-    : !!(name && email)
+    : isCustomRoute
+      ? !!(customFrom && customTo && customDistanceKm > 0 && date && pickupTime && name && email)
+      : !!(name && email)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -154,7 +196,9 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
       base_amount:  amount,
       notes:        [
         !isStay && variant ? `Option: ${variant.name}` : '',
-        isTransfer && pickupAddress ? `Pickup: ${pickupAddress}` : '',
+        isCustomRoute && customFrom ? `Pickup: ${customFrom}` : (isTransfer && pickupAddress ? `Pickup: ${pickupAddress}` : ''),
+        isCustomRoute && customTo ? `Dropoff: ${customTo}` : '',
+        isCustomRoute && customDistanceKm ? `Distance: ${customDistanceKm} km` : '',
         message,
       ].filter(Boolean).join('\n'),
       variant_id:   isStay ? (selectedVariantId || null) : (variant?.id ?? null),
@@ -173,17 +217,126 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
 
       {/* Price header */}
       <div>
-        <span className="font-display text-3xl font-bold text-jungle-800">
-          {formatPriceRaw(displayPrice, lang)}
-        </span>
-        <span className="text-gray-400 text-sm ml-1">{unitLabel[displayUnit] ?? `/ ${displayUnit}`}</span>
-        {activeVariants.length > 0 && !displayVariant && (
-          <p className="text-xs text-gray-400 mt-0.5">{l.fromPrice}</p>
+        {isCustomRoute ? (
+          customDistanceKm > 0 ? (
+            <>
+              <span className="font-display text-3xl font-bold text-jungle-800">
+                {Math.round(customPriceIDR).toLocaleString('id-ID')} IDR
+              </span>
+              <p className="text-xs text-gray-400 mt-0.5">{customDistanceKm} km × {pricePerKm.toLocaleString('id-ID')} IDR/km</p>
+            </>
+          ) : (
+            <>
+              <span className="font-display text-xl font-bold text-gray-400">
+                Select route to see price
+              </span>
+            </>
+          )
+        ) : (
+          <>
+            <span className="font-display text-3xl font-bold text-jungle-800">
+              {formatPriceRaw(displayPrice, lang)}
+            </span>
+            <span className="text-gray-400 text-sm ml-1">{unitLabel[displayUnit] ?? `/ ${displayUnit}`}</span>
+            {activeVariants.length > 0 && !displayVariant && !isTransfer && (
+              <p className="text-xs text-gray-400 mt-0.5">{l.fromPrice}</p>
+            )}
+            {isTransfer && activeVariants.length > 0 && !displayVariant && (
+              <p className="text-xs text-gray-400 mt-0.5">Select a route or enter a custom route</p>
+            )}
+          </>
         )}
       </div>
 
-      {/* Non-stay: variant picker (stays above the fold) */}
-      {!isStay && activeVariants.length > 0 && (
+      {/* Transfer: route selection (fixed routes or custom) */}
+      {isTransfer && (
+        <div className="space-y-3">
+          {/* Toggle: fixed route vs custom route */}
+          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => { setIsCustomRoute(false); setCustomFrom(''); setCustomTo(''); setCustomFromCoords(null); setCustomToCoords(null) }}
+              className={`flex-1 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
+                !isCustomRoute ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Fixed routes
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsCustomRoute(true); setVariant(null) }}
+              className={`flex-1 text-sm font-semibold py-1.5 rounded-lg transition-colors ${
+                isCustomRoute ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Custom route
+            </button>
+          </div>
+
+          {isCustomRoute ? (
+            /* Custom route: from/to with autocomplete */
+            <div className="space-y-3">
+              <div>
+                <label className={labelClass}>From</label>
+                {LocationAutocomplete && (
+                  <LocationAutocomplete
+                    name="custom_from"
+                    placeholder="Hotel, airport, address…"
+                    className={inputClass}
+                    onSelect={(val: string, lat: number, lon: number) => {
+                      setCustomFrom(val)
+                      setCustomFromCoords({ lat, lon })
+                    }}
+                  />
+                )}
+              </div>
+              <div>
+                <label className={labelClass}>To</label>
+                {LocationAutocomplete && (
+                  <LocationAutocomplete
+                    name="custom_to"
+                    placeholder="Destination…"
+                    className={inputClass}
+                    onSelect={(val: string, lat: number, lon: number) => {
+                      setCustomTo(val)
+                      setCustomToCoords({ lat, lon })
+                    }}
+                  />
+                )}
+              </div>
+              {customDistanceKm > 0 && (
+                <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-xl px-3 py-2">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {customDistanceKm} km · {Math.round(customPriceIDR).toLocaleString('id-ID')} IDR
+                </div>
+              )}
+            </div>
+          ) : activeVariants.length > 0 ? (
+            /* Fixed routes */
+            <div>
+              <label className={labelClass}>{l.selectVariant}</label>
+              <div className="relative">
+                <select
+                  className={inputClass + ' appearance-none pr-8'}
+                  value={variant?.id ?? ''}
+                  onChange={e => setVariant(activeVariants.find(v => v.id === e.target.value) ?? null)}
+                >
+                  <option value="">{l.selectVariant}…</option>
+                  {activeVariants.map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.name} — {formatPriceRaw(v.price_per_unit, lang)} / {v.price_unit}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* Non-stay, non-transfer: variant picker */}
+      {!isStay && !isTransfer && activeVariants.length > 0 && (
         <div>
           <label className={labelClass}>{l.selectVariant}</label>
           <div className="relative">
@@ -390,7 +543,12 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
           {/* Price summary */}
           <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 text-sm">
             <span className="text-gray-500">{t.pos.total}</span>
-            <span className="font-bold text-jungle-800">{formatPriceRaw(amount, lang)}</span>
+            <span className="font-bold text-jungle-800">
+              {isCustomRoute
+                ? `${Math.round(amount).toLocaleString('id-ID')} IDR`
+                : formatPriceRaw(amount, lang)
+              }
+            </span>
           </div>
 
           <div className="flex gap-2">

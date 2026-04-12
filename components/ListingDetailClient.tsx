@@ -311,8 +311,8 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
               </>
             )}
 
-            {/* Non-stay, non-transfer: availability calendar at bottom */}
-            {p.type !== 'stay' && p.type !== 'transfer' && (
+            {/* Non-stay: availability calendar at bottom (transfers return early above) */}
+            {p.type !== 'stay' && (
               <>
                 <hr className="border-gray-100" />
                 <div>

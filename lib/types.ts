@@ -70,6 +70,8 @@ export interface Property {
   amenities: string[]
   is_active: boolean
   venue_id: string | null
+  // transfer custom route pricing
+  price_per_km:     number | null
   // partner operator
   partner_id:       string | null
   // transfer-specific

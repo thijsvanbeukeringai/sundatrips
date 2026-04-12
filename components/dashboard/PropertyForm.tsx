@@ -227,6 +227,21 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
                 </div>
               </div>
 
+              {/* Price per km (custom route) */}
+              <div>
+                <label className={labelClass}>Price per km (IDR)</label>
+                <input
+                  name="price_per_km"
+                  type="number"
+                  min="0"
+                  step="100"
+                  defaultValue={property?.price_per_km ?? 12500}
+                  placeholder="12500"
+                  className={inputClass}
+                />
+                <p className="text-[11px] text-gray-400 mt-1">Used to calculate custom route prices. Default: 12,500 IDR/km.</p>
+              </div>
+
               {/* English-speaking toggle */}
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
