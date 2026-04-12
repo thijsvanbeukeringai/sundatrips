@@ -109,6 +109,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
         amount:        `€${input.base_amount}`,
         transferFrom:  property?.transfer_from ?? '',
         transferTo:    property?.transfer_to ?? '',
+        pickupAddress: input.notes?.match(/Pickup: (.+)/)?.[1] ?? '',
         notes:         input.notes ?? '',
       },
     })

@@ -59,6 +59,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const [variant, setVariant] = useState<ListingVariant | null>(null)
   const [date,    setDate]    = useState('')
   const [pickupTime, setPickupTime] = useState('')
+  const [pickupAddress, setPickupAddress] = useState('')
 
   // Guest details
   const [guests,  setGuests]  = useState(1)
@@ -151,7 +152,11 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
       check_out:    isStay ? checkOut : null,
       pickup_time:  isTransfer && pickupTime ? pickupTime : null,
       base_amount:  amount,
-      notes:        [!isStay && variant ? `Option: ${variant.name}` : '', message].filter(Boolean).join('\n'),
+      notes:        [
+        !isStay && variant ? `Option: ${variant.name}` : '',
+        isTransfer && pickupAddress ? `Pickup: ${pickupAddress}` : '',
+        message,
+      ].filter(Boolean).join('\n'),
       variant_id:   isStay ? (selectedVariantId || null) : (variant?.id ?? null),
       room_id:      isStay ? (selectedRoomId || null) : null,
     })
@@ -317,19 +322,34 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
               )}
             </>
           ) : (
-            /* ── NON-STAY: single date + optional time ── */
-            <div className={isTransfer ? 'grid grid-cols-2 gap-2' : ''}>
-              <div>
-                <label className={labelClass}>{l.date}</label>
-                <input type="date" required min={today} value={date} onChange={e => setDate(e.target.value)} className={inputClass} />
+            /* ── NON-STAY: single date + time + pickup address for transfers ── */
+            <>
+              <div className={isTransfer ? 'grid grid-cols-2 gap-2' : ''}>
+                <div>
+                  <label className={labelClass}>{l.date}</label>
+                  <input type="date" required min={today} value={date} onChange={e => setDate(e.target.value)} className={inputClass} />
+                </div>
+                {isTransfer && (
+                  <div>
+                    <label className={labelClass}>{l.pickupTime ?? 'Pickup time'}</label>
+                    <input type="time" required value={pickupTime} onChange={e => setPickupTime(e.target.value)} className={inputClass} />
+                  </div>
+                )}
               </div>
               {isTransfer && (
                 <div>
-                  <label className={labelClass}>{t.portal?.newBooking?.pickupTime ?? 'Pickup time'}</label>
-                  <input type="time" value={pickupTime} onChange={e => setPickupTime(e.target.value)} className={inputClass} />
+                  <label className={labelClass}>{l.pickupAddress ?? 'Pickup address'}</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={l.pickupAddressPH ?? 'Hotel name or address…'}
+                    value={pickupAddress}
+                    onChange={e => setPickupAddress(e.target.value)}
+                    className={inputClass}
+                  />
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {/* Guests */}
