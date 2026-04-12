@@ -59,7 +59,7 @@ function TransferFeaturedCard({ p, t, lang }: { p: Property; t: any; lang: 'en' 
       className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-jungle-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
     >
       <div
-        className="relative h-52 overflow-hidden flex-shrink-0 bg-jungle-800 bg-cover bg-center"
+        className="relative h-44 overflow-hidden flex-shrink-0 bg-jungle-800 bg-cover bg-center"
         style={displayImage ? { backgroundImage: `url(${displayImage})` } : undefined}
       >
         {!displayImage && (
