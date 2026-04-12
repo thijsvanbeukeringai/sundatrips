@@ -28,30 +28,55 @@ export async function POST(request: Request) {
 
     const inviteRole = role === 'partner' ? 'partner' : undefined
 
-    // 3. Send invite via Supabase service role
-    //    This creates the user + sends the magic-link email automatically.
+    // 3. Generate invite link via Supabase (without sending built-in email)
     const admin = createAdminClient()
-    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: {
-        full_name: fullName,
-        property_name: propertyName ?? null,
-        invited_by: user.id,
-        ...(inviteRole ? { role: inviteRole } : {}),
+    const { data: linkData, error: inviteError } = await admin.auth.admin.generateLink({
+      type: 'invite',
+      email,
+      options: {
+        data: {
+          full_name: fullName,
+          property_name: propertyName ?? null,
+          invited_by: user.id,
+          ...(inviteRole ? { role: inviteRole } : {}),
+        },
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
     })
 
     if (inviteError) {
       return NextResponse.json({ success: false, error: inviteError.message }, { status: 400 })
     }
 
-    // 4. If partner: set role on their profile immediately (don't wait for onboarding)
+    // 4. Send invite email via Mailgun template
+    const { sendMailWithTemplate } = await import('@/lib/mailgun')
+
+    const inviteLink = linkData.properties.action_link
+
+    try {
+      await sendMailWithTemplate({
+        to: email,
+        subject: inviteRole === 'partner'
+          ? "You're invited to join Sunda Trips as a partner"
+          : "You're invited to join Sunda Trips",
+        template: 'invitation',
+        variables: {
+          name: propertyName || fullName,
+          inviteLink,
+        },
+      })
+    } catch (err) {
+      console.error('[invite] Mailgun error:', err)
+      return NextResponse.json({ success: false, error: 'Failed to send invite email' }, { status: 500 })
+    }
+
+    // 5. If partner: set role on their profile immediately (don't wait for onboarding)
     //    The handle_new_user trigger creates the profile synchronously, so it exists now.
     if (inviteRole === 'partner') {
       await admin.from('profiles').update({ role: 'partner' }).eq('email', email)
     }
 
-    // 5. Record invite in our own table for tracking
+    // 6. Record invite in our own table for tracking
     await supabase.from('invites').upsert({
       email,
       invited_by: user.id,

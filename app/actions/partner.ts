@@ -181,12 +181,45 @@ export async function resendPartnerInvite(email: string, fullName: string) {
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const admin = createAdminClient()
 
-  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: fullName, role: 'partner' },
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
+  // Generate a new invite link (without sending Supabase's built-in email)
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: {
+      data: { full_name: fullName, role: 'partner' },
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
+    },
   })
 
   if (error) return { error: error.message }
+
+  // Look up the company/service name from the invites table
+  const { data: invite } = await supabase
+    .from('invites')
+    .select('property_name')
+    .eq('email', email)
+    .single()
+
+  // Send the invite email via Mailgun template
+  const { sendMailWithTemplate } = await import('@/lib/mailgun')
+
+  const inviteLink = data.properties.action_link
+
+  try {
+    await sendMailWithTemplate({
+      to: email,
+      subject: "You're invited to join Sunda Trips as a partner",
+      template: 'invitation',
+      variables: {
+        name: invite?.property_name || fullName,
+        inviteLink,
+      },
+    })
+  } catch (err: any) {
+    console.error('[resendPartnerInvite] Mailgun error:', err)
+    return { error: 'Failed to send email' }
+  }
+
   return { success: true }
 }
 
