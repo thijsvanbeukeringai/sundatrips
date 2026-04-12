@@ -88,10 +88,10 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
     )
   }
 
-  // Fetch property details for the email
+  // Fetch property + owner details for the emails
   const { data: property } = await supabase
     .from('properties')
-    .select('name, type, location, island, transfer_from, transfer_to')
+    .select('name, type, location, island, transfer_from, transfer_to, owner:profiles!owner_id(full_name, email, company_name)')
     .eq('id', input.property_id)
     .single()
 
@@ -127,8 +127,45 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
       },
     })
   } catch (err: any) {
-    console.error('[createPublicBooking] Mailgun error:', err)
-    // Don't fail the booking if email fails
+    console.error('[createPublicBooking] Mailgun guest error:', err)
+  }
+
+  // Send "new booking arrived" notification to the partner/owner
+  try {
+    const { sendMailWithTemplate } = await import('@/lib/mailgun')
+    const owner = (property as any)?.owner
+
+    if (owner?.email) {
+      const dateFormatted = new Date(input.check_in).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      })
+
+      await sendMailWithTemplate({
+        to: owner.email,
+        subject: bookingNumber
+          ? `New booking request #${bookingNumber} — ${input.guest_name.trim()}`
+          : `New booking request — ${input.guest_name.trim()}`,
+        template: 'New booking arrived',
+        variables: {
+          partnerName:   owner.company_name || owner.full_name || 'Partner',
+          bookingNumber,
+          serviceName:   property?.name ?? 'Service',
+          transferFrom:  input.notes?.match(/Pickup: (.+)/)?.[1] || property?.transfer_from || '',
+          transferTo:    property?.transfer_to ?? '',
+          date:          dateFormatted,
+          pickupTime:    input.pickup_time ?? '',
+          pickupAddress: input.notes?.match(/Pickup: (.+)/)?.[1] ?? '',
+          guestName:     input.guest_name.trim(),
+          guestEmail:    email,
+          guestPhone:    input.guest_phone || '',
+          guestsCount:   String(input.guests_count),
+          amount:        `€${input.base_amount}`,
+          notes:         input.notes ?? '',
+        },
+      })
+    }
+  } catch (err: any) {
+    console.error('[createPublicBooking] Mailgun partner error:', err)
   }
 
   revalidatePath(`/listings/${input.property_id}`)

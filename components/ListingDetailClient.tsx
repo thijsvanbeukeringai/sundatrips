@@ -118,12 +118,6 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                       {p.driver_name}
                     </span>
                   )}
-                  {p.driver_phone && (
-                    <span className="flex items-center gap-1.5 text-xs font-medium text-jungle-100 bg-jungle-700/50 px-3 py-1.5 rounded-full">
-                      <Phone className="w-3.5 h-3.5" />
-                      {p.driver_phone}
-                    </span>
-                  )}
                 </div>
               </div>
 
