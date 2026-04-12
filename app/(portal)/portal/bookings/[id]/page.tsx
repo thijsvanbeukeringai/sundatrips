@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, MapPin, Users, Phone, Mail, CalendarDays,
-  MessageSquare, Euro, Loader2, CheckCircle, Clock, XCircle,
+  MessageSquare, Loader2, CheckCircle, Clock, XCircle,
+  Car, Star, Banknote,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 
@@ -93,10 +94,28 @@ export default function PortalBookingDetailPage() {
 
   const property = booking.property
   const variant  = booking.variant
+  const isTransfer = property?.type === 'transfer'
+  const isActivity = property?.type === 'activity' || property?.type === 'trip'
 
   const checkInDate = new Date(booking.check_in).toLocaleDateString(locale, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
+
+  // Parse structured info from notes
+  const notes = booking.notes ?? ''
+  const timeSlot      = notes.match(/Time slot: (.+)/)?.[1] ?? ''
+  const pickupAddress = notes.match(/Pickup: (.+)/)?.[1] ?? ''
+  const isPrivateTour = notes.includes('Private tour')
+  const selectedOption = notes.match(/Option: (.+)/)?.[1] ?? ''
+  const dropoff       = notes.match(/Dropoff: (.+)/)?.[1] ?? ''
+  const distance      = notes.match(/Distance: (.+)/)?.[1] ?? ''
+
+  // Clean message: remove structured lines from notes to get the guest message
+  const guestMessage = notes
+    .split('\n')
+    .filter((line: string) => !line.match(/^(Time slot:|Pickup:|Dropoff:|Distance:|Option:|Private tour)/) )
+    .join('\n')
+    .trim()
 
   return (
     <div className="space-y-5">
@@ -115,6 +134,7 @@ export default function PortalBookingDetailPage() {
             </p>
             <p className="font-display text-lg sm:text-xl font-bold truncate">{property?.name ?? t.portal.bookingDetail.booking}</p>
             {variant?.name && <p className="text-jungle-200 text-sm mt-0.5">{variant.name}</p>}
+            {selectedOption && !variant?.name && <p className="text-jungle-200 text-sm mt-0.5">{selectedOption}</p>}
           </div>
           <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${STATUS_STYLES[booking.status] ?? ''} flex-shrink-0`}>
             {statusLabel(booking.status)}
@@ -125,6 +145,13 @@ export default function PortalBookingDetailPage() {
           <CalendarDays className="w-4 h-4 text-jungle-400" />
           {checkInDate}
         </div>
+
+        {timeSlot && (
+          <div className="mt-1.5 flex items-center gap-2 text-sm text-jungle-200">
+            <Clock className="w-4 h-4 text-jungle-400" />
+            {timeSlot}
+          </div>
+        )}
 
         {property?.location && (
           <div className="mt-1.5 flex items-center gap-2 text-sm text-jungle-200">
@@ -177,6 +204,27 @@ export default function PortalBookingDetailPage() {
         </div>
       )}
 
+      {/* Private tour badge */}
+      {isPrivateTour && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3">
+          <Star className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Private tour</p>
+            <p className="text-xs text-amber-600">Entire time slot booked for this group</p>
+          </div>
+        </div>
+      )}
+
+      {/* Transfer route */}
+      {isTransfer && (property?.transfer_from || pickupAddress || property?.transfer_to || dropoff) && (
+        <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 pt-4 mb-1">Route</p>
+          <Row label="Pickup" value={pickupAddress || property?.transfer_from} icon={<Car className="w-3.5 h-3.5" />} />
+          <Row label="Dropoff" value={dropoff || property?.transfer_to} icon={<MapPin className="w-3.5 h-3.5" />} />
+          {distance && <Row label="Distance" value={distance} icon={<Car className="w-3.5 h-3.5" />} />}
+        </div>
+      )}
+
       {/* Pickup time (for transfers) */}
       {booking.pickup_time && (
         <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3">
@@ -184,6 +232,17 @@ export default function PortalBookingDetailPage() {
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">{t.portal.bookingDetail.pickupTime}</p>
             <p className="text-sm font-semibold text-gray-800">{booking.pickup_time}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Hotel pickup (for activities) */}
+      {isActivity && pickupAddress && (
+        <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3">
+          <MapPin className="w-4 h-4 text-jungle-600" />
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Hotel pickup</p>
+            <p className="text-sm font-semibold text-gray-800">{pickupAddress}</p>
           </div>
         </div>
       )}
@@ -211,7 +270,7 @@ export default function PortalBookingDetailPage() {
       {/* Price */}
       <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-gray-500">
-          <Euro className="w-4 h-4" />
+          <Banknote className="w-4 h-4" />
           <span className="text-sm font-medium">{t.portal.bookingDetail.priceAgreement}</span>
         </div>
         <p className="font-display text-xl font-bold text-jungle-800">
@@ -219,14 +278,14 @@ export default function PortalBookingDetailPage() {
         </p>
       </div>
 
-      {/* Notes */}
-      {booking.notes && (
+      {/* Guest message */}
+      {guestMessage && (
         <div className="bg-white border border-gray-100 rounded-2xl px-4 sm:px-5 py-4">
           <div className="flex items-center gap-2 text-gray-500 mb-2">
             <MessageSquare className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">{t.portal.bookingDetail.notes}</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Message</span>
           </div>
-          <p className="text-sm text-gray-700 leading-relaxed">{booking.notes}</p>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{guestMessage}</p>
         </div>
       )}
 
