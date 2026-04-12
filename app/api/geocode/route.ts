@@ -5,7 +5,8 @@ export async function GET(req: NextRequest) {
   if (!q || q.length < 2) return NextResponse.json([])
 
   // Photon (Komoot) — free OSM geocoder with excellent POI support (hotels, airports, etc.)
-  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=en`
+  // Bias results towards Indonesia (Bali/Lombok area) for better hotel/POI matches
+  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10&lang=en&lat=-8.5&lon=116.0&location_bias_scale=0.5`
 
   const res = await fetch(url, {
     headers: { 'Accept': 'application/json' },
