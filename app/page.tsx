@@ -4,6 +4,7 @@ import nextDynamic from 'next/dynamic'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Property } from '@/lib/types'
 
 const FeaturedProperties = nextDynamic(() => import('@/components/FeaturedProperties'))
@@ -26,7 +27,8 @@ export default async function Home() {
   const transferOwnerIds = [...new Set(all.filter(p => p.type === 'transfer').map(p => p.owner_id))]
   let ownerMap = new Map<string, any>()
   if (transferOwnerIds.length > 0) {
-    const { data: profiles } = await supabase
+    const admin = createAdminClient()
+    const { data: profiles } = await admin
       .from('profiles')
       .select('id, company_name, company_logo, company_location, company_island, languages')
       .in('id', transferOwnerIds)

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -73,7 +74,8 @@ export default async function ListingsPage({
   // For transfers: fetch owner profiles to get company data
   const transferOwnerIds = [...new Set(all.filter(p => p.type === 'transfer').map(p => p.owner_id))]
   if (transferOwnerIds.length > 0) {
-    const { data: profiles } = await supabase
+    const admin = createAdminClient()
+    const { data: profiles } = await admin
       .from('profiles')
       .select('id, company_name, company_logo, company_location, company_island, languages')
       .in('id', transferOwnerIds)
