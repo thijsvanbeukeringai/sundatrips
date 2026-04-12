@@ -8,6 +8,13 @@ import { useI18n } from '@/lib/i18n'
 import { formatPriceRaw } from '@/lib/currency'
 
 function TransferCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }) {
+  const owner = (p as any).owner
+  const displayName = owner?.company_name || p.name
+  const displayImage = owner?.company_logo || p.images[0]
+  const displayLocation = owner?.company_location || p.location
+  const displayIsland = owner?.company_island || p.island
+  const ownerLanguages: string[] = owner?.languages ?? []
+
   return (
     <Link
       href={`/listings/${p.id}`}
@@ -15,9 +22,9 @@ function TransferCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }
     >
       {/* Driver image with dark overlay */}
       <div className="relative h-48 overflow-hidden bg-jungle-800 flex-shrink-0">
-        {p.images[0] ? (
+        {displayImage ? (
           <Image
-            src={p.images[0]} alt={p.name} fill
+            src={displayImage} alt={displayName} fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw"
           />
@@ -35,24 +42,24 @@ function TransferCard({ p, t, lang }: { p: Property; t: any; lang: 'en' | 'id' }
         </span>
 
         <span className="absolute bottom-3 right-3 text-[10px] font-bold text-white bg-jungle-800/80 backdrop-blur-sm px-2 py-0.5 rounded-full uppercase tracking-wider">
-          {p.island}
+          {displayIsland}
         </span>
       </div>
 
       <div className="p-4 flex flex-col flex-1">
-        {/* Driver name + location */}
+        {/* Company name + location */}
         <div>
           <h3 className="font-semibold text-gray-900 group-hover:text-jungle-800 transition-colors leading-snug text-sm truncate">
-            {p.name}
+            {displayName}
           </h3>
           <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-            <MapPin className="w-3 h-3 flex-shrink-0" />{p.location}
+            <MapPin className="w-3 h-3 flex-shrink-0" />{displayLocation}
           </p>
         </div>
 
         {/* Driver features */}
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {p.english_speaking && (
+          {(ownerLanguages.includes('English') || p.english_speaking) && (
             <span className="flex items-center gap-1 text-[11px] text-jungle-700 bg-jungle-50 px-2 py-1 rounded-md leading-none whitespace-nowrap">
               <Languages className="w-3 h-3" />English
             </span>

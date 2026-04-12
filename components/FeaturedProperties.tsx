@@ -147,15 +147,22 @@ export default function FeaturedProperties({ properties }: { properties: Propert
                 exit="exit"
                 className="h-full"
               >
-              {p.type === 'transfer' ? (
+              {p.type === 'transfer' ? (() => {
+                const owner = (p as any).owner
+                const displayName = owner?.company_name || p.name
+                const displayImage = owner?.company_logo || p.images[0]
+                const displayLocation = owner?.company_location || p.location
+                const displayIsland = owner?.company_island || p.island
+                const ownerLanguages: string[] = owner?.languages ?? []
+                return (
                 /* ── Transfer: driver profile card ── */
                 <Link
                   href={`/listings/${p.id}`}
                   className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-jungle-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
                 >
                   <div className="relative h-44 overflow-hidden flex-shrink-0 bg-jungle-800">
-                    {p.images[0] ? (
-                      <Image src={p.images[0]} alt={p.name} fill
+                    {displayImage ? (
+                      <Image src={displayImage} alt={displayName} fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw"
                       />
@@ -169,18 +176,18 @@ export default function FeaturedProperties({ properties }: { properties: Propert
                       <Car className="w-3 h-3" />{t.types.transfer}
                     </span>
                     <span className="absolute bottom-3 right-3 text-[10px] font-bold text-white bg-jungle-800/80 backdrop-blur-sm px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      {p.island}
+                      {displayIsland}
                     </span>
                   </div>
                   <div className="p-4 flex flex-col flex-1">
                     <div>
-                      <h3 className="font-semibold text-gray-900 group-hover:text-jungle-800 transition-colors leading-snug text-sm truncate">{p.name}</h3>
+                      <h3 className="font-semibold text-gray-900 group-hover:text-jungle-800 transition-colors leading-snug text-sm truncate">{displayName}</h3>
                       <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                        <MapPin className="w-3 h-3 flex-shrink-0" />{p.location}
+                        <MapPin className="w-3 h-3 flex-shrink-0" />{displayLocation}
                       </p>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      {p.english_speaking && (
+                      {(ownerLanguages.includes('English') || p.english_speaking) && (
                         <span className="flex items-center gap-1 text-[11px] text-jungle-700 bg-jungle-50 px-2 py-1 rounded-md leading-none whitespace-nowrap">
                           <Languages className="w-3 h-3" />English
                         </span>
@@ -203,6 +210,8 @@ export default function FeaturedProperties({ properties }: { properties: Propert
                     </div>
                   </div>
                 </Link>
+                )
+              })()
               ) : (
                 /* ── Default card ── */
                 <Link

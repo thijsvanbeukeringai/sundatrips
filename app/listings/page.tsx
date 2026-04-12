@@ -50,7 +50,7 @@ export default async function ListingsPage({
 
   let query = supabase
     .from('properties')
-    .select('*')
+    .select('*, owner:profiles!owner_id(company_name, company_logo, company_location, company_island, languages)')
     .eq('is_active', true)
 
   if (typeParam !== 'all' && TYPE_MAP[typeParam]) {
@@ -67,7 +67,20 @@ export default async function ListingsPage({
   }
 
   const { data } = await query.order('created_at', { ascending: false })
-  const properties = (data ?? []) as Property[]
+
+  // For transfers: show one card per owner (lowest price as "from" price)
+  const all = (data ?? []) as Property[]
+  const nonTransfers = all.filter(p => p.type !== 'transfer')
+  const transfers = all.filter(p => p.type === 'transfer')
+  const transferByOwner = new Map<string, Property>()
+  for (const tr of transfers) {
+    const existing = transferByOwner.get(tr.owner_id)
+    if (!existing || tr.price_per_unit < existing.price_per_unit) {
+      transferByOwner.set(tr.owner_id, tr)
+    }
+  }
+  const properties = [...nonTransfers, ...transferByOwner.values()]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   const heading = qParam
     ? `Results for "${qParam}"`
