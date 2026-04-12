@@ -68,6 +68,28 @@ export default function PartnerSettingsPage() {
     load()
   }, [])
 
+  async function resizeImage(file: File, targetSize = 800): Promise<Blob> {
+    const bitmap = await createImageBitmap(file)
+    const scale = Math.max(1, targetSize / Math.min(bitmap.width, bitmap.height))
+    const w = Math.round(bitmap.width * Math.min(scale, targetSize / bitmap.width))
+    const h = Math.round(bitmap.height * Math.min(scale, targetSize / bitmap.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(w, targetSize)
+    canvas.height = Math.max(h, targetSize)
+
+    // Center the image if it's smaller than target
+    const ctx = canvas.getContext('2d')!
+    const offsetX = (canvas.width - w) / 2
+    const offsetY = (canvas.height - h) / 2
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(bitmap, offsetX, offsetY, w, h)
+    bitmap.close()
+
+    const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/jpeg', 0.92))
+    return blob ?? file
+  }
+
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -76,16 +98,26 @@ export default function PartnerSettingsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setUploading(false); return }
 
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-    const path = `${user.id}/company-logo.${ext}`
+    // Resize to at least 800x800 while keeping quality
+    let uploadBlob: Blob
+    try {
+      uploadBlob = await resizeImage(file, 800)
+    } catch {
+      uploadBlob = file
+    }
+
+    const path = `${user.id}/company-logo.jpg`
 
     const { error } = await supabase.storage
       .from('images')
-      .upload(path, file, { upsert: true })
+      .upload(path, uploadBlob, { upsert: true, contentType: 'image/jpeg' })
 
-    if (!error) {
+    if (error) {
+      console.error('[logo upload]', error.message)
+      alert(`Upload failed: ${error.message}`)
+    } else {
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
-      setCompanyLogo(publicUrl)
+      setCompanyLogo(publicUrl + '?t=' + Date.now())
     }
     setUploading(false)
   }
