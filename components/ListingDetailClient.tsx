@@ -53,13 +53,15 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
   const [triggerVariantId, setTriggerVariantId] = useState<string | null>(null)
   const [triggerDate,      setTriggerDate]      = useState<string | null>(null)
   const [triggerOpen,      setTriggerOpen]      = useState(0)
+  const [triggerMaxSpots,  setTriggerMaxSpots]  = useState<number | null>(null)
   const [bookingProperty,  setBookingProperty]  = useState<Property>(p)
 
-  function openBooking(opts: { variantId?: string; date?: string; property?: Property }) {
+  function openBooking(opts: { variantId?: string; date?: string; property?: Property; maxSpots?: number }) {
     if (opts.property) setBookingProperty(opts.property)
     else setBookingProperty(p)
     setTriggerVariantId(opts.variantId ?? null)
     setTriggerDate(opts.date ?? null)
+    setTriggerMaxSpots(opts.maxSpots ?? null)
     setTriggerOpen(n => n + 1)
   }
 
@@ -314,6 +316,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 triggerVariantId={triggerVariantId}
                 triggerDate={triggerDate}
                 triggerOpen={triggerOpen}
+                triggerMaxSpots={triggerMaxSpots}
               />
             </div>
           </div>
@@ -465,7 +468,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                         durationHours={p.duration_hours}
                         maxCapacity={p.max_capacity}
                         slotAvailability={slotAvailability}
-                        onBook={date => openBooking({ date })}
+                        onBook={(date, maxSpots) => openBooking({ date, maxSpots })}
                       />
                     </>
                   ) : (
@@ -491,6 +494,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 triggerVariantId={triggerVariantId}
                 triggerDate={triggerDate}
                 triggerOpen={triggerOpen}
+                triggerMaxSpots={triggerMaxSpots}
               />
             </div>
           )}

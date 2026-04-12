@@ -18,6 +18,7 @@ interface Props {
   triggerVariantId?: string | null
   triggerDate?:      string | null
   triggerOpen?:      number
+  triggerMaxSpots?:  number | null
 }
 
 function diffNights(a: string, b: string) {
@@ -35,7 +36,7 @@ function calcAmount(property: Property, variant: AvailableVariant | ListingVaria
   return price * Math.max(1, guests)
 }
 
-export default function PublicBookingForm({ property, variants, triggerVariantId, triggerDate, triggerOpen }: Props) {
+export default function PublicBookingForm({ property, variants, triggerVariantId, triggerDate, triggerOpen, triggerMaxSpots }: Props) {
   const { t, lang } = useI18n()
   const l = t.listing
   const isStay     = property.type === 'stay'
@@ -63,6 +64,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const [date,    setDate]    = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [pickupAddress, setPickupAddress] = useState('')
+  const [maxSpots, setMaxSpots] = useState<number | null>(null)
 
   // Custom route (transfer)
   const [isCustomRoute,  setIsCustomRoute]  = useState(false)
@@ -117,10 +119,16 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
       if (v) setVariant(v)
     }
     if (triggerDate) setDate(triggerDate)
+    if (triggerMaxSpots != null) {
+      setMaxSpots(triggerMaxSpots)
+      if (guests > triggerMaxSpots) setGuests(Math.max(1, triggerMaxSpots))
+    } else {
+      setMaxSpots(null)
+    }
     setOpen(true)
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerVariantId, triggerDate, triggerOpen])
+  }, [triggerVariantId, triggerDate, triggerOpen, triggerMaxSpots])
 
   // Fetch room availability when both dates are filled (stay only)
   useEffect(() => {
@@ -527,10 +535,13 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
               {isTransfer ? l.passengersCount : l.guestsCount}
             </label>
             <input
-              type="number" required min={1} max={property.max_capacity ?? 99}
-              value={guests} onChange={e => setGuests(parseInt(e.target.value) || 1)}
+              type="number" required min={1} max={maxSpots ?? property.max_capacity ?? 99}
+              value={guests} onChange={e => setGuests(Math.min(parseInt(e.target.value) || 1, maxSpots ?? property.max_capacity ?? 99))}
               className={inputClass}
             />
+            {maxSpots != null && maxSpots < (property.max_capacity ?? 99) && (
+              <p className="text-[11px] text-amber-500 mt-1">{maxSpots} {l.spotsAvailable ?? 'spots available'}</p>
+            )}
           </div>
 
           {/* Guest details */}

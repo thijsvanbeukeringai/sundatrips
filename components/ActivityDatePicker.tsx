@@ -11,7 +11,7 @@ interface Props {
   durationHours:     number | null
   maxCapacity:       number | null
   slotAvailability?: SlotAvailability[]
-  onBook?:           (date: string) => void
+  onBook?:           (date: string, maxSpots: number) => void
 }
 
 function isoDate(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
@@ -214,7 +214,10 @@ export default function ActivityDatePicker({ blocks, slots, durationHours, maxCa
           {pickedSlot && (
             <button
               type="button"
-              onClick={() => onBook?.(selected!)}
+              onClick={() => {
+                const spots = pickedSlot ? slotSpotsLeft(pickedSlot, selected!) : (maxCapacity ?? 99)
+                onBook?.(selected!, spots)
+              }}
               className="block w-full bg-jungle-800 hover:bg-jungle-900 text-white font-semibold py-3.5 rounded-xl text-center transition-colors"
             >
               {t.listing.requestSlot}
