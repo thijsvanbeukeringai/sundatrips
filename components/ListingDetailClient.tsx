@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { MapPin, Clock, Users, ArrowLeft, Bed, Compass, Activity, Star, CheckCircle2, ArrowRight, Route, Languages } from 'lucide-react'
+import { MapPin, Clock, Users, ArrowLeft, Bed, Compass, Activity, Star, CheckCircle2, ArrowRight, Route, Languages, Car, Phone } from 'lucide-react'
 import type { Property, AvailabilityBlock, TimeSlot, ListingVariant, SlotAvailability } from '@/lib/types'
 import { groupAmenities } from '@/lib/amenities'
 import { useI18n } from '@/lib/i18n'
@@ -53,6 +53,145 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
     return t.common[key as keyof typeof t.common] ?? unit
   }
 
+  // ── Transfer: driver profile layout ──
+  if (p.type === 'transfer') {
+    const lowestPrice = variants.filter(v => v.is_active).length > 0
+      ? Math.min(...variants.filter(v => v.is_active).map(v => v.price_per_unit))
+      : p.price_per_unit
+
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+
+        <main>
+          <div className="absolute top-24 left-4 sm:left-6 z-20">
+            <Link
+              href="/#destinations"
+              className="flex items-center gap-2 bg-white/90 backdrop-blur-sm text-gray-800 font-medium text-sm px-4 py-2 rounded-full hover:bg-white transition-colors shadow-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t.listing.back}
+            </Link>
+          </div>
+
+          <ListingGallery images={p.images} name={p.name} />
+
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid lg:grid-cols-3 gap-10">
+
+            {/* Left: driver profile + routes */}
+            <div className="lg:col-span-2 space-y-8">
+
+              {/* Driver profile card */}
+              <div className="bg-jungle-800 rounded-2xl p-6 sm:p-8 text-white">
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-jungle-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <Car className="w-7 h-7 sm:w-8 sm:h-8 text-white/80" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-jungle-300 text-xs font-semibold uppercase tracking-widest">
+                      {t.types.transfer}
+                    </span>
+                    <h1 className="font-display text-2xl sm:text-3xl font-bold mt-1">{p.name}</h1>
+                    <p className="flex items-center gap-1.5 text-jungle-200 mt-1.5 text-sm">
+                      <MapPin className="w-3.5 h-3.5 text-jungle-400" />
+                      {p.location}, {p.island}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 mt-5">
+                  {p.english_speaking && (
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-jungle-100 bg-jungle-700/50 px-3 py-1.5 rounded-full">
+                      <Languages className="w-3.5 h-3.5" />
+                      {t.listing.englishSpeaking}
+                    </span>
+                  )}
+                  {p.max_capacity && (
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-jungle-100 bg-jungle-700/50 px-3 py-1.5 rounded-full">
+                      <Users className="w-3.5 h-3.5" />
+                      {t.listing.maxGuests} {p.max_capacity} {t.listing.people}
+                    </span>
+                  )}
+                  {p.driver_name && (
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-jungle-100 bg-jungle-700/50 px-3 py-1.5 rounded-full">
+                      <Users className="w-3.5 h-3.5" />
+                      {p.driver_name}
+                    </span>
+                  )}
+                  {p.driver_phone && (
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-jungle-100 bg-jungle-700/50 px-3 py-1.5 rounded-full">
+                      <Phone className="w-3.5 h-3.5" />
+                      {p.driver_phone}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {p.description && (
+                <div>
+                  <h2 className="font-semibold text-gray-900 mb-3">
+                    {t.listing.aboutThis} {t.types.transfer.toLowerCase()}
+                  </h2>
+                  <p className="text-gray-600 leading-relaxed whitespace-pre-line">{p.description}</p>
+                </div>
+              )}
+
+              {/* Amenities / highlights */}
+              {p.amenities.length > 0 && (() => {
+                const groups = groupAmenities(p.amenities, p.type)
+                if (groups.length === 0) return null
+                return (
+                  <div>
+                    <h2 className="font-semibold text-gray-900 mb-5">{t.listing.whatsIncluded}</h2>
+                    <div className="space-y-6">
+                      {groups.map(group => (
+                        <div key={group.category}>
+                          <p className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                            <span>{group.emoji}</span>{group.category}
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {group.items.map(item => (
+                              <div key={item} className="flex items-center gap-2 text-sm text-gray-600">
+                                <CheckCircle2 className="w-4 h-4 text-jungle-500 flex-shrink-0" />
+                                {item}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Routes / variants */}
+              {variants.length > 0 && (
+                <>
+                  <hr className="border-gray-100" />
+                  <ListingVariants variants={variants} propertyType={p.type} onBook={id => openBooking({ variantId: id })} />
+                </>
+              )}
+            </div>
+
+            {/* Right sidebar: booking form */}
+            <div className="lg:col-span-1">
+              <PublicBookingForm
+                property={p}
+                variants={variants}
+                triggerVariantId={triggerVariantId}
+                triggerDate={triggerDate}
+              />
+            </div>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    )
+  }
+
+  // ── Non-transfer layout ──
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -98,15 +237,6 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 {p.location}, {p.island}
               </p>
 
-              {/* Transfer route */}
-              {p.type === 'transfer' && p.transfer_from && p.transfer_to && (
-                <div className="flex items-center gap-2 mt-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-xl w-fit">
-                  <span>{p.transfer_from}</span>
-                  <ArrowRight className="w-4 h-4 text-sunset-500 flex-shrink-0" />
-                  <span>{p.transfer_to}</span>
-                </div>
-              )}
-
               <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-600">
                 {p.max_capacity && (
                   <span className="flex items-center gap-1.5">
@@ -114,28 +244,10 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                     {t.listing.maxGuests} {p.max_capacity} {p.type === 'stay' ? t.listing.guests : t.listing.people}
                   </span>
                 )}
-                {p.distance_km && (
-                  <span className="flex items-center gap-1.5">
-                    <Route className="w-4 h-4 text-gray-400" />
-                    {p.distance_km} km
-                  </span>
-                )}
-                {p.duration_hours && p.type === 'transfer' && (
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    ±{p.duration_hours < 1 ? `${p.duration_hours * 60} min` : `${p.duration_hours} h`}
-                  </span>
-                )}
-                {p.duration && p.type !== 'transfer' && (
+                {p.duration && (
                   <span className="flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-gray-400" />
                     {p.duration}
-                  </span>
-                )}
-                {p.type === 'transfer' && p.english_speaking && (
-                  <span className="flex items-center gap-1.5 text-jungle-700 font-medium">
-                    <Languages className="w-4 h-4 text-jungle-500" />
-                    {t.listing.englishSpeaking}
                   </span>
                 )}
               </div>

@@ -92,10 +92,21 @@ export default function ListingsGrid({ properties }: { properties: Property[] })
             )}
 
             <div className="mt-auto pt-3 flex items-center justify-between">
-              <span className="text-[11px] text-gray-400 capitalize">{p.type}</span>
+              <span className="text-[11px] text-gray-400 capitalize">
+                {t.types[p.type as keyof typeof t.types] ?? p.type}
+              </span>
               <div className="text-right">
-                <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
-                <span className="text-xs text-gray-400"> / {displayUnit(p.price_unit, p.type)}</span>
+                {p.type === 'transfer' ? (
+                  <>
+                    <span className="text-xs text-gray-400">{t.listing.fromPrice?.split('—')[0]?.trim() ?? 'from'} </span>
+                    <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+                    <span className="text-xs text-gray-400"> / {displayUnit(p.price_unit, p.type)}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
