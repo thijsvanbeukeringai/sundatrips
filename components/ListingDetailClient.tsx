@@ -11,6 +11,7 @@ import PublicAvailabilityCalendar from '@/components/PublicAvailabilityCalendar'
 import ActivityDatePicker from '@/components/ActivityDatePicker'
 import ListingVariants from '@/components/ListingVariants'
 import ListingGallery from '@/components/ListingGallery'
+import ActivityGallery from '@/components/ActivityGallery'
 import PublicBookingForm from '@/components/PublicBookingForm'
 import StayBookingSection from '@/components/StayBookingSection'
 import Navbar from '@/components/Navbar'
@@ -346,7 +347,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
           </Link>
         </div>
 
-        <ListingGallery images={p.images} name={p.name} />
+        <ListingGallery images={isActivity ? p.images.slice(0, 1) : p.images} name={p.name} />
 
         <div className={`max-w-5xl mx-auto px-4 sm:px-6 py-10 ${p.type === 'stay' ? '' : 'grid lg:grid-cols-3 gap-10'}`}>
 
@@ -416,6 +417,14 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 </h2>
                 <p className="text-gray-600 leading-relaxed whitespace-pre-line">{p.description}</p>
               </div>
+            )}
+
+            {/* Photo gallery — activities/trips with multiple images */}
+            {isActivity && p.images.length > 1 && (
+              <>
+                <hr className="border-gray-100" />
+                <ActivityGallery images={p.images} name={p.name} />
+              </>
             )}
 
             {/* Amenities */}

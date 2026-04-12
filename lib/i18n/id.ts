@@ -350,6 +350,7 @@ export const id: Translations = {
     pickupHotelPH:   'Nama hotel atau alamat Anda…',
     hotelPickup:     'Penjemputan hotel termasuk',
     selectSlotFirst: 'Pilih tanggal dan slot waktu di bawah terlebih dahulu',
+    photos:          'Foto',
     submit:          'Kirim permintaan pemesanan',
     submitting:      'Mengirim…',
     successTitle:    'Permintaan terkirim!',

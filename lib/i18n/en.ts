@@ -348,6 +348,7 @@ export const en = {
     pickupHotelPH:   'Your hotel name or address…',
     hotelPickup:     'Hotel pickup included',
     selectSlotFirst: 'Select a date and time slot below first',
+    photos:          'Photos',
     submit:          'Send booking request',
     submitting:      'Sending…',
     successTitle:    'Request sent!',
