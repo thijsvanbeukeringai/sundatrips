@@ -430,6 +430,10 @@ export async function acceptPartnerBooking(bookingId: string) {
     const driverName  = variant?.driver_name  || property?.driver_name  || ''
     const driverPhone = variant?.driver_phone || property?.driver_phone || ''
 
+    // For transfers: use the customer's pickup address as the "from" location
+    const pickupAddress = booking.notes?.match(/Pickup: (.+)/)?.[1] ?? ''
+    const transferFrom  = pickupAddress || property?.transfer_from || ''
+
     const dateFormatted = new Date(booking.check_in).toLocaleDateString('en-GB', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     })
@@ -445,12 +449,12 @@ export async function acceptPartnerBooking(bookingId: string) {
         serviceType:   property?.type ?? '',
         date:          dateFormatted,
         pickupTime:    booking.pickup_time ?? '',
-        pickupAddress: booking.notes?.match(/Pickup: (.+)/)?.[1] ?? '',
+        pickupAddress,
         location:      property?.location ?? '',
         island:        property?.island ?? '',
         guestsCount:   String(booking.guests_count),
         amount:        `€${booking.base_amount}`,
-        transferFrom:  property?.transfer_from ?? '',
+        transferFrom,
         transferTo:    property?.transfer_to ?? '',
         driverName,
         driverPhone,

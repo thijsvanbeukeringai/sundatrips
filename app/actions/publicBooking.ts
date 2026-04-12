@@ -107,7 +107,7 @@ export async function createPublicBooking(input: PublicBookingInput): Promise<{ 
         island:        property?.island ?? '',
         guestsCount:   String(input.guests_count),
         amount:        `€${input.base_amount}`,
-        transferFrom:  property?.transfer_from ?? '',
+        transferFrom:  input.notes?.match(/Pickup: (.+)/)?.[1] || property?.transfer_from || '',
         transferTo:    property?.transfer_to ?? '',
         pickupAddress: input.notes?.match(/Pickup: (.+)/)?.[1] ?? '',
         notes:         input.notes ?? '',
