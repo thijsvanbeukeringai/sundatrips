@@ -371,6 +371,13 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
                 <input name="duration" type="text" defaultValue={property?.duration ?? ''} placeholder={t.form.durationLabelPH} className={inputClass} />
                 <p className="text-[11px] text-gray-400 mt-1">{t.form.durationLabelHelper}</p>
               </div>
+              <label className="flex items-center gap-3 cursor-pointer pt-1">
+                <input type="checkbox" name="pickup_available" defaultChecked={property?.pickup_available ?? false} className="w-4 h-4 rounded border-gray-300 text-jungle-600 focus:ring-jungle-600" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{t.form.pickupAvailable ?? 'Hotel pickup available'}</p>
+                  <p className="text-xs text-gray-400">{t.form.pickupAvailableHelper ?? 'Guests can enter their hotel for pickup'}</p>
+                </div>
+              </label>
             </>
           )}
 

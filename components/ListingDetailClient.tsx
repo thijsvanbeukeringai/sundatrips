@@ -383,6 +383,12 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                     {p.duration}
                   </span>
                 )}
+                {p.pickup_available && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    {t.listing.hotelPickup ?? 'Hotel pickup included'}
+                  </span>
+                )}
               </div>
             </div>
 

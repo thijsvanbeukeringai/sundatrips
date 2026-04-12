@@ -40,6 +40,8 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const l = t.listing
   const isStay     = property.type === 'stay'
   const isTransfer = property.type === 'transfer'
+  const isActivity = property.type === 'activity' || property.type === 'trip'
+  const hasPickup  = isActivity && property.pickup_available
   const activeVariants = variants.filter(v => v.is_active)
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -197,7 +199,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
       base_amount:  amount,
       notes:        [
         !isStay && variant ? `Option: ${variant.name}` : '',
-        isCustomRoute && customFrom ? `Pickup: ${customFrom}` : (isTransfer && pickupAddress ? `Pickup: ${pickupAddress}` : ''),
+        isCustomRoute && customFrom ? `Pickup: ${customFrom}` : ((isTransfer || hasPickup) && pickupAddress ? `Pickup: ${pickupAddress}` : ''),
         isCustomRoute && customTo ? `Dropoff: ${customTo}` : '',
         isCustomRoute && customDistanceKm ? `Distance: ${customDistanceKm} km` : '',
         message,
@@ -497,6 +499,18 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
                     type="text"
                     required
                     placeholder={l.pickupAddressPH ?? 'Hotel name or address…'}
+                    value={pickupAddress}
+                    onChange={e => setPickupAddress(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              )}
+              {hasPickup && (
+                <div>
+                  <label className={labelClass}>{l.pickupHotel ?? 'Hotel / pickup location'}</label>
+                  <input
+                    type="text"
+                    placeholder={l.pickupHotelPH ?? 'Your hotel name or address…'}
                     value={pickupAddress}
                     onChange={e => setPickupAddress(e.target.value)}
                     className={inputClass}

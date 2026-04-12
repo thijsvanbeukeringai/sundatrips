@@ -89,6 +89,8 @@ export interface Property {
   english_speaking: boolean
   driver_name:      string | null
   driver_phone:     string | null
+  // activity/trip pickup
+  pickup_available: boolean
   created_at: string
   updated_at: string
 }

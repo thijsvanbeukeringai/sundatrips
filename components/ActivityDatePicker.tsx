@@ -113,16 +113,25 @@ export default function ActivityDatePicker({ blocks, slots, durationHours, maxCa
             const isBlocked  = isDateBlocked(dateStr)
             const isSel      = selected === dateStr
             const dow        = ((date.getDay() + 6) % 7) + 1  // 1=Mon…7=Sun
-            const hasSlots   = slots.some(s => s.days_of_week?.includes(dow) !== false)
+            const daySlots   = slots.filter(s => s.days_of_week?.includes(dow) !== false)
+            const hasSlots   = daySlots.length > 0
             const unavailable = isBlocked || (!hasSlots && slots.length > 0)
+
+            // Check if any slot on this day has limited or no spots
+            const allFull = hasSlots && maxCapacity
+              ? daySlots.every(s => slotSpotsLeft(s.id, dateStr) === 0)
+              : false
+            const someLimited = hasSlots && maxCapacity
+              ? daySlots.some(s => { const sp = slotSpotsLeft(s.id, dateStr); return sp > 0 && sp < maxCapacity })
+              : false
 
             return (
               <button
                 key={dateStr}
-                disabled={isPast || unavailable}
+                disabled={isPast || unavailable || allFull}
                 onClick={() => handleDateClick(dateStr)}
                 className={`relative h-12 border-b border-r border-gray-50 last:border-r-0 flex flex-col items-center justify-center gap-0.5 transition-colors
-                  ${isPast || unavailable ? 'opacity-30 cursor-not-allowed' : 'hover:bg-jungle-50 cursor-pointer'}
+                  ${isPast || unavailable || allFull ? 'opacity-30 cursor-not-allowed' : 'hover:bg-jungle-50 cursor-pointer'}
                   ${isSel ? 'bg-jungle-800' : ''}
                 `}
               >
@@ -131,11 +140,11 @@ export default function ActivityDatePicker({ blocks, slots, durationHours, maxCa
                 `}>
                   {date.getDate()}
                 </span>
-                {!isPast && !unavailable && (
-                  <span className={`w-1.5 h-1.5 rounded-full ${isSel ? 'bg-white/60' : 'bg-emerald-400'}`} />
+                {!isPast && !unavailable && !allFull && (
+                  <span className={`w-1.5 h-1.5 rounded-full ${isSel ? 'bg-white/60' : someLimited ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                 )}
-                {!isPast && unavailable && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                {!isPast && (unavailable || allFull) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
                 )}
               </button>
             )
@@ -190,8 +199,10 @@ export default function ActivityDatePicker({ blocks, slots, durationHours, maxCa
                     {slot.start_time}
                     {end && <span className={`block text-xs font-normal ${isFull ? 'text-gray-300' : isPicked ? 'text-white/70' : 'text-gray-400'}`}>{t.listing.until} {end}</span>}
                     {isFull && <span className="block text-[10px] font-bold text-red-400">{t.listing.fullyBooked}</span>}
-                    {!isFull && spots < (maxCapacity ?? 99) && spots > 0 && (
-                      <span className={`block text-[10px] font-normal ${isPicked ? 'text-white/60' : 'text-amber-500'}`}>{spots} {t.listing.spotsLeft}</span>
+                    {!isFull && maxCapacity && (
+                      <span className={`block text-[10px] font-normal ${isPicked ? 'text-white/60' : spots < maxCapacity ? 'text-amber-500' : 'text-gray-400'}`}>
+                        {spots}/{maxCapacity} {t.listing.spotsAvailable ?? 'spots'}
+                      </span>
                     )}
                   </span>
                   {isPicked && <CheckCircle2 className="w-4 h-4 ml-auto flex-shrink-0" />}
@@ -214,6 +225,7 @@ export default function ActivityDatePicker({ blocks, slots, durationHours, maxCa
 
       <div className="flex gap-5 text-xs text-gray-500">
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" /> {t.calendar.available}</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" /> {t.calendar.limited ?? 'Limited'}</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block" /> {t.calendar.fullyBooked}</span>
       </div>
     </div>

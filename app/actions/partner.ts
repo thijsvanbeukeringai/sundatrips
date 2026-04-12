@@ -303,10 +303,11 @@ export async function createPartnerService(_prevState: unknown, formData: FormDa
     transfer_from:    (formData.get('transfer_from') as string) || null,
     transfer_to:      (formData.get('transfer_to') as string) || null,
     distance_km:      formData.get('distance_km') ? parseFloat(formData.get('distance_km') as string) : null,
-    english_speaking: formData.get('english_speaking') === 'on',
-    driver_name:      (formData.get('driver_name') as string) || null,
-    driver_phone:     (formData.get('driver_phone') as string) || null,
-    price_per_km:     formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
+    english_speaking:  formData.get('english_speaking') === 'on',
+    driver_name:       (formData.get('driver_name') as string) || null,
+    driver_phone:      (formData.get('driver_phone') as string) || null,
+    price_per_km:      formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
+    pickup_available:  formData.get('pickup_available') === 'on',
   })
 
   if (error) return { error: error.message }
@@ -343,10 +344,11 @@ export async function updatePartnerService(_prevState: unknown, formData: FormDa
       transfer_from:    (formData.get('transfer_from') as string) || null,
       transfer_to:      (formData.get('transfer_to') as string) || null,
       distance_km:      formData.get('distance_km') ? parseFloat(formData.get('distance_km') as string) : null,
-      english_speaking: formData.get('english_speaking') === 'on',
-      driver_name:      (formData.get('driver_name') as string) || null,
-      driver_phone:     (formData.get('driver_phone') as string) || null,
-      price_per_km:     formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
+      english_speaking:  formData.get('english_speaking') === 'on',
+      driver_name:       (formData.get('driver_name') as string) || null,
+      driver_phone:      (formData.get('driver_phone') as string) || null,
+      price_per_km:      formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
+      pickup_available:  formData.get('pickup_available') === 'on',
     })
     .eq('id', id)
     .eq('owner_id', user.id)
