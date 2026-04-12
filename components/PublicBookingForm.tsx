@@ -43,7 +43,8 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const isStay     = property.type === 'stay'
   const isTransfer = property.type === 'transfer'
   const isActivity = property.type === 'activity' || property.type === 'trip'
-  const hasPickup  = isActivity && property.pickup_available
+  const hasPickup      = isActivity && property.pickup_available
+  const hasPrivateTour = isActivity && property.private_tour_available && property.private_tour_price
   const activeVariants = variants.filter(v => v.is_active)
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -67,6 +68,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const [pickupAddress, setPickupAddress] = useState('')
   const [maxSpots, setMaxSpots] = useState<number | null>(null)
   const [slotTime, setSlotTime] = useState<string | null>(null)
+  const [isPrivateTour, setIsPrivateTour] = useState(false)
 
   // Custom route (transfer)
   const [isCustomRoute,  setIsCustomRoute]  = useState(false)
@@ -167,13 +169,15 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
 
   // Pricing
   const displayVariant    = isStay ? selectedVariant : variant
-  const displayPrice      = isCustomRoute ? 0 : (displayVariant ? displayVariant.price_per_unit : property.price_per_unit)
-  const displayUnit       = displayVariant ? displayVariant.price_unit     : property.price_unit
-  const amount            = isCustomRoute
-    ? customPriceIDR
-    : isStay
-      ? calcAmount(property, selectedVariant ?? null, checkIn, checkOut, guests)
-      : calcAmount(property, variant, isStay ? checkIn : date, isStay ? checkOut : date, guests)
+  const displayPrice      = isPrivateTour ? (property.private_tour_price ?? 0) : isCustomRoute ? 0 : (displayVariant ? displayVariant.price_per_unit : property.price_per_unit)
+  const displayUnit       = isPrivateTour ? 'group' : (displayVariant ? displayVariant.price_unit : property.price_unit)
+  const amount            = isPrivateTour
+    ? (property.private_tour_price ?? 0)
+    : isCustomRoute
+      ? customPriceIDR
+      : isStay
+        ? calcAmount(property, selectedVariant ?? null, checkIn, checkOut, guests)
+        : calcAmount(property, variant, isStay ? checkIn : date, isStay ? checkOut : date, guests)
 
   const unitLabel: Record<string, string> = {
     night:   `/ ${t.common.night}`,
@@ -182,6 +186,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
     day:     `/ ${t.common.day}`,
     trip:    `/ ${t.common.trip}`,
     vehicle: `/ ${t.common.vehicle}`,
+    group:   `/ ${t.common.group ?? 'group'}`,
   }
 
   // Whether the form can be submitted
@@ -211,6 +216,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
       notes:        [
         !isStay && variant ? `Option: ${variant.name}` : '',
         slotTime ? `Time slot: ${slotTime}` : '',
+        isPrivateTour ? 'Private tour' : '',
         isCustomRoute && customFrom ? `Pickup: ${customFrom}` : ((isTransfer || hasPickup) && pickupAddress ? `Pickup: ${pickupAddress}` : ''),
         isCustomRoute && customTo ? `Dropoff: ${customTo}` : '',
         isCustomRoute && customDistanceKm ? `Distance: ${customDistanceKm} km` : '',
@@ -564,14 +570,33 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
               {isTransfer ? l.passengersCount : l.guestsCount}
             </label>
             <input
-              type="number" required min={1} max={maxSpots ?? property.max_capacity ?? 99}
-              value={guests} onChange={e => setGuests(Math.min(parseInt(e.target.value) || 1, maxSpots ?? property.max_capacity ?? 99))}
+              type="number" required min={1} max={isPrivateTour ? (property.max_capacity ?? 99) : (maxSpots ?? property.max_capacity ?? 99)}
+              value={guests} onChange={e => setGuests(Math.min(parseInt(e.target.value) || 1, isPrivateTour ? (property.max_capacity ?? 99) : (maxSpots ?? property.max_capacity ?? 99)))}
               className={inputClass}
             />
-            {maxSpots != null && maxSpots < (property.max_capacity ?? 99) && (
+            {maxSpots != null && !isPrivateTour && maxSpots < (property.max_capacity ?? 99) && (
               <p className="text-[11px] text-amber-500 mt-1">{maxSpots} {l.spotsAvailable ?? 'spots available'}</p>
             )}
           </div>
+
+          {/* Private tour toggle — only when spots are available */}
+          {hasPrivateTour && (maxSpots == null || maxSpots > 0) && (
+            <label className="flex items-center gap-3 cursor-pointer bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <input
+                type="checkbox"
+                checked={isPrivateTour}
+                onChange={e => setIsPrivateTour(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-jungle-600 focus:ring-jungle-600"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-800">{l.privateTour ?? 'Private tour'}</p>
+                <p className="text-xs text-gray-500">
+                  {l.privateTourPrice ?? 'Fixed price for your group'}: {' '}
+                  <span className="font-semibold text-jungle-700">Rp {(property.private_tour_price ?? 0).toLocaleString('id-ID')}</span>
+                </p>
+              </div>
+            </label>
+          )}
 
           {/* Guest details */}
           <div>

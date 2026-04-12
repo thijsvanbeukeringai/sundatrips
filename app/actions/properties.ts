@@ -40,7 +40,9 @@ export async function createProperty(_prevState: unknown, formData: FormData) {
     driver_phone:      (formData.get('driver_phone') as string) || null,
     venue_id:          (formData.get('venue_id') as string) || null,
     price_per_km:      formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
-    pickup_available:  formData.get('pickup_available') === 'on',
+    pickup_available:        formData.get('pickup_available') === 'on',
+    private_tour_available:  formData.get('private_tour_available') === 'on',
+    private_tour_price:      formData.get('private_tour_price') ? parseFloat(formData.get('private_tour_price') as string) : null,
   })
 
   if (error) return { error: error.message }
@@ -81,7 +83,9 @@ export async function updateProperty(_prevState: unknown, formData: FormData) {
       driver_name:       (formData.get('driver_name') as string) || null,
       driver_phone:      (formData.get('driver_phone') as string) || null,
       price_per_km:      formData.get('price_per_km') ? parseFloat(formData.get('price_per_km') as string) : null,
-      pickup_available:  formData.get('pickup_available') === 'on',
+      pickup_available:        formData.get('pickup_available') === 'on',
+      private_tour_available:  formData.get('private_tour_available') === 'on',
+      private_tour_price:      formData.get('private_tour_price') ? parseFloat(formData.get('private_tour_price') as string) : null,
     })
     .eq('id', id)
     .eq('owner_id', user.id)

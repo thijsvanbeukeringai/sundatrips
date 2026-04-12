@@ -58,6 +58,7 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
   const [estimatedHrs, setEstimatedHrs] = useState<string>(property?.duration_hours ? String(property.duration_hours) : '')
   const [fromCoords, setFromCoords] = useState<{ lat: number; lon: number } | null>(null)
   const [toCoords,   setToCoords]   = useState<{ lat: number; lon: number } | null>(null)
+  const [privateTour, setPrivateTour] = useState(property?.private_tour_available ?? false)
 
   const ALL_TYPES = [
     { value: 'stay',     label: t.form.types.stay },
@@ -378,6 +379,34 @@ export default function PropertyForm({ userId, property, allowedTypes, defaultVe
                   <p className="text-xs text-gray-400">{t.form.pickupAvailableHelper ?? 'Guests can enter their hotel for pickup'}</p>
                 </div>
               </label>
+              <label className="flex items-center gap-3 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  name="private_tour_available"
+                  checked={privateTour}
+                  onChange={e => setPrivateTour(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-jungle-600 focus:ring-jungle-600"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{t.form.privateTour ?? 'Private tour available'}</p>
+                  <p className="text-xs text-gray-400">{t.form.privateTourHelper ?? 'Guests can book the full activity as a private group'}</p>
+                </div>
+              </label>
+              {privateTour && (
+                <div>
+                  <label className={labelClass}>{t.form.privateTourPrice ?? 'Private tour price (Rp)'}</label>
+                  <input
+                    name="private_tour_price"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    defaultValue={property?.private_tour_price ?? ''}
+                    placeholder="1500000"
+                    className={inputClass}
+                  />
+                  <p className="text-[11px] text-gray-400 mt-1">{t.form.privateTourPriceHelper ?? 'Fixed price for the entire group (regardless of group size)'}</p>
+                </div>
+              )}
             </>
           )}
 

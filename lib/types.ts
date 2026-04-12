@@ -91,6 +91,9 @@ export interface Property {
   driver_phone:     string | null
   // activity/trip pickup
   pickup_available: boolean
+  // private tour option
+  private_tour_available: boolean
+  private_tour_price:     number | null
   created_at: string
   updated_at: string
 }
