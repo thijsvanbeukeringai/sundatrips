@@ -25,6 +25,8 @@ export async function getPartnerProperties() {
 
 export async function getPartnerBookings(filter: 'upcoming' | 'past' | 'all' = 'upcoming') {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -35,6 +37,7 @@ export async function getPartnerBookings(filter: 'upcoming' | 'past' | 'all' = '
       property:properties(id, name, type, location, island),
       variant:listing_variants(name, price_per_unit, price_unit)
     `)
+    .eq('owner_id', user.id)
     .order('check_in', { ascending: filter !== 'past' })
 
   if (filter === 'upcoming') query = query.gte('check_in', today).neq('status', 'cancelled')
@@ -46,6 +49,9 @@ export async function getPartnerBookings(filter: 'upcoming' | 'past' | 'all' = '
 
 export async function getPartnerBookingById(id: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
   const { data } = await supabase
     .from('bookings')
     .select(`
@@ -54,6 +60,7 @@ export async function getPartnerBookingById(id: string) {
       variant:listing_variants(name, price_per_unit, price_unit)
     `)
     .eq('id', id)
+    .eq('owner_id', user.id)
     .single()
   return data
 }
@@ -62,9 +69,13 @@ export async function getPartnerBookingById(id: string) {
 
 export async function getPartnerCustomers() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
   const { data } = await supabase
     .from('bookings')
     .select('guest_name, guest_email, guest_phone, check_in, status')
+    .eq('owner_id', user.id)
     .neq('status', 'cancelled')
     .order('check_in', { ascending: false })
 
