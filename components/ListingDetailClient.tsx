@@ -52,10 +52,13 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
   const isActivity  = p.type === 'activity' || p.type === 'trip'
   const [triggerVariantId, setTriggerVariantId] = useState<string | null>(null)
   const [triggerDate,      setTriggerDate]      = useState<string | null>(null)
+  const [triggerOpen,      setTriggerOpen]      = useState(0)
 
   function openBooking(opts: { variantId?: string; date?: string }) {
     setTriggerVariantId(opts.variantId ?? null)
     setTriggerDate(opts.date ?? null)
+    // Increment counter to force form to open even without variant/date
+    setTriggerOpen(n => n + 1)
   }
 
   function displayPriceUnit(unit: string, type: string): string {
@@ -245,7 +248,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
 
                         {/* Sibling transfers from the same owner */}
                         {siblingTransfers.map(s => (
-                          <div key={s.id} className="border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
+                          <Link key={s.id} href={`/listings/${s.id}?book=1`} className="block border border-gray-200 rounded-2xl p-5 hover:border-jungle-200 hover:shadow-md transition-all duration-200">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-gray-900">{s.name}</h3>
@@ -261,12 +264,12 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                                   <span className="font-display text-2xl font-bold text-jungle-800">{formatPriceRaw(s.price_per_unit, lang)}</span>
                                   <span className="text-sm text-gray-400 ml-1">/ {t.common[s.price_unit as keyof typeof t.common] ?? s.price_unit}</span>
                                 </div>
-                                <button type="button" onClick={() => openBooking({})} className="inline-flex items-center gap-1.5 bg-jungle-800 hover:bg-jungle-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
+                                <span className="inline-flex items-center gap-1.5 bg-jungle-800 text-white text-sm font-semibold px-4 py-2.5 rounded-xl">
                                   {t.variants.requestBook}
-                                </button>
+                                </span>
                               </div>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     </div>
@@ -282,6 +285,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 variants={variants}
                 triggerVariantId={triggerVariantId}
                 triggerDate={triggerDate}
+                triggerOpen={triggerOpen}
               />
             </div>
           </div>
@@ -452,6 +456,7 @@ export default function ListingDetailClient({ property: p, availabilityBlocks, t
                 variants={variants}
                 triggerVariantId={triggerVariantId}
                 triggerDate={triggerDate}
+                triggerOpen={triggerOpen}
               />
             </div>
           )}

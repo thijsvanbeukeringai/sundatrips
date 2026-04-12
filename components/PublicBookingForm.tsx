@@ -17,6 +17,7 @@ interface Props {
   variants:          ListingVariant[]
   triggerVariantId?: string | null
   triggerDate?:      string | null
+  triggerOpen?:      number
 }
 
 function diffNights(a: string, b: string) {
@@ -34,7 +35,7 @@ function calcAmount(property: Property, variant: AvailableVariant | ListingVaria
   return price * Math.max(1, guests)
 }
 
-export default function PublicBookingForm({ property, variants, triggerVariantId, triggerDate }: Props) {
+export default function PublicBookingForm({ property, variants, triggerVariantId, triggerDate, triggerOpen }: Props) {
   const { t, lang } = useI18n()
   const l = t.listing
   const isStay     = property.type === 'stay'
@@ -106,9 +107,9 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
   const [phone,   setPhone]   = useState('')
   const [message, setMessage] = useState('')
 
-  // External trigger from variant / slot buttons
+  // External trigger from variant / slot / route buttons
   useEffect(() => {
-    if (!triggerVariantId && !triggerDate) return
+    if (!triggerVariantId && !triggerDate && !triggerOpen) return
     if (triggerVariantId && !isStay) {
       const v = activeVariants.find(v => v.id === triggerVariantId)
       if (v) setVariant(v)
@@ -117,7 +118,7 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
     setOpen(true)
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerVariantId, triggerDate])
+  }, [triggerVariantId, triggerDate, triggerOpen])
 
   // Fetch room availability when both dates are filled (stay only)
   useEffect(() => {
