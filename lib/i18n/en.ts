@@ -327,7 +327,7 @@ export const en = {
     until:           'until',
     fullyBooked:     'Fully booked',
     spotsLeft:       'left',
-    spotsAvailable:  'spots',
+    spotsAvailable:  'spots available',
     bookNow:         'Request to Book',
     bookingForm:     'Complete your booking request',
     checkIn:         'Check-in',

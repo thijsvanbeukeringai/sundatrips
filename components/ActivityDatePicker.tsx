@@ -201,7 +201,7 @@ export default function ActivityDatePicker({ blocks, slots, durationHours, maxCa
                     {isFull && <span className="block text-[10px] font-bold text-red-400">{t.listing.fullyBooked}</span>}
                     {!isFull && maxCapacity && (
                       <span className={`block text-[10px] font-normal ${isPicked ? 'text-white/60' : spots < maxCapacity ? 'text-amber-500' : 'text-gray-400'}`}>
-                        {spots}/{maxCapacity} {t.listing.spotsAvailable ?? 'spots'}
+                        {spots}/{maxCapacity} {t.listing.spotsAvailable ?? 'spots available'}
                       </span>
                     )}
                   </span>

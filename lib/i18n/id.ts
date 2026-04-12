@@ -329,7 +329,7 @@ export const id: Translations = {
     until:           'sampai',
     fullyBooked:     'Penuh',
     spotsLeft:       'tersisa',
-    spotsAvailable:  'tempat',
+    spotsAvailable:  'tempat tersedia',
     bookNow:         'Minta Pemesanan',
     bookingForm:     'Lengkapi permintaan pemesanan',
     checkIn:         'Check-in',
