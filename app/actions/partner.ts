@@ -449,21 +449,22 @@ export async function acceptPartnerBooking(bookingId: string) {
 
   if (updateErr) return { error: updateErr.message }
 
-  // If private tour: block all spots for this time slot on this date
+  // Update slot availability when booking is confirmed
   const isPrivateTour = booking.notes?.includes('Private tour') ?? false
-  if (isPrivateTour) {
-    const timeSlotMatch = booking.notes?.match(/Time slot: (\d{2}:\d{2})/)
-    const startTime = timeSlotMatch?.[1]
-    if (startTime) {
-      // Find the time_slot_id by start_time and property_id
-      const { data: slot } = await supabase
-        .from('time_slots')
-        .select('id')
-        .eq('property_id', booking.property_id)
-        .eq('start_time', startTime)
-        .single()
+  const timeSlotMatch = booking.notes?.match(/Time slot: (\d{2}:\d{2})/)
+  const startTime = timeSlotMatch?.[1]
 
-      if (slot) {
+  if (startTime) {
+    const { data: slot } = await supabase
+      .from('time_slots')
+      .select('id')
+      .eq('property_id', booking.property_id)
+      .eq('start_time', startTime)
+      .single()
+
+    if (slot) {
+      if (isPrivateTour) {
+        // Private tour: block entire slot
         await supabase
           .from('slot_availability')
           .upsert({
@@ -472,6 +473,31 @@ export async function acceptPartnerBooking(bookingId: string) {
             time_slot_id:    slot.id,
             date:            booking.check_in,
             available_spots: 0,
+          }, { onConflict: 'time_slot_id,date' })
+      } else {
+        // Regular booking: reduce available spots by guests_count
+        const property = (booking as any).property
+        const maxCapacity = property?.max_capacity ?? 99
+
+        // Get current available spots
+        const { data: existing } = await supabase
+          .from('slot_availability')
+          .select('available_spots')
+          .eq('time_slot_id', slot.id)
+          .eq('date', booking.check_in)
+          .single()
+
+        const currentSpots = existing?.available_spots ?? maxCapacity
+        const newSpots = Math.max(0, currentSpots - booking.guests_count)
+
+        await supabase
+          .from('slot_availability')
+          .upsert({
+            property_id:     booking.property_id,
+            owner_id:        user.id,
+            time_slot_id:    slot.id,
+            date:            booking.check_in,
+            available_spots: newSpots,
           }, { onConflict: 'time_slot_id,date' })
       }
     }
