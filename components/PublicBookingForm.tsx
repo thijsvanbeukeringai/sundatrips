@@ -592,7 +592,10 @@ export default function PublicBookingForm({ property, variants, triggerVariantId
                 <p className="text-sm font-semibold text-gray-800">{l.privateTour ?? 'Private tour'}</p>
                 <p className="text-xs text-gray-500">
                   {l.privateTourPrice ?? 'Fixed price for your group'}: {' '}
-                  <span className="font-semibold text-jungle-700">Rp {(property.private_tour_price ?? 0).toLocaleString('id-ID')}</span>
+                  <span className="font-semibold text-jungle-700">Rp {Math.round(property.private_tour_price ?? 0).toLocaleString('id-ID')}</span>
+                  {property.max_capacity && (
+                    <span className="text-gray-400"> · max {property.max_capacity} {t.listing.people ?? 'people'}</span>
+                  )}
                 </p>
               </div>
             </label>
