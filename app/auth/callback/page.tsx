@@ -19,17 +19,41 @@ export default function AuthCallbackPage() {
     const impersonate = params.get('impersonate') === '1'
 
     async function handleCallback() {
-      // The hash fragment contains access_token, refresh_token, etc.
-      // supabase.auth.getSession() will automatically parse the hash
-      // and set the session if tokens are present.
-      const { data: { session }, error } = await supabase.auth.getSession()
+      // Parse tokens from the hash fragment manually
+      const hash = window.location.hash.substring(1) // remove the #
+      const hashParams = new URLSearchParams(hash)
+      const accessToken  = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
 
-      if (error) {
-        console.error('[auth/callback] Error getting session:', error)
-        router.replace('/login?error=auth_callback_failed')
-        return
+      if (accessToken && refreshToken) {
+        // Set the session explicitly using the tokens from the hash
+        const { data: { session }, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+
+        if (error) {
+          console.error('[auth/callback] Error setting session:', error)
+          router.replace('/login?error=auth_callback_failed')
+          return
+        }
+
+        if (session) {
+          if (!impersonate) {
+            const isInvite  = !!session.user.app_metadata?.invited_at
+            const onboarded = !!session.user.user_metadata?.onboarded
+            if (isInvite && !onboarded) {
+              router.replace('/onboarding')
+              return
+            }
+          }
+          router.replace(next)
+          return
+        }
       }
 
+      // Fallback: check if there's already a session (e.g. PKCE flow)
+      const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         if (!impersonate) {
           const isInvite  = !!session.user.app_metadata?.invited_at
@@ -43,30 +67,8 @@ export default function AuthCallbackPage() {
         return
       }
 
-      // If no session yet, listen for auth state change (fallback)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, newSession) => {
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            if (!newSession) return
-            if (!impersonate) {
-              const isInvite  = !!newSession.user.app_metadata?.invited_at
-              const onboarded = !!newSession.user.user_metadata?.onboarded
-              if (isInvite && !onboarded) {
-                router.replace('/onboarding')
-                return
-              }
-            }
-            router.replace(next)
-            subscription.unsubscribe()
-          }
-        }
-      )
-
-      // Timeout fallback — if nothing happens after 10 seconds, redirect to login
-      setTimeout(() => {
-        subscription.unsubscribe()
-        router.replace('/login?error=auth_callback_timeout')
-      }, 10000)
+      // No tokens and no session — redirect to login
+      router.replace('/login?error=auth_callback_failed')
     }
 
     handleCallback()
