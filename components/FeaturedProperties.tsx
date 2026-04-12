@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
-import { Star, MapPin, Wifi, Waves, Coffee, Heart, Clock, Users, Compass } from 'lucide-react'
+import { Star, MapPin, Wifi, Waves, Coffee, Heart, Clock, Users, Compass, Car, Languages, Route } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Property } from '@/lib/types'
@@ -147,98 +147,129 @@ export default function FeaturedProperties({ properties }: { properties: Propert
                 exit="exit"
                 className="h-full"
               >
-              <Link
-                href={`/listings/${p.id}`}
-                className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
-              >
-                {/* Image */}
-                <div className="relative h-44 overflow-hidden flex-shrink-0 bg-gray-100">
-                  {p.images[0] ? (
-                    <Image
-                      src={p.images[0]}
-                      alt={p.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-jungle-100 to-jungle-200" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-
-                  {p.tag && (
-                    <span className={`absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full ${tagColor(p.tag)}`}>
-                      {p.tag}
+              {p.type === 'transfer' ? (
+                /* ── Transfer: driver profile card ── */
+                <Link
+                  href={`/listings/${p.id}`}
+                  className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-jungle-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
+                >
+                  <div className="relative h-44 overflow-hidden flex-shrink-0 bg-jungle-800">
+                    {p.images[0] ? (
+                      <Image src={p.images[0]} alt={p.name} fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-jungle-700 to-jungle-900 flex items-center justify-center">
+                        <Car className="w-12 h-12 text-white/20" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    <span className="absolute top-3 left-3 flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full bg-jungle-800/90 text-white backdrop-blur-sm">
+                      <Car className="w-3 h-3" />{t.types.transfer}
                     </span>
-                  )}
-                  <button
-                    onClick={e => e.preventDefault()}
-                    className="absolute top-3 right-3 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
-                  >
-                    <Heart className="w-3.5 h-3.5 text-gray-400 hover:text-red-500 transition-colors" />
-                  </button>
-
-                  {p.duration && (
-                    <span className="absolute bottom-3 left-3 flex items-center gap-1 text-[10px] font-semibold text-white bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
-                      <Clock className="w-3 h-3" />
-                      {p.duration}
+                    <span className="absolute bottom-3 right-3 text-[10px] font-bold text-white bg-jungle-800/80 backdrop-blur-sm px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      {p.island}
                     </span>
-                  )}
-                  <span className="absolute bottom-3 right-3 text-[10px] font-bold text-white bg-jungle-800/80 backdrop-blur-sm px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    {p.island}
-                  </span>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 flex flex-col flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-jungle-800 transition-colors leading-snug text-sm truncate">
-                        {p.name}
-                      </h3>
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 group-hover:text-jungle-800 transition-colors leading-snug text-sm truncate">{p.name}</h3>
                       <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                        <MapPin className="w-3 h-3 flex-shrink-0" />
-                        {p.location}
+                        <MapPin className="w-3 h-3 flex-shrink-0" />{p.location}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                      <span className="text-sm font-bold text-gray-800">New</span>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {p.english_speaking && (
+                        <span className="flex items-center gap-1 text-[11px] text-jungle-700 bg-jungle-50 px-2 py-1 rounded-md leading-none whitespace-nowrap">
+                          <Languages className="w-3 h-3" />English
+                        </span>
+                      )}
+                      {p.max_capacity && (
+                        <span className="flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md leading-none whitespace-nowrap">
+                          <Users className="w-3 h-3" />Max {p.max_capacity}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md leading-none whitespace-nowrap">
+                        <Route className="w-3 h-3" />Custom routes
+                      </span>
+                    </div>
+                    <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-50">
+                      <span className="text-[11px] text-gray-400">{t.types.transfer}</span>
+                      <div className="text-right">
+                        <span className="text-xs text-gray-400">from </span>
+                        <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Amenities — always one fixed row so all cards stay the same height */}
-                  <div className="mt-3 flex gap-1.5 overflow-hidden h-6">
-                    {p.amenities.slice(0, 2).map((a) => (
-                      <span key={a} className="text-[11px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md leading-none whitespace-nowrap flex-shrink-0">
-                        {a}
-                      </span>
-                    ))}
-                    {p.amenities.length > 2 && (
-                      <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-1 rounded-md leading-none whitespace-nowrap flex-shrink-0">
-                        +{p.amenities.length - 2}
+                </Link>
+              ) : (
+                /* ── Default card ── */
+                <Link
+                  href={`/listings/${p.id}`}
+                  className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
+                >
+                  <div className="relative h-44 overflow-hidden flex-shrink-0 bg-gray-100">
+                    {p.images[0] ? (
+                      <Image src={p.images[0]} alt={p.name} fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-jungle-100 to-jungle-200" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                    {p.tag && (
+                      <span className={`absolute top-3 left-3 text-[11px] font-bold px-2.5 py-1 rounded-full ${tagColor(p.tag)}`}>{p.tag}</span>
+                    )}
+                    <button onClick={e => e.preventDefault()} className="absolute top-3 right-3 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors">
+                      <Heart className="w-3.5 h-3.5 text-gray-400 hover:text-red-500 transition-colors" />
+                    </button>
+                    {p.duration && (
+                      <span className="absolute bottom-3 left-3 flex items-center gap-1 text-[10px] font-semibold text-white bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                        <Clock className="w-3 h-3" />{p.duration}
                       </span>
                     )}
+                    <span className="absolute bottom-3 right-3 text-[10px] font-bold text-white bg-jungle-800/80 backdrop-blur-sm px-2 py-0.5 rounded-full uppercase tracking-wider">{p.island}</span>
                   </div>
-
-                  {/* Group size */}
-                  {p.max_capacity && (
-                    <p className="flex items-center gap-1 text-[11px] text-gray-400 mt-2">
-                      <Users className="w-3 h-3" />
-                      Max {p.max_capacity}
-                    </p>
-                  )}
-
-                  {/* Price */}
-                  <div className="mt-auto pt-3 flex items-center justify-between">
-                    <span className="text-[11px] text-gray-400 capitalize">{p.type}</span>
-                    <div className="text-right">
-                      <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
-                      <span className="text-xs text-gray-400"> / {displayUnit(p.price_unit, p.type)}</span>
+                  <div className="p-4 flex flex-col flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-jungle-800 transition-colors leading-snug text-sm truncate">{p.name}</h3>
+                        <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />{p.location}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span className="text-sm font-bold text-gray-800">{t.listings.new}</span>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex gap-1.5 overflow-hidden h-6">
+                      {p.amenities.slice(0, 2).map((a) => (
+                        <span key={a} className="text-[11px] text-gray-500 bg-gray-50 px-2 py-1 rounded-md leading-none whitespace-nowrap flex-shrink-0">{a}</span>
+                      ))}
+                      {p.amenities.length > 2 && (
+                        <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-1 rounded-md leading-none whitespace-nowrap flex-shrink-0">+{p.amenities.length - 2}</span>
+                      )}
+                    </div>
+                    {p.max_capacity && (
+                      <p className="flex items-center gap-1 text-[11px] text-gray-400 mt-2">
+                        <Users className="w-3 h-3" />{t.listings.maxGuests} {p.max_capacity}
+                      </p>
+                    )}
+                    <div className="mt-auto pt-3 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-400 capitalize">
+                        {t.types[p.type as keyof typeof t.types] ?? p.type}
+                      </span>
+                      <div className="text-right">
+                        <span className="font-display text-lg font-bold text-jungle-800">{formatPriceRaw(p.price_per_unit, lang)}</span>
+                        <span className="text-xs text-gray-400"> / {displayUnit(p.price_unit, p.type)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              )}
               </m.div>
             ))}
           </AnimatePresence>
