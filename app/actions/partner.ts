@@ -423,7 +423,7 @@ export async function acceptPartnerBooking(bookingId: string) {
     .from('bookings')
     .select(`
       *,
-      property:properties(name, type, location, island, transfer_from, transfer_to, driver_name, driver_phone),
+      property:properties(name, type, location, island, transfer_from, transfer_to, driver_name, driver_phone, duration, max_capacity, pickup_available, private_tour_available, private_tour_price),
       variant:listing_variants(driver_name, driver_phone)
     `)
     .eq('id', bookingId)
@@ -431,6 +431,13 @@ export async function acceptPartnerBooking(bookingId: string) {
 
   if (fetchErr || !booking) return { error: 'Booking not found' }
   if (booking.status !== 'pending') return { error: 'Booking is not pending' }
+
+  // Fetch partner profile for contact details in confirmation email
+  const { data: partnerProfile } = await supabase
+    .from('profiles')
+    .select('full_name, phone, company_name')
+    .eq('id', user.id)
+    .single()
 
   // Update status to confirmed
   const { error: updateErr } = await supabase
@@ -440,46 +447,100 @@ export async function acceptPartnerBooking(bookingId: string) {
 
   if (updateErr) return { error: updateErr.message }
 
+  // If private tour: block all spots for this time slot on this date
+  const isPrivateTour = booking.notes?.includes('Private tour') ?? false
+  if (isPrivateTour) {
+    const timeSlotMatch = booking.notes?.match(/Time slot: (\d{2}:\d{2})/)
+    const startTime = timeSlotMatch?.[1]
+    if (startTime) {
+      // Find the time_slot_id by start_time and property_id
+      const { data: slot } = await supabase
+        .from('time_slots')
+        .select('id')
+        .eq('property_id', booking.property_id)
+        .eq('start_time', startTime)
+        .single()
+
+      if (slot) {
+        await supabase
+          .from('slot_availability')
+          .upsert({
+            property_id:     booking.property_id,
+            owner_id:        user.id,
+            time_slot_id:    slot.id,
+            date:            booking.check_in,
+            available_spots: 0,
+          }, { onConflict: 'time_slot_id,date' })
+      }
+    }
+  }
+
   // Send confirmation email via Mailgun
   try {
     const { sendMailWithTemplate } = await import('@/lib/mailgun')
     const property = (booking as any).property
     const variant  = (booking as any).variant
 
+    const isActivityType = property?.type === 'activity' || property?.type === 'trip'
+
     // Driver info: prefer variant driver, fallback to property driver
     const driverName  = variant?.driver_name  || property?.driver_name  || ''
     const driverPhone = variant?.driver_phone || property?.driver_phone || ''
 
-    // For transfers: use the customer's pickup address as the "from" location
+    // Parse notes
     const pickupAddress = booking.notes?.match(/Pickup: (.+)/)?.[1] ?? ''
+    const timeSlot      = booking.notes?.match(/Time slot: (.+)/)?.[1] ?? ''
+    const isPrivateTour = booking.notes?.includes('Private tour') ?? false
     const transferFrom  = pickupAddress || property?.transfer_from || ''
 
     const dateFormatted = new Date(booking.check_in).toLocaleDateString('en-GB', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     })
 
-    await sendMailWithTemplate({
-      to: booking.guest_email,
-      subject: `Booking #${booking.booking_number} confirmed — ${property?.name ?? 'Sunda Trips'}`,
-      template: 'trip confirmation',
-      variables: {
-        guestName:     booking.guest_name,
-        bookingNumber: String(booking.booking_number ?? ''),
-        serviceName:   property?.name ?? 'Service',
-        serviceType:   property?.type ?? '',
-        date:          dateFormatted,
+    const templateName = isActivityType ? 'activity confirmed' : 'trip confirmation'
+
+    const variables: Record<string, string> = {
+      guestName:     booking.guest_name,
+      bookingNumber: String(booking.booking_number ?? ''),
+      serviceName:   property?.name ?? 'Service',
+      serviceType:   property?.type ?? '',
+      date:          dateFormatted,
+      location:      property?.location ?? '',
+      island:        property?.island ?? '',
+      guestsCount:   String(booking.guests_count),
+      amount:        `Rp ${Math.round(booking.base_amount).toLocaleString('id-ID')}`,
+      notes:         booking.notes ?? '',
+    }
+
+    if (isActivityType) {
+      Object.assign(variables, {
+        timeSlot,
+        duration:         property?.duration ?? '',
+        privateTour:      isPrivateTour ? 'yes' : 'no',
+        privateTourPrice: isPrivateTour && property?.private_tour_price
+          ? `Rp ${Math.round(property.private_tour_price).toLocaleString('id-ID')}`
+          : '',
+        maxCapacity:      String(property?.max_capacity ?? ''),
+        pickupAddress,
+        partnerName:      partnerProfile?.company_name || partnerProfile?.full_name || '',
+        partnerPhone:     partnerProfile?.phone || '',
+      })
+    } else {
+      Object.assign(variables, {
         pickupTime:    booking.pickup_time ?? '',
         pickupAddress,
-        location:      property?.location ?? '',
-        island:        property?.island ?? '',
-        guestsCount:   String(booking.guests_count),
-        amount:        `Rp ${Math.round(booking.base_amount).toLocaleString('id-ID')}`,
         transferFrom,
         transferTo:    property?.transfer_to ?? '',
         driverName,
         driverPhone,
-        notes:         booking.notes ?? '',
-      },
+      })
+    }
+
+    await sendMailWithTemplate({
+      to: booking.guest_email,
+      subject: `Booking #${booking.booking_number} confirmed — ${property?.name ?? 'Sunda Trips'}`,
+      template: templateName,
+      variables,
     })
   } catch (err: any) {
     console.error('[acceptPartnerBooking] Mailgun error:', err)
