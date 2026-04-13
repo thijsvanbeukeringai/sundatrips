@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ListingVariant } from '@/lib/types'
 
@@ -99,7 +100,9 @@ export async function getAvailableRoomsForBooking(
   checkIn:    string,
   checkOut:   string,
 ): Promise<AvailableVariant[]> {
-  const supabase = await createClient()
+  // Use admin client to bypass RLS — rooms table is owner-only but
+  // public guests need to check availability before booking
+  const supabase = createAdminClient()
 
   const { data: variants } = await supabase
     .from('listing_variants')
