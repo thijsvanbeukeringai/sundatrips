@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native'
+import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { supabase } from '@/lib/supabase'
@@ -115,9 +116,13 @@ export default function Explore() {
 }
 
 function ListingCard({ listing }: { listing: Property }) {
+  const router = useRouter()
   const cover = listing.images?.[0]
   return (
-    <View style={styles.card}>
+    <Pressable
+      style={styles.card}
+      onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
+    >
       {cover ? (
         <Image source={{ uri: cover }} style={styles.cardImage} />
       ) : (
@@ -141,7 +146,7 @@ function ListingCard({ listing }: { listing: Property }) {
           <Text style={styles.cardUnit}>/ {priceUnitLabel(listing.price_unit)}</Text>
         </Text>
       </View>
-    </View>
+    </Pressable>
   )
 }
 

@@ -22,12 +22,17 @@ mobile/
 │   ├── index.tsx             # splash → redirects by audience
 │   ├── (auth)/login.tsx      # partner password login + guest magic link
 │   ├── (customer)/           # customer side (tabs): Explore, My Trips, Account
-│   └── (partner)/            # partner side (tabs): Dashboard, Bookings, Account
+│   ├── (partner)/            # partner side (tabs): Dashboard, Bookings, Account
+│   ├── listing/[id].tsx      # listing detail (gallery, variants, amenities)
+│   └── book/[id].tsx         # booking request form (no payment)
 └── src/
+    ├── components/DatePicker.tsx # horizontal date strip (no native dep)
     ├── contexts/AuthContext.tsx  # session + profile, derives audience (customer | partner)
     ├── lib/supabase.ts           # Supabase client (AsyncStorage session persistence)
+    ├── lib/bookings.ts           # calls the create-booking edge function
     ├── lib/types.ts              # shared domain types (mirror of web lib/types.ts)
     ├── lib/format.ts             # IDR currency formatting (Hermes-safe)
+    ├── lib/dates.ts              # date helpers (Hermes-safe)
     ├── lib/env.ts                # EXPO_PUBLIC_* env access
     └── theme/colors.ts           # brand palette (mirrors tailwind.config.ts)
 ```
@@ -73,8 +78,11 @@ The anon key is safe to ship — RLS protects the data.
 - ✅ Auth: partner password login + guest magic-link
 - ✅ Role-based routing (customer vs partner)
 - ✅ Customer: live listings feed from Supabase, filters, my bookings
+- ✅ Customer: **listing detail** (gallery, variants, amenities) + **booking
+  request flow** (date picker, guests, no payment)
 - ✅ Partner: dashboard KPIs + bookings list
 - ✅ Shared brand theme and domain types
+- ✅ `create-booking` Supabase edge function (booking request + emails)
 
 ## Payments
 
@@ -84,19 +92,51 @@ arrival, or online via another channel). There is **no Stripe / in-app payment
 integration** on the customer side — booking flows submit the booking only and
 never collect card details.
 
+## Backend: the `create-booking` edge function
+
+RLS does not allow anonymous guests to insert into `bookings` directly. So,
+exactly like the web app's `createPublicBooking` (which uses the service-role
+key server-side), booking creation goes through a Supabase **edge function**
+that runs with the service-role key. The mobile app calls it via
+`supabase.functions.invoke('create-booking', …)` — see `src/lib/bookings.ts`.
+
+Source: `supabase/functions/create-booking/index.ts` (in the repo root).
+
+```bash
+# Deploy (run from the repo root, not mobile/)
+supabase functions deploy create-booking --no-verify-jwt
+
+# Secrets it needs (Mailgun is optional — emails are best-effort):
+supabase secrets set \
+  MAILGUN_API_KEY=... \
+  MAILGUN_DOMAIN=sundatrips.com \
+  MAILGUN_FROM="Sunda Trips <noreply@sundatrips.com>" \
+  SITE_URL=https://sundatrips.com
+# SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically.
+```
+
+It creates a `pending` booking (`payment_method: cash`), finds/invites the guest
+auth user, and emails the guest + partner using the same Mailgun templates as
+the web app. Booking still succeeds if email sending fails.
+
+> Not yet ported from the web flow: automatic room assignment for stays
+> (`autoAssignRoom`). For now the partner assigns a room in the dashboard.
+
 ## Roadmap (next steps)
 
-1. **Listing detail + booking flow** (customer) — availability calendar, variant
-   selector, create booking **request** (no payment step). Mirror the web
-   `/listings/[id]` logic minus the checkout/payment.
-2. **Magic-link deep linking** — handle the `sundatrips://` callback so guest
+1. **Availability checking** — validate the requested dates against existing
+   bookings/room availability before submitting (mirror `getAvailableVariants`),
+   ideally inside the edge function so it stays authoritative.
+2. **Time slots** for activities/trips (the web booking form supports picking a
+   time slot + private-tour option; the app currently sends date only).
+3. **Magic-link deep linking** — handle the `sundatrips://` callback so guest
    login opens straight back into the app.
-3. **Partner booking detail + status actions** (confirm / check-in / complete).
-4. **POS terminal** (partner) — the web POS already uses optimistic UI + Supabase
+4. **Partner booking detail + status actions** (confirm / check-in / complete).
+5. **POS terminal** (partner) — the web POS already uses optimistic UI + Supabase
    realtime; a strong candidate for a native on-site screen.
-5. **Push notifications** — `expo-notifications` for new bookings (partner) and
+6. **Push notifications** — `expo-notifications` for new bookings (partner) and
    booking updates (guest).
-6. **App Store / Play Store** — set up EAS Build & Submit, icons, screenshots.
+7. **App Store / Play Store** — set up EAS Build & Submit, icons, screenshots.
 
 ## Notes
 

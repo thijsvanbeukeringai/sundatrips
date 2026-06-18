@@ -39,6 +39,8 @@ function RootNavigator() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(customer)" />
       <Stack.Screen name="(partner)" />
+      <Stack.Screen name="listing/[id]" />
+      <Stack.Screen name="book/[id]" options={{ presentation: 'modal' }} />
     </Stack>
   )
 }
