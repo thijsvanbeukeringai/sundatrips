@@ -76,19 +76,27 @@ The anon key is safe to ship — RLS protects the data.
 - ✅ Partner: dashboard KPIs + bookings list
 - ✅ Shared brand theme and domain types
 
+## Payments
+
+**No customer payments happen inside the app.** The app lets a guest create a
+booking request, but the actual payment is handled outside the app (cash on
+arrival, or online via another channel). There is **no Stripe / in-app payment
+integration** on the customer side — booking flows submit the booking only and
+never collect card details.
+
 ## Roadmap (next steps)
 
 1. **Listing detail + booking flow** (customer) — availability calendar, variant
-   selector, create booking. Mirror the web `/listings/[id]` logic.
-2. **Stripe payments** — `@stripe/stripe-react-native` for online bookings.
-3. **Magic-link deep linking** — handle the `sundatrips://` callback so guest
+   selector, create booking **request** (no payment step). Mirror the web
+   `/listings/[id]` logic minus the checkout/payment.
+2. **Magic-link deep linking** — handle the `sundatrips://` callback so guest
    login opens straight back into the app.
-4. **Partner booking detail + status actions** (confirm / check-in / complete).
-5. **POS terminal** (partner) — the web POS already uses optimistic UI + Supabase
+3. **Partner booking detail + status actions** (confirm / check-in / complete).
+4. **POS terminal** (partner) — the web POS already uses optimistic UI + Supabase
    realtime; a strong candidate for a native on-site screen.
-6. **Push notifications** — `expo-notifications` for new bookings (partner) and
+5. **Push notifications** — `expo-notifications` for new bookings (partner) and
    booking updates (guest).
-7. **App Store / Play Store** — set up EAS Build & Submit, icons, screenshots.
+6. **App Store / Play Store** — set up EAS Build & Submit, icons, screenshots.
 
 ## Notes
 
