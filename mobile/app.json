@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Sunda Trips",
+    "slug": "sundatrips",
+    "scheme": "sundatrips",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#022c22"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sundatrips.app"
+    },
+    "android": {
+      "package": "com.sundatrips.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#022c22",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
