@@ -9,21 +9,29 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-three/drei": "^9.114.3",
+    "@react-three/fiber": "^8.17.10",
+    "@react-three/postprocessing": "^2.16.3",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.100.1",
     "framer-motion": "^11.3.0",
+    "lenis": "^1.1.18",
+    "leva": "^0.9.35",
     "lucide-react": "^0.400.0",
     "next": "14.2.5",
     "nodemailer": "^8.0.5",
+    "postprocessing": "^6.36.4",
     "react": "^18",
     "react-dom": "^18",
-    "stripe": "^21.0.1"
+    "stripe": "^21.0.1",
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/three": "^0.169.0",
     "autoprefixer": "^10.4.27",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",

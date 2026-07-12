@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="576" viewBox="0 0 1024 576">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151521"/>
+      <stop offset="1" stop-color="#0a0a12"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="576" fill="url(#g)"/>
+  <rect x="28" y="28" width="968" height="520" fill="none" stroke="#7c8cff" stroke-opacity="0.22" stroke-width="1"/>
+  <text x="56" y="104" font-family="ui-monospace, Menlo, monospace" font-size="34" letter-spacing="8" fill="#fafafa">MERIDIAN</text>
+  <text x="58" y="150" font-family="ui-monospace, Menlo, monospace" font-size="18" letter-spacing="4" fill="#fafafa" fill-opacity="0.45">WEBGL / BRAND</text>
+  <text x="52" y="530" font-family="ui-monospace, Menlo, monospace" font-size="180" font-weight="700" letter-spacing="-8" fill="#7c8cff" fill-opacity="0.9">01</text>
+  <circle cx="952" cy="96" r="7" fill="#7c8cff"/>
+  <text x="968" y="530" text-anchor="end" font-family="ui-monospace, Menlo, monospace" font-size="18" letter-spacing="3" fill="#fafafa" fill-opacity="0.3">SUNDA — WORKS</text>
+</svg>
