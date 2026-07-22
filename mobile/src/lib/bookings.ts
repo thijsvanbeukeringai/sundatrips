@@ -9,6 +9,8 @@ export interface CreateBookingInput {
   check_in: string
   check_out?: string | null
   variant_id?: string | null
+  time_slot_id?: string | null
+  slot_label?: string | null
   base_amount: number
   notes?: string
 }
@@ -17,6 +19,42 @@ export interface CreateBookingResult {
   success: boolean
   booking_number?: string
   error?: string
+}
+
+export interface AvailabilityVariant {
+  id: string
+  name: string
+  price_per_unit: number
+  price_unit: string
+  max_capacity: number | null
+  rooms_available: number
+}
+
+export interface AvailabilitySlot {
+  id: string
+  start_time: string
+  spots_left: number
+  max_capacity: number
+  full: boolean
+}
+
+export type AvailabilityResult =
+  | { kind: 'variants'; variants: AvailabilityVariant[] }
+  | { kind: 'slots'; slots: AvailabilitySlot[] }
+  | { kind: 'none' }
+  | { kind: 'error'; error: string }
+
+// Asks the availability edge function what is bookable for the given dates.
+export async function checkAvailability(body: {
+  property_id: string
+  check_in?: string
+  check_out?: string
+  date?: string
+}): Promise<AvailabilityResult> {
+  const { data, error } = await supabase.functions.invoke('availability', { body })
+  if (error) return { kind: 'error', error: error.message }
+  if (data?.error) return { kind: 'error', error: data.error }
+  return data as AvailabilityResult
 }
 
 // Submits a booking *request* via the create-booking edge function.

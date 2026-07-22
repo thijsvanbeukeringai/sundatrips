@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,7 +15,13 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { createBookingRequest } from '@/lib/bookings'
+import {
+  checkAvailability,
+  createBookingRequest,
+  type AvailabilityResult,
+  type AvailabilitySlot,
+  type AvailabilityVariant,
+} from '@/lib/bookings'
 import { formatPrice, priceUnitLabel } from '@/lib/format'
 import { nightsBetween, nextDays } from '@/lib/dates'
 import { DatePicker } from '@/components/DatePicker'
@@ -35,9 +41,8 @@ export default function BookingRequest() {
   const insets = useSafeAreaInsets()
   const { session, profile } = useAuth()
 
-  const price = Number(params.price ?? 0)
-  const unit = params.unit ?? 'night'
   const isStay = params.type === 'stay'
+  const isActivity = params.type === 'activity' || params.type === 'trip'
 
   const [name, setName] = useState(profile?.full_name ?? '')
   const [email, setEmail] = useState(session?.user?.email ?? '')
@@ -47,20 +52,65 @@ export default function BookingRequest() {
   const [checkOut, setCheckOut] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
 
+  // Availability
+  const [avail, setAvail] = useState<AvailabilityResult | null>(null)
+  const [availLoading, setAvailLoading] = useState(false)
+  const [variant, setVariant] = useState<AvailabilityVariant | null>(null)
+  const [slot, setSlot] = useState<AvailabilitySlot | null>(null)
+
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<string | null>(null) // booking number on success
+  const [done, setDone] = useState<string | null>(null)
+
+  // Fetch availability when the relevant dates are set.
+  useEffect(() => {
+    setVariant(null)
+    setSlot(null)
+    setAvail(null)
+
+    if (isStay) {
+      if (!checkIn || !checkOut || nightsBetween(checkIn, checkOut) < 1) return
+    } else if (isActivity) {
+      if (!checkIn) return
+    } else {
+      return // transfers / other: no availability calendar
+    }
+
+    let active = true
+    setAvailLoading(true)
+    checkAvailability({
+      property_id: params.id,
+      check_in: checkIn ?? undefined,
+      check_out: isStay ? checkOut ?? undefined : undefined,
+      date: isActivity ? checkIn ?? undefined : undefined,
+    })
+      .then((res) => {
+        if (!active) return
+        setAvail(res)
+        // Pre-select if the variant chosen on the detail screen is available.
+        if (res.kind === 'variants' && params.variantId) {
+          const match = res.variants.find((v) => v.id === params.variantId)
+          if (match) setVariant(match)
+        }
+      })
+      .finally(() => {
+        if (active) setAvailLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [checkIn, checkOut, isStay, isActivity, params.id, params.variantId])
+
+  // Effective price / unit (a chosen room-type overrides the listing price).
+  const price = variant ? variant.price_per_unit : Number(params.price ?? 0)
+  const unit = variant ? variant.price_unit : params.unit ?? 'night'
+  const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0
 
   const baseAmount = useMemo(() => {
-    if (unit === 'night') {
-      const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0
-      return price * Math.max(nights, 0)
-    }
+    if (isStay) return price * Math.max(nights, 0)
     if (unit === 'person') return price * guests
     return price
-  }, [unit, price, guests, checkIn, checkOut])
-
-  const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0
+  }, [isStay, unit, price, guests, nights])
 
   function validate(): string | null {
     if (!name.trim()) return 'Please enter your name.'
@@ -69,6 +119,12 @@ export default function BookingRequest() {
     if (isStay) {
       if (!checkOut) return 'Please pick a check-out date.'
       if (nightsBetween(checkIn, checkOut) < 1) return 'Check-out must be after check-in.'
+      if (avail?.kind === 'variants' && avail.variants.length > 0 && !variant) {
+        return 'Please select an available room type.'
+      }
+    }
+    if (isActivity && avail?.kind === 'slots' && avail.slots.length > 0 && !slot) {
+      return 'Please select a time slot.'
     }
     return null
   }
@@ -90,7 +146,9 @@ export default function BookingRequest() {
         guests_count: guests,
         check_in: checkIn!,
         check_out: isStay ? checkOut : null,
-        variant_id: params.variantId || null,
+        variant_id: isStay ? variant?.id ?? null : params.variantId || null,
+        time_slot_id: isActivity ? slot?.id ?? null : null,
+        slot_label: isActivity ? slot?.start_time ?? null : null,
         base_amount: baseAmount,
         notes: notes.trim(),
       })
@@ -114,10 +172,7 @@ export default function BookingRequest() {
           The partner will confirm shortly. We&apos;ve emailed you the details.
         </Text>
         <Text style={styles.successNote}>No payment is needed now — you&apos;ll arrange payment with the partner.</Text>
-        <Pressable
-          style={styles.cta}
-          onPress={() => router.replace('/(customer)/bookings')}
-        >
+        <Pressable style={styles.cta} onPress={() => router.replace('/(customer)/bookings')}>
           <Text style={styles.ctaText}>View my trips</Text>
         </Pressable>
         <Pressable onPress={() => router.replace('/(customer)')}>
@@ -128,13 +183,10 @@ export default function BookingRequest() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 120 }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 130 }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
@@ -146,11 +198,104 @@ export default function BookingRequest() {
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryName}>{params.name}</Text>
-          {params.variantName ? <Text style={styles.muted}>{params.variantName}</Text> : null}
+          {variant?.name || params.variantName ? (
+            <Text style={styles.muted}>{variant?.name ?? params.variantName}</Text>
+          ) : null}
           <Text style={styles.summaryPrice}>
             {formatPrice(price)} <Text style={styles.muted}>/ {priceUnitLabel(unit)}</Text>
           </Text>
         </View>
+
+        {/* Dates */}
+        <Label text={isStay ? 'Check-in' : 'Date'} />
+        <DatePicker
+          value={checkIn}
+          onChange={(d) => {
+            setCheckIn(d)
+            if (checkOut && checkOut <= d) setCheckOut(null)
+          }}
+        />
+
+        {isStay && (
+          <>
+            <Label text="Check-out" />
+            <DatePicker
+              value={checkOut}
+              onChange={setCheckOut}
+              minDate={checkIn ? nextDays(2, new Date(checkIn))[1] : undefined}
+            />
+          </>
+        )}
+
+        {/* Availability results */}
+        {availLoading && (
+          <View style={styles.availLoading}>
+            <ActivityIndicator color={theme.primary} size="small" />
+            <Text style={styles.muted}>Checking availability…</Text>
+          </View>
+        )}
+
+        {!availLoading && avail?.kind === 'variants' && (
+          <>
+            <Label text="Room type" />
+            {avail.variants.length === 0 ? (
+              <Text style={styles.noneText}>No rooms available for these dates.</Text>
+            ) : (
+              avail.variants.map((v) => {
+                const active = variant?.id === v.id
+                return (
+                  <Pressable
+                    key={v.id}
+                    style={[styles.option, active && styles.optionActive]}
+                    onPress={() => setVariant(v)}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.optionName}>{v.name}</Text>
+                      <Text style={styles.muted}>
+                        {formatPrice(v.price_per_unit)} / {priceUnitLabel(v.price_unit)} ·{' '}
+                        {v.rooms_available} available
+                      </Text>
+                    </View>
+                    {active && <Ionicons name="checkmark-circle" size={22} color={theme.primary} />}
+                  </Pressable>
+                )
+              })
+            )}
+          </>
+        )}
+
+        {!availLoading && avail?.kind === 'slots' && (
+          <>
+            <Label text="Time slot" />
+            {avail.slots.length === 0 ? (
+              <Text style={styles.noneText}>No time slots available on this date.</Text>
+            ) : (
+              <View style={styles.slotGrid}>
+                {avail.slots.map((s) => {
+                  const active = slot?.id === s.id
+                  return (
+                    <Pressable
+                      key={s.id}
+                      disabled={s.full}
+                      style={[styles.slot, active && styles.slotActive, s.full && styles.slotFull]}
+                      onPress={() => {
+                        setSlot(s)
+                        if (guests > s.spots_left) setGuests(Math.max(1, s.spots_left))
+                      }}
+                    >
+                      <Text style={[styles.slotTime, active && styles.slotTimeActive, s.full && styles.slotFullText]}>
+                        {s.start_time}
+                      </Text>
+                      <Text style={[styles.slotSpots, active && styles.slotTimeActive, s.full && styles.slotFullText]}>
+                        {s.full ? 'Full' : `${s.spots_left} left`}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            )}
+          </>
+        )}
 
         <Label text="Your name" />
         <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={theme.textMuted} />
@@ -187,23 +332,6 @@ export default function BookingRequest() {
           </Pressable>
         </View>
 
-        <Label text={isStay ? 'Check-in' : 'Date'} />
-        <DatePicker value={checkIn} onChange={(d) => {
-          setCheckIn(d)
-          if (checkOut && checkOut <= d) setCheckOut(null)
-        }} />
-
-        {isStay && (
-          <>
-            <Label text="Check-out" />
-            <DatePicker
-              value={checkOut}
-              onChange={setCheckOut}
-              minDate={checkIn ? nextDays(2, new Date(checkIn))[1] : undefined}
-            />
-          </>
-        )}
-
         <Label text="Notes (optional)" />
         <TextInput
           style={[styles.input, styles.textarea]}
@@ -217,12 +345,11 @@ export default function BookingRequest() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
 
-      {/* Sticky submit */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         {baseAmount > 0 && (
           <View style={styles.totalRow}>
             <Text style={styles.muted}>
-              {unit === 'night' && nights > 0 ? `${formatPrice(price)} × ${nights} nights` : 'Estimated total'}
+              {isStay && nights > 0 ? `${formatPrice(price)} × ${nights} nights` : 'Estimated total'}
             </Text>
             <Text style={styles.total}>{formatPrice(baseAmount)}</Text>
           </View>
@@ -256,7 +383,7 @@ const styles = StyleSheet.create({
   summaryName: { fontSize: 17, fontWeight: '700', color: theme.text },
   summaryPrice: { fontSize: 16, fontWeight: '700', color: theme.primary, marginTop: 6 },
   muted: { color: theme.textMuted, fontSize: 14 },
-  label: { fontSize: 14, fontWeight: '600', color: theme.text, marginBottom: 8, marginTop: 4 },
+  label: { fontSize: 14, fontWeight: '600', color: theme.text, marginBottom: 8, marginTop: 12 },
   input: {
     backgroundColor: colors.gray[50],
     borderWidth: 1,
@@ -266,10 +393,40 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     color: theme.text,
-    marginBottom: 16,
+    marginBottom: 4,
   },
   textarea: { height: 90, textAlignVertical: 'top' },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 20, marginBottom: 16 },
+  availLoading: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 },
+  noneText: { color: colors.sunset[600], fontSize: 14, paddingVertical: 4 },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+  },
+  optionActive: { borderColor: theme.primary, backgroundColor: colors.jungle[50] },
+  optionName: { fontSize: 15, fontWeight: '700', color: theme.text },
+  slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  slot: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minWidth: 92,
+    alignItems: 'center',
+  },
+  slotActive: { borderColor: theme.primary, backgroundColor: colors.jungle[50] },
+  slotFull: { backgroundColor: colors.gray[100], borderColor: colors.gray[100] },
+  slotTime: { fontSize: 15, fontWeight: '700', color: theme.text },
+  slotTimeActive: { color: theme.primary },
+  slotSpots: { fontSize: 11, color: theme.textMuted, marginTop: 2 },
+  slotFullText: { color: colors.gray[400] },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: 20, marginBottom: 4 },
   stepBtn: {
     width: 44,
     height: 44,
@@ -297,16 +454,8 @@ const styles = StyleSheet.create({
   ctaDisabled: { opacity: 0.6 },
   ctaText: { color: colors.white, fontWeight: '700', fontSize: 16 },
   footnote: { textAlign: 'center', color: theme.textMuted, fontSize: 12, marginTop: 8 },
-  // Success screen
   successWrap: { flex: 1, backgroundColor: theme.background, alignItems: 'center', paddingHorizontal: 28, gap: 14, justifyContent: 'center' },
-  successIcon: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: theme.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  successIcon: { width: 84, height: 84, borderRadius: 42, backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center' },
   successTitle: { fontSize: 24, fontWeight: '800', color: theme.primaryDark },
   successBody: { fontSize: 15, lineHeight: 22, color: theme.text, textAlign: 'center' },
   successNote: { fontSize: 13, color: theme.textMuted, textAlign: 'center' },

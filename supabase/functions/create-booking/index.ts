@@ -26,6 +26,8 @@ interface BookingInput {
   check_out?: string | null
   pickup_time?: string | null
   variant_id?: string | null
+  time_slot_id?: string | null
+  slot_label?: string | null
   base_amount: number
   notes?: string
 }
@@ -119,6 +121,91 @@ Deno.serve(async (req) => {
   if (propErr || !property) return json({ error: 'Listing not found' }, 404)
   if (!property.is_active) return json({ error: 'This listing is not available' }, 400)
 
+  // ── Availability check (authoritative — prevents double bookings) ─────────
+  let assignedRoomId: string | null = null
+
+  if (property.type === 'stay') {
+    if (!input.check_out) return json({ error: 'A check-out date is required for stays.' }, 400)
+
+    const { data: variants } = await supabase
+      .from('listing_variants')
+      .select('id')
+      .eq('property_id', property.id)
+      .eq('is_active', true)
+
+    if (variants && variants.length > 0 && !input.variant_id) {
+      return json({ error: 'Please select a room type.' }, 400)
+    }
+
+    // Room-based assignment when the property has rooms; else variant-level lock.
+    const { data: rooms } = await supabase
+      .from('rooms')
+      .select('id, variant_id')
+      .eq('property_id', property.id)
+      .eq('is_active', true)
+      .neq('status', 'maintenance')
+      .order('sort_order')
+      .order('room_number')
+
+    if (rooms && rooms.length > 0) {
+      const candidateRooms = input.variant_id
+        ? rooms.filter((r) => r.variant_id === input.variant_id)
+        : rooms
+      const roomIds = candidateRooms.map((r) => r.id)
+      if (roomIds.length === 0) {
+        return json({ error: 'No rooms available for these dates.' }, 409)
+      }
+      const { data: conflicts } = await supabase
+        .from('bookings')
+        .select('room_id')
+        .in('room_id', roomIds)
+        .in('status', ['pending', 'confirmed', 'checked_in'])
+        .lt('check_in', input.check_out)
+        .or(`check_out.gt.${input.check_in},check_out.is.null`)
+
+      const booked = new Set((conflicts ?? []).map((b) => b.room_id))
+      assignedRoomId = candidateRooms.find((r) => !booked.has(r.id))?.id ?? null
+      if (!assignedRoomId) return json({ error: 'No rooms available for these dates.' }, 409)
+    } else if (input.variant_id) {
+      const { data: conflicts } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('property_id', property.id)
+        .eq('variant_id', input.variant_id)
+        .in('status', ['pending', 'confirmed', 'checked_in'])
+        .lt('check_in', input.check_out)
+        .or(`check_out.gt.${input.check_in},check_out.is.null`)
+        .limit(1)
+      if (conflicts && conflicts.length > 0) {
+        return json({ error: 'This room type is not available for these dates.' }, 409)
+      }
+    }
+  } else if (property.type === 'activity' || property.type === 'trip') {
+    const { data: slots } = await supabase
+      .from('time_slots')
+      .select('id')
+      .eq('property_id', property.id)
+      .eq('is_active', true)
+
+    if (slots && slots.length > 0) {
+      if (!input.time_slot_id) return json({ error: 'Please select a time slot.' }, 400)
+
+      const { data: slotAvail } = await supabase
+        .from('slot_availability')
+        .select('available_spots')
+        .eq('property_id', property.id)
+        .eq('time_slot_id', input.time_slot_id)
+        .eq('date', input.check_in)
+        .maybeSingle()
+
+      const spotsLeft = slotAvail ? slotAvail.available_spots : property.max_capacity ?? 99
+      if (spotsLeft <= 0) return json({ error: 'This time slot is fully booked.' }, 409)
+      if (input.guests_count > spotsLeft) {
+        return json({ error: `Only ${spotsLeft} spot(s) left for this time slot.` }, 409)
+      }
+    }
+  }
+
   // ── Find or invite the guest auth user ───────────────────────────────────
   const siteUrl = Deno.env.get('SITE_URL') ?? ''
   let guestUserId: string | null = null
@@ -132,6 +219,14 @@ Deno.serve(async (req) => {
     const { data: list } = await supabase.auth.admin.listUsers({ perPage: 1000 })
     guestUserId = list?.users?.find((u) => u.email === email)?.id ?? null
   }
+
+  // Compose notes — keep the "Time slot: …" line the email templates parse.
+  const combinedNotes = [
+    input.slot_label ? `Time slot: ${input.slot_label}` : '',
+    input.notes ?? '',
+  ]
+    .filter(Boolean)
+    .join('\n')
 
   // ── Insert the booking ───────────────────────────────────────────────────
   const { data: booking, error } = await supabase
@@ -149,9 +244,10 @@ Deno.serve(async (req) => {
       base_amount: input.base_amount ?? 0,
       status: 'pending',
       payment_method: 'cash',
-      notes: input.notes || null,
+      notes: combinedNotes || null,
       guest_user_id: guestUserId,
       variant_id: input.variant_id || null,
+      room_id: assignedRoomId,
     })
     .select('id, booking_number')
     .single()
@@ -182,11 +278,12 @@ Deno.serve(async (req) => {
         serviceName: property.name ?? 'Service',
         serviceType: property.type ?? '',
         date: dateFormatted,
+        timeSlot: input.slot_label ?? '',
         location: property.location ?? '',
         island: property.island ?? '',
         guestsCount: String(input.guests_count),
         amount: formatIDR(input.base_amount ?? 0),
-        notes: input.notes ?? '',
+        notes: combinedNotes,
       },
     })
   } catch (err) {
@@ -215,6 +312,7 @@ Deno.serve(async (req) => {
           serviceName: property.name ?? 'Service',
           serviceType: property.type ?? '',
           date: dateFormatted,
+          timeSlot: input.slot_label ?? '',
           guestName: input.guest_name.trim(),
           guestEmail: email,
           guestPhone: input.guest_phone || '',
@@ -222,7 +320,7 @@ Deno.serve(async (req) => {
           amount: formatIDR(input.base_amount ?? 0),
           location: property.location ?? '',
           island: property.island ?? '',
-          notes: input.notes ?? '',
+          notes: combinedNotes,
         },
       })
     }
